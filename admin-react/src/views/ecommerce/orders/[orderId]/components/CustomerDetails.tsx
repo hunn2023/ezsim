@@ -1,97 +1,99 @@
 import { Button, Card, CardBody, CardHeader, CardTitle, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'react-bootstrap'
 import { TbBan, TbDotsVertical, TbEdit, TbMail, TbMapPin, TbPencil, TbPhone, TbShare, TbTrash } from 'react-icons/tb'
 import { Link } from 'react-router'
+import { type OrderType } from '../../data'
 
-import gbFlag from '@/assets/images/flags/gb.svg'
-import user5 from '@/assets/images/users/user-5.jpg'
+interface CustomerDetailsProps {
+  customer: OrderType['customer']
+}
 
-const CustomerDetails = () => {
+const CustomerDetails = ({ customer }: CustomerDetailsProps) => {
   return (
-    <Card>
-      <CardHeader className="justify-content-between border-dashed">
-        <CardTitle as="h4">Customer Details</CardTitle>
-        <Button size="sm" className="btn-default btn-icon rounded-circle">
-          <TbPencil className="fs-lg" />
+    <Card className="border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+      <CardHeader className="justify-content-between border-bottom p-4 bg-white d-flex align-items-center">
+        <CardTitle as="h5" className="fw-bold text-dark mb-0">Thông Tin Khách Hàng</CardTitle>
+        <Button variant="light" size="sm" className="btn-icon rounded-circle shadow-sm">
+          <TbPencil className="fs-base text-primary" />
         </Button>
       </CardHeader>
-      <CardBody>
-        <div className="d-flex align-items-center mb-4">
-          <div className="me-2">
-            <img src={user5} width={44} height={44} alt="avatar" className="rounded-circle avatar-lg" />
+      <CardBody className="p-4">
+        <div className="d-flex align-items-center mb-4 pb-3 border-bottom border-light-subtle">
+          <div className="me-3 flex-shrink-0">
+            <img src={customer.avatar} width={54} height={54} alt="avatar" className="rounded-circle shadow-sm border border-light-subtle img-fluid" />
           </div>
           <div>
-            <h5 className="mb-1 d-flex align-items-center">
-              <Link to="/pages/profile" className="link-reset">
-                Sophia Carter
+            <h5 className="mb-1 fw-bold text-dark">
+              <Link to={`/customers`} className="text-dark text-decoration-none">
+                {customer.name}
               </Link>
-              <img src={gbFlag} alt="UK" width={16} height={16} className="ms-2 rounded-circle" />
             </h5>
-            <p className="text-muted mb-0">Since 2020</p>
+            <span className="badge bg-primary-subtle text-primary fs-xs px-2 py-1 rounded-pill">{customer.id}</span>
           </div>
           <div className="ms-auto">
             <Dropdown align="end">
-              <DropdownToggle variant="link" className="btn-icon btn-ghost-light text-muted drop-arrow-none">
+              <DropdownToggle variant="link" className="btn-icon btn-ghost-light text-muted drop-arrow-none p-0 border-0 shadow-none">
                 <TbDotsVertical className="fs-xl" />
               </DropdownToggle>
 
-              <DropdownMenu>
-                <DropdownItem>
-                  <TbShare className="me-2" />
-                  Share
+              <DropdownMenu className="rounded-3 shadow border-0">
+                <DropdownItem className="fs-sm py-2">
+                  <TbShare className="me-2 text-primary" /> Chia sẻ hồ sơ
                 </DropdownItem>
-                <DropdownItem>
-                  <TbEdit className="me-2" />
-                  Edit
+                <DropdownItem className="fs-sm py-2">
+                  <TbEdit className="me-2 text-warning" /> Chỉnh sửa
                 </DropdownItem>
-                <DropdownItem>
-                  <TbBan className="me-2" />
-                  Block
+                <DropdownItem className="fs-sm py-2 text-warning">
+                  <TbBan className="me-2 text-warning" /> Khóa tài khoản
                 </DropdownItem>
-                <DropdownItem className="text-danger">
-                  <TbTrash className="me-2" />
-                  Delete
+                <DropdownItem className="fs-sm py-2 text-danger">
+                  <TbTrash className="me-2 text-danger" /> Xóa dữ liệu
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
         </div>
-        <ul className="list-unstyled text-muted mb-0">
-          <li className="mb-2">
-            <div className="d-flex align-items-center gap-2">
-              <div className="avatar-xs avatar-img-size fs-24">
-                <span className="avatar-title text-bg-light fs-sm rounded-circle">
+        <ul className="list-unstyled text-muted mb-0 d-flex flex-column gap-3 fs-sm">
+          <li>
+            <div className="d-flex align-items-center gap-3">
+              <div className="avatar-xs flex-shrink-0">
+                <span className="avatar-title bg-light text-primary rounded-circle shadow-sm p-2 fs-5">
                   <TbMail />
                 </span>
               </div>
-              <h5 className="fs-base mb-0 fw-medium">
-                <Link to="" className="link-reset">
-                  sophia@designhub.com
-                </Link>
-              </h5>
-            </div>
-          </li>
-          <li className="mb-2">
-            <div className="d-flex align-items-center gap-2">
-              <div className="avatar-xs avatar-img-size fs-24">
-                <span className="avatar-title text-bg-light fs-sm rounded-circle">
-                  <TbPhone />
-                </span>
+              <div className="text-truncate">
+                <span className="text-muted d-block fs-xs">Email liên hệ:</span>
+                <a href={`mailto:${customer.email}`} className="text-dark fw-semibold text-decoration-none text-truncate d-block">
+                  {customer.email}
+                </a>
               </div>
-              <h5 className="fs-base mb-0 fw-medium">
-                <Link to="" className="link-reset">
-                  +44 7911 123456
-                </Link>
-              </h5>
             </div>
           </li>
           <li>
-            <div className="d-flex align-items-center gap-2">
-              <div className="avatar-xs avatar-img-size fs-24">
-                <span className="avatar-title text-bg-light fs-sm rounded-circle">
+            <div className="d-flex align-items-center gap-3">
+              <div className="avatar-xs flex-shrink-0">
+                <span className="avatar-title bg-light text-success rounded-circle shadow-sm p-2 fs-5">
+                  <TbPhone />
+                </span>
+              </div>
+              <div>
+                <span className="text-muted d-block fs-xs">Số điện thoại / Zalo:</span>
+                <a href={`tel:${customer.phone}`} className="text-dark fw-semibold text-decoration-none">
+                  {customer.phone}
+                </a>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div className="d-flex align-items-center gap-3">
+              <div className="avatar-xs flex-shrink-0">
+                <span className="avatar-title bg-light text-danger rounded-circle shadow-sm p-2 fs-5">
                   <TbMapPin />
                 </span>
               </div>
-              <h5 className="fs-base mb-0 fw-medium">London, UK</h5>
+              <div>
+                <span className="text-muted d-block fs-xs">Quốc gia:</span>
+                <span className="text-dark fw-semibold">Việt Nam (VN)</span>
+              </div>
             </div>
           </li>
         </ul>

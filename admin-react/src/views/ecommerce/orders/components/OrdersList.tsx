@@ -15,14 +15,130 @@ import { Button, Card, CardFooter, CardHeader } from 'react-bootstrap'
 import { Link } from 'react-router'
 import { useState } from 'react'
 import { LuCalendar, LuCreditCard, LuPlus, LuSearch, LuTruck } from 'react-icons/lu'
-import { TbEdit, TbEye, TbPointFilled, TbTrash } from 'react-icons/tb'
+import {
+  TbEdit,
+  TbEye,
+  TbCheck,
+  TbClock,
+  TbX,
+  TbQrcode,
+  TbDeviceSim,
+  TbTruck as TbTruckIcon,
+  TbTrash,
+  TbBuildingBank,
+  TbCreditCard,
+  TbWallet,
+} from 'react-icons/tb'
 
 import DataTable from '@/components/table/DataTable'
 import DeleteConfirmationModal from '@/components/table/DeleteConfirmationModal'
 import TablePagination from '@/components/table/TablePagination'
-import { currency } from '@/helpers'
-import { toPascalCase } from '@/helpers/casing'
 import { orders, type OrderType } from '../data'
+
+const formatVND = (val: number) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
+}
+
+const getPaymentStatusBadge = (status: string) => {
+  switch (status) {
+    case 'paid':
+      return (
+        <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbCheck className="me-1 fs-sm" /> Đã thanh toán
+        </span>
+      )
+    case 'pending':
+      return (
+        <span className="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbClock className="me-1 fs-sm" /> Chờ thanh toán
+        </span>
+      )
+    case 'processing':
+      return (
+        <span className="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbClock className="me-1 fs-sm" /> Đang xử lý
+        </span>
+      )
+    case 'error':
+      return (
+        <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbX className="me-1 fs-sm" /> Lỗi thanh toán
+        </span>
+      )
+    case 'cancelled':
+      return (
+        <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbX className="me-1 fs-sm" /> Đã hủy
+        </span>
+      )
+    case 'refunded':
+      return (
+        <span className="badge bg-dark-subtle text-dark border border-dark-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          Đã hoàn tiền
+        </span>
+      )
+    default:
+      return <span className="badge bg-light text-dark">{status}</span>
+  }
+}
+
+const getOrderStatusBadge = (status: string) => {
+  switch (status) {
+    case 'qr_code_esim':
+      return (
+        <span className="badge bg-purple-subtle text-purple border border-purple-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm" style={{ color: '#6f42c1', backgroundColor: '#e2d9f3' }}>
+          <TbQrcode className="me-1 fs-sm" /> Gửi QR eSIM
+        </span>
+      )
+    case 'activation_code':
+      return (
+        <span className="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbDeviceSim className="me-1 fs-sm" /> Mã kích hoạt
+        </span>
+      )
+    case 'manual_processing':
+      return (
+        <span className="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbClock className="me-1 fs-sm" /> Xử lý thủ công
+        </span>
+      )
+    case 'physical_sim_shipping':
+      return (
+        <span className="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbTruckIcon className="me-1 fs-sm" /> Giao SIM vật lý
+        </span>
+      )
+    case 'delivered':
+      return (
+        <span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbCheck className="me-1 fs-sm" /> Đã hoàn thành
+        </span>
+      )
+    case 'cancelled':
+      return (
+        <span className="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-xs fw-semibold d-inline-flex align-items-center shadow-sm">
+          <TbX className="me-1 fs-sm" /> Đã hủy đơn
+        </span>
+      )
+    default:
+      return <span className="badge bg-light text-dark">{status}</span>
+  }
+}
+
+const getPaymentMethodIcon = (methodType: string) => {
+  switch (methodType) {
+    case 'E-Wallet':
+      return <TbWallet className="text-primary me-1 fs-lg" />
+    case 'Bank Transfer':
+      return <TbBuildingBank className="text-info me-1 fs-lg" />
+    case 'QR Code':
+      return <TbQrcode className="text-success me-1 fs-lg" />
+    case 'Card':
+      return <TbCreditCard className="text-warning me-1 fs-lg" />
+    default:
+      return <TbWallet className="text-secondary me-1 fs-lg" />
+  }
+}
 
 const columnHelper = createColumnHelper<OrderType>()
 
@@ -32,10 +148,13 @@ const dateRangeFilterFn: FilterFn<any> = (row, columnId, selectedRange) => {
   const text = row.getValue<string>(columnId)
   if (!text) return false
 
-  const cellDate = new Date(text)
+  // Parse DD/MM/YYYY
+  const parts = text.split('/')
+  if (parts.length !== 3) return false
+  const cellDate = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]))
   if (isNaN(cellDate.getTime())) return false
 
-  const now = new Date()
+  const now = new Date(2026, 4, 18) // Mock current date 18/05/2026
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
   let rangeStart, rangeEnd
@@ -85,103 +204,91 @@ const OrdersList = () => {
       enableSorting: false,
       enableColumnFilter: false,
     },
-    columnHelper.accessor('id', {
-      header: 'Order ID',
+    columnHelper.accessor('orderCode', {
+      header: 'Mã Đơn Hàng',
       cell: ({ row }) => (
-        <h5 className="fs-sm mb-0 fw-medium">
-          <Link to="" className="link-reset">
-            #{row.original.id}
+        <h5 className="fs-sm mb-0 fw-bold">
+          <Link to={`/orders/${row.original.id}`} className="text-primary text-decoration-none">
+            #{row.original.orderCode}
           </Link>
         </h5>
       ),
     }),
     columnHelper.accessor('date', {
-      header: 'Date',
+      header: 'Ngày đặt',
       filterFn: dateRangeFilterFn,
       enableColumnFilter: true,
       cell: ({ row }) => (
-        <>
-          {row.original.date} <small className="text-muted">{row.original.time}</small>
-        </>
+        <div className="fw-medium text-dark fs-sm">
+          {row.original.date} <small className="text-muted ms-1">{row.original.time}</small>
+        </div>
       ),
     }),
     columnHelper.accessor('customer', {
-      header: 'Customer',
+      header: 'Khách hàng',
       cell: ({ row }) => (
         <div className="d-flex justify-content-start align-items-center gap-2">
-          <div className="avatar avatar-sm">
-            <img src={row.original.customer.avatar} alt="" height={32} width={32} className="img-fluid rounded-circle" />
+          <div className="avatar avatar-sm flex-shrink-0">
+            <img src={row.original.customer.avatar} alt="" height={36} width={36} className="img-fluid rounded-circle shadow-sm border" />
           </div>
           <div>
-            <h5 className="text-nowrap fs-base mb-0 lh-base">{row.original.customer.name}</h5>
-            <p className="text-muted fs-xs mb-0">{row.original.customer.email}</p>
+            <h5 className="text-nowrap fs-sm fw-bold text-dark mb-0 lh-base">{row.original.customer.name}</h5>
+            <p className="text-muted fs-xs mb-0">{row.original.customer.phone}</p>
           </div>
         </div>
       ),
     }),
-    columnHelper.accessor('amount', {
-      header: 'Amount',
-      cell: ({ row }) => (
-        <>
-          {currency}
-          {row.original.amount}
-        </>
-      ),
+    columnHelper.accessor('totalAmount', {
+      header: 'Tổng tiền',
+      cell: ({ row }) => <span className="fw-black text-danger fs-sm">{formatVND(row.original.finalAmount)}</span>,
     }),
     columnHelper.accessor('paymentStatus', {
-      header: 'Payment Status',
+      header: 'Thanh toán',
       filterFn: 'equalsString',
       enableColumnFilter: true,
-      cell: ({ row }) => (
-        <span
-          className={`fw-semibold text-${row.original.paymentStatus === 'paid' ? 'success' : row.original.paymentStatus === 'pending' ? 'warning' : 'danger'}`}>
-          <TbPointFilled className="fs-sm" /> {toPascalCase(row.original.paymentStatus)}
-        </span>
-      ),
+      cell: ({ row }) => getPaymentStatusBadge(row.original.paymentStatus),
     }),
     columnHelper.accessor('orderStatus', {
-      header: 'Order Status',
+      header: 'Giao hàng & Xử lý',
       filterFn: 'equalsString',
       enableColumnFilter: true,
-      cell: ({ row }) => (
-        <span
-          className={`badge fs-xxs badge-soft-${row.original.orderStatus === 'cancelled' ? 'danger' : row.original.orderStatus === 'processing' ? 'warning' : 'success'}`}>
-          {toPascalCase(row.original.orderStatus)}
-        </span>
-      ),
+      cell: ({ row }) => getOrderStatusBadge(row.original.orderStatus),
     }),
-    columnHelper.accessor('paymentMethod', {
-      header: 'Payment Method',
+    columnHelper.accessor('paymentInfo', {
+      header: 'Cổng & Phương thức',
       cell: ({ row }) => (
-        <>
-          <img src={row.original.paymentMethod.image} alt="" className="me-2" height={28} width={28} />{' '}
-          {row.original.paymentMethod.type === 'card'
-            ? row.original.paymentMethod.cardNumber
-            : row.original.paymentMethod.type === 'upi'
-              ? row.original.paymentMethod.upiId
-              : row.original.paymentMethod.email}
-        </>
+        <div className="d-flex align-items-center fs-sm fw-medium text-dark">
+          {getPaymentMethodIcon(row.original.paymentInfo.methodType)}
+          <span>{row.original.paymentInfo.provider}</span>
+          <span className="text-muted fs-xs ms-1">({row.original.paymentInfo.methodType})</span>
+        </div>
       ),
     }),
     {
-      header: 'Actions',
+      header: 'Thao tác',
+      id: 'actions',
       cell: ({ row }: { row: TableRow<OrderType> }) => (
-        <div className="d-flex  gap-1">
-          <Button variant="light" size="sm" className="btn-icon rounded-circle">
-            <TbEye className="fs-lg" />
-          </Button>
-          <Button variant="light" size="sm" className="btn-icon rounded-circle">
-            <TbEdit className="fs-lg" />
-          </Button>
+        <div className="d-flex gap-1">
+          <Link to={`/orders/${row.original.id}`}>
+            <Button variant="light" size="sm" className="btn-icon rounded-circle shadow-sm" title="Xem chi tiết">
+              <TbEye className="fs-base text-primary" />
+            </Button>
+          </Link>
+          <Link to={`/orders/${row.original.id}`}>
+            <Button variant="light" size="sm" className="btn-icon rounded-circle shadow-sm ms-1" title="Chỉnh sửa">
+              <TbEdit className="fs-base text-warning" />
+            </Button>
+          </Link>
           <Button
             variant="light"
             size="sm"
-            className="btn-icon rounded-circle"
+            className="btn-icon rounded-circle shadow-sm ms-1"
+            title="Xóa"
             onClick={() => {
               toggleDeleteModal()
               setSelectedRowIds({ [row.id]: true })
             }}>
-            <TbTrash className="fs-lg" />
+            <TbTrash className="fs-base text-danger" />
           </Button>
         </div>
       ),
@@ -209,7 +316,13 @@ const OrdersList = () => {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: 'includesString',
+    globalFilterFn: (row, columnId, filterValue) => {
+      const search = filterValue.toLowerCase()
+      const matchCode = row.original.orderCode.toLowerCase().includes(search)
+      const matchCust = row.original.customer.name.toLowerCase().includes(search) || row.original.customer.phone.includes(search)
+      const matchItem = row.original.items.some((item) => item.productName.toLowerCase().includes(search))
+      return matchCode || matchCust || matchItem
+    },
     enableColumnFilters: true,
     enableRowSelection: true,
     filterFns: {
@@ -239,99 +352,111 @@ const OrdersList = () => {
   }
 
   return (
-    <Card>
-      <CardHeader className="border-light justify-content-between">
-        <div className="d-flex gap-2">
-          <div className="app-search">
+    <Card className="border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <CardHeader className="bg-white border-bottom p-4">
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+          <h4 className="fw-bolder text-dark mb-0">Danh Sách Đơn Hàng Viễn Thông</h4>
+          <div className="d-flex gap-2">
+            {Object.keys(selectedRowIds).length > 0 && (
+              <Button variant="danger" className="rounded-pill px-4 py-2 fw-bold d-flex align-items-center shadow-sm" onClick={toggleDeleteModal}>
+                <TbTrash className="fs-base me-1" /> Xóa ({Object.keys(selectedRowIds).length})
+              </Button>
+            )}
+            <Link to="/orders/new">
+              <Button variant="primary" className="rounded-pill px-4 py-2 fw-bold d-flex align-items-center shadow-sm">
+                <LuPlus className="fs-base me-1" /> Tạo Đơn Hàng
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        <div className="d-flex flex-wrap align-items-center gap-3 mt-3 pt-2 border-top border-light-subtle">
+          <div className="app-search flex-grow-1" style={{ minWidth: '260px' }}>
             <input
               type="search"
-              className="form-control"
-              placeholder="Search order..."
+              className="form-control rounded-pill px-4 py-2 fs-sm bg-light border-0 shadow-none"
+              placeholder="Tìm theo mã đơn, tên hoặc SĐT khách hàng..."
               value={globalFilter ?? ''}
               onChange={(e) => setGlobalFilter(e.target.value)}
             />
-            <LuSearch className="app-search-icon text-muted" />
-          </div>
-          {Object.keys(selectedRowIds).length > 0 && (
-            <Button variant="danger" size="sm" onClick={toggleDeleteModal}>
-              Delete
-            </Button>
-          )}
-        </div>
-        <div className="d-flex align-items-center gap-2">
-          <span className="me-2 fw-semibold">Filter By:</span>
-
-          <div className="app-search">
-            <select
-              className="form-select form-control my-1 my-md-0"
-              value={(table.getColumn('paymentStatus')?.getFilterValue() as string) ?? 'All'}
-              onChange={(e) => table.getColumn('paymentStatus')?.setFilterValue(e.target.value === 'All' ? undefined : e.target.value)}>
-              <option value="All">Payment Status</option>
-              <option value="paid">Paid</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
-            </select>
-            <LuCreditCard className="app-search-icon text-muted" />
+            <LuSearch className="app-search-icon text-muted ms-2" />
           </div>
 
-          <div className="app-search">
-            <select
-              className="form-select form-control my-1 my-md-0"
-              value={(table.getColumn('orderStatus')?.getFilterValue() as string) ?? 'All'}
-              onChange={(e) => table.getColumn('orderStatus')?.setFilterValue(e.target.value === 'All' ? undefined : e.target.value)}>
-              <option value="All">Delivery Status</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <LuTruck className="app-search-icon text-muted" />
-          </div>
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border border-light-subtle">
+              <LuCreditCard className="text-muted me-2 fs-sm" />
+              <select
+                className="form-select form-select-sm bg-transparent border-0 shadow-none fw-medium text-dark"
+                value={(table.getColumn('paymentStatus')?.getFilterValue() as string) ?? 'All'}
+                onChange={(e) => table.getColumn('paymentStatus')?.setFilterValue(e.target.value === 'All' ? undefined : e.target.value)}>
+                <option value="All">Tất cả thanh toán</option>
+                <option value="paid">Đã thanh toán</option>
+                <option value="pending">Chờ thanh toán</option>
+                <option value="processing">Đang xử lý</option>
+                <option value="error">Lỗi giao dịch</option>
+                <option value="cancelled">Đã hủy</option>
+                <option value="refunded">Đã hoàn tiền</option>
+              </select>
+            </div>
 
-          <div className="app-search">
-            <select
-              className="form-select form-control my-1 my-md-0"
-              value={(table.getColumn('date')?.getFilterValue() as string) ?? ''}
-              onChange={(e) => table.getColumn('date')?.setFilterValue(e.target.value || undefined)}>
-              <option value="All">Date Range</option>
-              <option value="Today">Today</option>
-              <option value="Last 7 Days">Last 7 Days</option>
-              <option value="Last 30 Days">Last 30 Days</option>
-              <option value="This Year">This Year</option>
-            </select>
-            <LuCalendar className="app-search-icon text-muted" />
-          </div>
+            <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border border-light-subtle">
+              <LuTruck className="text-muted me-2 fs-sm" />
+              <select
+                className="form-select form-select-sm bg-transparent border-0 shadow-none fw-medium text-dark"
+                value={(table.getColumn('orderStatus')?.getFilterValue() as string) ?? 'All'}
+                onChange={(e) => table.getColumn('orderStatus')?.setFilterValue(e.target.value === 'All' ? undefined : e.target.value)}>
+                <option value="All">Tất cả hình thức giao</option>
+                <option value="qr_code_esim">Gửi QR eSIM</option>
+                <option value="activation_code">Mã kích hoạt</option>
+                <option value="manual_processing">Xử lý thủ công</option>
+                <option value="physical_sim_shipping">Giao SIM vật lý</option>
+                <option value="delivered">Đã hoàn thành</option>
+                <option value="cancelled">Đã hủy đơn</option>
+              </select>
+            </div>
 
-          <div>
-            <select
-              className="form-select form-control my-1 my-md-0"
-              value={table.getState().pagination.pageSize}
-              onChange={(e) => table.setPageSize(Number(e.target.value))}>
-              {[5, 8, 10, 15, 20].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+            <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border border-light-subtle">
+              <LuCalendar className="text-muted me-2 fs-sm" />
+              <select
+                className="form-select form-select-sm bg-transparent border-0 shadow-none fw-medium text-dark"
+                value={(table.getColumn('date')?.getFilterValue() as string) ?? ''}
+                onChange={(e) => table.getColumn('date')?.setFilterValue(e.target.value || undefined)}>
+                <option value="All">Khoảng thời gian</option>
+                <option value="Today">Hôm nay</option>
+                <option value="Last 7 Days">7 ngày qua</option>
+                <option value="Last 30 Days">30 ngày qua</option>
+                <option value="This Year">Năm nay</option>
+              </select>
+            </div>
+
+            <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border border-light-subtle">
+              <span className="text-muted fs-xs me-2">Hiển thị:</span>
+              <select
+                className="form-select form-select-sm bg-transparent border-0 shadow-none fw-bold text-dark"
+                value={table.getState().pagination.pageSize}
+                onChange={(e) => table.setPageSize(Number(e.target.value))}>
+                {[5, 8, 10, 15, 20].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-        <div className="d-flex gap-1">
-          <Button variant="danger" className="ms-1">
-            <LuPlus className="fs-sm me-2" /> Add Order
-          </Button>
         </div>
       </CardHeader>
 
-      <DataTable<OrderType> table={table} emptyMessage="No records found" />
+      <div className="p-0">
+        <DataTable<OrderType> table={table} emptyMessage="Không tìm thấy đơn hàng nào phù hợp" />
+      </div>
 
       {table.getRowModel().rows.length > 0 && (
-        <CardFooter className="border-0">
+        <CardFooter className="border-top bg-white p-4">
           <TablePagination
             totalItems={totalItems}
             start={start}
             end={end}
-            itemsName="orders"
+            itemsName="đơn hàng"
             showInfo
             previousPage={table.previousPage}
             canPreviousPage={table.getCanPreviousPage()}
@@ -349,7 +474,7 @@ const OrdersList = () => {
         onHide={toggleDeleteModal}
         onConfirm={handleDelete}
         selectedCount={Object.keys(selectedRowIds).length}
-        itemName="orders"
+        itemName="đơn hàng"
       />
     </Card>
   )

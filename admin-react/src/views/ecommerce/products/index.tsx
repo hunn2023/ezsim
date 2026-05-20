@@ -5,8 +5,8 @@ import ProductsListing from '@/views/ecommerce/products/components/ProductsListi
 
 const Page = () => {
   return (
-    <Container fluid>
-      <PageBreadcrumb title="Products" subtitle="Ecommerce" />
+    <Container fluid className="py-3">
+      <PageBreadcrumb title="Quản lý Kho SIM & Thẻ Điện Thoại" subtitle="E-commerce Telecom" />
 
       <ProductStats />
 
