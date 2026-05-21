@@ -11,10 +11,10 @@ interface Product {
 }
 
 const mockNewProducts: Product[] = [
-  { id: "n1", name: "eSIM Úc 10 ngày - 4GB/ngày", slug: "esim-uc-10ngay", image: "/images/products/esim-aus.jpg", price: 249000, category: "eSIM" },
-  { id: "n2", name: "Thẻ Vinaphone 200K", slug: "the-vina-200k", image: "/images/products/vina-200k.jpg", price: 190000, category: "Thẻ nạp" },
-  { id: "n3", name: "eSIM Châu Âu 15 ngày - 5GB/ngày", slug: "esim-chau-au-15ngay", image: "/images/products/esim-eu.jpg", price: 399000, category: "eSIM" },
-  { id: "n4", name: "Thẻ Game Steam 500K", slug: "the-steam-500k", image: "/images/products/steam-500k.jpg", price: 475000, category: "Thẻ Game" },
+  { id: "n1", name: "eSIM Úc 10 ngày - 4GB/ngày", slug: "esim-uc-10-ngay", image: "https://picsum.photos/seed/esim-aus/400/300", price: 249000, category: "eSIM Du lịch" },
+  { id: "n2", name: "Thẻ Vinaphone 200K", slug: "the-vinaphone-200k", image: "https://picsum.photos/seed/vinaphone/400/300", price: 190000, category: "Thẻ Viễn thông" },
+  { id: "n3", name: "eSIM Châu Âu 15 ngày - 5GB/ngày", slug: "esim-chau-au-15-ngay", image: "https://picsum.photos/seed/esim-eu/400/300", price: 399000, category: "eSIM Du lịch" },
+  { id: "n4", name: "Thẻ Game Steam 500K", slug: "the-steam-500k", image: "https://picsum.photos/seed/steam/400/300", price: 475000, category: "Thẻ Game" },
 ];
 
 function formatPrice(price: number) {
@@ -33,7 +33,7 @@ export default function NewProducts() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {mockNewProducts.map((p) => (
-            <Link key={p.id} href={`/san-pham/${p.slug}`} className="product-card">
+            <Link key={p.id} href={`/products/${p.slug}`} className="product-card">
               <div className="relative">
                 <img
                   src={p.image}

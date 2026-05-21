@@ -14,14 +14,14 @@ interface Product {
 }
 
 const mockProducts: Product[] = [
-  { id: "1", name: "eSIM Nhật Bản 7 ngày - 5GB/ngày", slug: "esim-nhat-ban-7ngay", image: "/images/products/esim-japan.jpg", price: 189000, originalPrice: 250000, badge: "Hot" },
-  { id: "2", name: "eSIM Hàn Quốc 5 ngày - Unlimited", slug: "esim-han-quoc-5ngay", image: "/images/products/esim-korea.jpg", price: 159000, badge: "Bán chạy" },
-  { id: "3", name: "Thẻ Viettel 100K", slug: "the-viettel-100k", image: "/images/products/viettel-100k.jpg", price: 95000, originalPrice: 100000 },
-  { id: "4", name: "eSIM Thái Lan 7 ngày - 3GB/ngày", slug: "esim-thai-lan-7ngay", image: "/images/products/esim-thai.jpg", price: 139000 },
-  { id: "5", name: "Thẻ Game Garena 200K", slug: "the-garena-200k", image: "/images/products/garena-200k.jpg", price: 190000, originalPrice: 200000 },
-  { id: "6", name: "eSIM Singapore 5 ngày - 2GB/ngày", slug: "esim-singapore-5ngay", image: "/images/products/esim-sg.jpg", price: 169000, badge: "Mới" },
-  { id: "7", name: "Data Mobifone 30GB/tháng", slug: "data-mobi-30gb", image: "/images/products/mobi-30gb.jpg", price: 77000, originalPrice: 90000 },
-  { id: "8", name: "eSIM Đài Loan 7 ngày - Unlimited", slug: "esim-dai-loan-7ngay", image: "/images/products/esim-taiwan.jpg", price: 179000 },
+  { id: "1", name: "eSIM Nhật Bản 7 ngày - 3GB/ngày", slug: "esim-nhat-ban-7-ngay-3gb", image: "https://picsum.photos/seed/esim-japan/400/300", price: 150000, originalPrice: 200000, badge: "-25%" },
+  { id: "2", name: "eSIM Hàn Quốc 5 ngày - Unlimited", slug: "esim-han-quoc-5-ngay", image: "https://picsum.photos/seed/esim-korea/400/300", price: 250000, badge: "Hot" },
+  { id: "3", name: "Thẻ Viettel 100K", slug: "the-viettel-100k", image: "https://picsum.photos/seed/viettel100/400/300", price: 95000, originalPrice: 100000 },
+  { id: "4", name: "eSIM Thái Lan 10 ngày - 5GB/ngày", slug: "esim-thai-lan-10-ngay", image: "https://picsum.photos/seed/esim-thai/400/300", price: 320000 },
+  { id: "5", name: "Thẻ Game Garena 200K", slug: "the-game-garena-200k", image: "https://picsum.photos/seed/garena200/400/300", price: 200000 },
+  { id: "6", name: "eSIM Singapore 3 ngày - Unlimited", slug: "esim-singapore-3-ngay-unlimited", image: "https://picsum.photos/seed/esim-sg/400/300", price: 180000, badge: "Mới" },
+  { id: "7", name: "Data Mobifone 30GB/tháng", slug: "data-mobifone-30gb", image: "https://picsum.photos/seed/mobifone/400/300", price: 77000, originalPrice: 90000 },
+  { id: "8", name: "eSIM Đài Loan 7 ngày - Unlimited", slug: "esim-dai-loan-7-ngay", image: "https://picsum.photos/seed/esim-taiwan/400/300", price: 179000 },
 ];
 
 function formatPrice(price: number) {
@@ -46,7 +46,7 @@ export default function FeaturedProducts() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {mockProducts.map((p) => (
             <div key={p.id} className="product-card">
-              <Link href={`/san-pham/${p.slug}`} className="relative">
+              <Link href={`/products/${p.slug}`} className="relative">
                 <img
                   src={p.image}
                   alt={p.name}
@@ -60,7 +60,7 @@ export default function FeaturedProducts() {
                 )}
               </Link>
               <div className="product-card-body">
-                <Link href={`/san-pham/${p.slug}`}>
+                <Link href={`/products/${p.slug}`}>
                   <h3 className="product-card-title">{p.name}</h3>
                 </Link>
                 <div className="flex items-center gap-2 mt-auto">

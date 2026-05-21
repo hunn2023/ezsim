@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Header, Navbar, Footer } from "@/components/layout";
+import { Navbar, Footer, Header } from "@/components/layout";
+import { CartAnimationProvider, CartFlyAnimations } from "@/components/ui/CartAnimation";
+import ToastProvider from "@/components/ui/ToastProvider";
 
 export const metadata: Metadata = {
   title: "EZSIM - Kết nối dễ như chớp mắt | eSIM, Thẻ ĐT, Thẻ Game, Data 4G/5G",
@@ -12,10 +14,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body className="min-h-screen flex flex-col">
-        <Header />
-        <Navbar />
-        <main className="flex-1">{children}</main>
+        <CartAnimationProvider>
+          <Header />
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <CartFlyAnimations />
+        </CartAnimationProvider>
         <Footer />
+        <ToastProvider />
       </body>
     </html>
   );

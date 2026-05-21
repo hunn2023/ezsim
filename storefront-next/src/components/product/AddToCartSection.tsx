@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCartPlus, faBolt, faMinus, faPlus, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useCartStore } from "@/lib/cartStore";
+import { useCartAnimation } from "@/components/ui/CartAnimation";
 
 interface Props {
   productId: string;
@@ -27,6 +28,8 @@ export default function AddToCartSection({
 }: Props) {
   const router = useRouter();
   const addToCart = useCartStore((s) => s.addToCart);
+  const { triggerFlyToCart } = useCartAnimation();
+  const addButtonRef = useRef<HTMLButtonElement>(null);
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
@@ -41,15 +44,18 @@ export default function AddToCartSection({
     else setQuantity(val);
   };
 
-  const cartItem = {
-    id: productId,
-    name: productName,
-    slug: productSlug,
-    image: productImage,
-    price: productPrice,
-    quantity,
-    stock,
-  };
+  const cartItem = useMemo(
+    () => ({
+      id: productId,
+      name: productName,
+      slug: productSlug,
+      image: productImage,
+      price: productPrice,
+      quantity,
+      stock,
+    }),
+    [productId, productName, productSlug, productImage, productPrice, quantity, stock]
+  );
 
   const handleAddToCart = useCallback(async () => {
     if (!inStock || isAddingToCart) return;
@@ -57,21 +63,23 @@ export default function AddToCartSection({
     try {
       await new Promise((r) => setTimeout(r, 300));
       addToCart(cartItem);
+      triggerFlyToCart(productImage, addButtonRef.current);
     } finally {
       setIsAddingToCart(false);
     }
-  }, [inStock, isAddingToCart, addToCart, cartItem]);
+  }, [inStock, isAddingToCart, addToCart, cartItem, triggerFlyToCart, productImage]);
 
   const handleBuyNow = useCallback(async () => {
     if (!inStock || isBuyingNow) return;
     setIsBuyingNow(true);
     try {
       addToCart(cartItem);
-      router.push("/checkout");
+      triggerFlyToCart(productImage, addButtonRef.current);
+      router.push("/cart");
     } finally {
       setIsBuyingNow(false);
     }
-  }, [inStock, isBuyingNow, addToCart, cartItem, router]);
+  }, [inStock, isBuyingNow, addToCart, cartItem, triggerFlyToCart, productImage, router]);
 
   if (!inStock) {
     return (
@@ -122,6 +130,7 @@ export default function AddToCartSection({
       {/* Action buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
         <button
+          ref={addButtonRef}
           type="button"
           onClick={handleAddToCart}
           disabled={isAddingToCart}
