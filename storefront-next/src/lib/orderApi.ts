@@ -1,5 +1,4 @@
 import { CheckoutFormData } from "./schemas/checkoutSchema";
-import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export interface OrderItem {
   id: string;
@@ -257,14 +256,3 @@ export async function getOrderById(id: string): Promise<OrderHistoryItem> {
   return order;
 }
 
-async function _getMyOrders(page: number = 1): Promise<OrderHistoryResponse> {
-  const response = await fetchWithAuth(`/orders/my-orders?page=${page}&pageSize=${PAGE_SIZE}`);
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new OrderApiError(
-      (data as { message?: string }).message ?? "Không thể tải đơn hàng.",
-      response.status
-    );
-  }
-  return response.json() as Promise<OrderHistoryResponse>;
-}

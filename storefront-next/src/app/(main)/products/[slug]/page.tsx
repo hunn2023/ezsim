@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return buildMetadata({
     title: product.name,
-    description: product.description,
+    description: product.description ?? "",
     image: product.image,
     imageAlt: product.name,
     canonicalPath: `/products/${product.slug}`,

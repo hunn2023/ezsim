@@ -6,11 +6,7 @@ import Icon from "@/components/ui/Icon";
 import Link from "next/link";
 import { useCartStore } from "@/lib/cartStore";
 
-interface CartIconProps {
-  ref?: React.Ref<HTMLElement>;
-}
-
-const CartIcon = forwardRef<HTMLElement, CartIconProps>(function CartIcon(_props, ref) {
+const CartIcon = forwardRef<HTMLAnchorElement, object>(function CartIcon(_props, ref) {
   const items = useCartStore((s) => s.items);
   const [mounted, setMounted] = useState(false);
 
@@ -23,7 +19,7 @@ const CartIcon = forwardRef<HTMLElement, CartIconProps>(function CartIcon(_props
 
   return (
     <Link
-      ref={ref as React.Ref<HTMLAnchorElement>}
+      ref={ref}
       href="/cart"
       className="relative w-10 h-10 rounded-[10px] bg-gray-100 flex items-center justify-center text-navy hover:bg-primary/10 transition"
       aria-label={`Giỏ hàng (${count} sản phẩm)`}

@@ -13,7 +13,7 @@ interface CartAnimationContextType {
   triggerFlyToCart: (image: string, startElement: HTMLElement | null) => void;
   flyAnimations: FlyAnimation[];
   removeAnimation: (id: string) => void;
-  cartIconRef: React.RefObject<HTMLElement>;
+  cartIconRef: React.RefObject<HTMLAnchorElement>;
 }
 
 const CartAnimationContext = createContext<CartAnimationContextType | null>(null);
@@ -28,7 +28,7 @@ export function useCartAnimation() {
 
 export function CartAnimationProvider({ children }: { children: ReactNode }) {
   const [flyAnimations, setFlyAnimations] = useState<FlyAnimation[]>([]);
-  const cartIconRef = useRef<HTMLElement>(null);
+  const cartIconRef = useRef<HTMLAnchorElement>(null);
 
   const triggerFlyToCart = useCallback((image: string, startElement: HTMLElement | null) => {
     if (!startElement || !cartIconRef.current) return;
@@ -77,7 +77,7 @@ export function CartFlyAnimations() {
 
 interface CartFlyingItemProps {
   animation: FlyAnimation;
-  cartIconRef: React.RefObject<HTMLElement>;
+  cartIconRef: React.RefObject<HTMLAnchorElement>;
   onComplete: () => void;
 }
 
