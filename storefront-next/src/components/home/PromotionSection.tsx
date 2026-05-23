@@ -12,7 +12,12 @@ export default function PromotionSection() {
   return (
     <section className="py-12 md:py-16 bg-navy text-white">
       <div className="max-w-container mx-auto px-4 md:px-6">
-        <h2 className="text-center text-white mb-10">Cam kết của chúng tôi</h2>
+        <div className="text-center mb-10">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-secondary bg-white/10 px-3 py-1 rounded-full mb-2">
+            Cam kết
+          </span>
+          <h2 className="text-white">Của chúng tôi</h2>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {commitments.map((item) => (
             <div key={item.title} className="text-center">

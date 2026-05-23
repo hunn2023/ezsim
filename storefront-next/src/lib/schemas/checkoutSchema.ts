@@ -37,7 +37,9 @@ export const checkoutSchema = z.object({
     .max(500, "Ghi chú không được vượt quá 500 ký tự")
     .optional()
     .or(z.literal("")),
-  paymentMethod: z.enum(["cod", "banking"], "Vui lòng chọn phương thức thanh toán"),
+  paymentMethod: z.enum(["cod", "banking"], {
+    message: "Vui lòng chọn phương thức thanh toán",
+  }),
 });
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;

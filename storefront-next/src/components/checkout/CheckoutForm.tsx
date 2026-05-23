@@ -82,8 +82,16 @@ export default function CheckoutForm() {
 
         if (result.success) {
           toast.success(result.message || "Đặt hàng thành công!");
+          const total = getTotalAmount();
+          const params = new URLSearchParams({
+            orderId: result.orderId ?? "",
+            total: total.toString(),
+            paymentMethod: formData.paymentMethod,
+          });
+          // Navigate BEFORE clearCart to prevent checkout page
+          // from re-rendering with empty cart and overriding this redirect
+          router.push(`/order-success?${params.toString()}`);
           clearCart();
-          router.push(`/order-success?orderId=${result.orderId}`);
         } else {
           toast.error(result.message || "Đặt hàng thất bại. Vui lòng thử lại.");
         }

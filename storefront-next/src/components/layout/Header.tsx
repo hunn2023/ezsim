@@ -5,6 +5,7 @@ import Link from "next/link";
 import Logo from "./Logo";
 import CartIcon from "./CartIcon";
 import MobileMenu from "./MobileMenu";
+import HeaderUserMenu from "./HeaderUserMenu";
 import { useCartAnimation } from "@/components/ui/CartAnimation";
 
 export default function Header() {
@@ -37,12 +38,7 @@ export default function Header() {
           >
             <Icon icon="headset" /> Hỗ trợ
           </Link>
-          <Link
-            href="/dang-nhap"
-            className="hidden lg:flex text-gray-700 font-medium text-sm items-center gap-1.5 hover:text-primary transition"
-          >
-            <Icon icon="user" /> Đăng nhập
-          </Link>
+          <HeaderUserMenu />
           <CartIcon ref={cartIconRef} />
         </nav>
       </div>

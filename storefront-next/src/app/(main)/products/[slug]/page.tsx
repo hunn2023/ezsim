@@ -1,6 +1,7 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProductBySlug, getRelatedProducts } from "@/lib/api/products";
+import { buildMetadata } from "@/lib/seo";
+import { getProductBySlug, getRelatedProducts } from "@/lib/api/productsApi";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import ProductImages from "@/components/product/ProductImages";
 import ProductInfo from "@/components/product/ProductInfo";
@@ -14,12 +15,16 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const product = await getProductBySlug(params.slug);
-  if (!product) return { title: "Không tìm thấy sản phẩm" };
+  if (!product) return { title: "Không tìm thấy sản phẩm", robots: { index: false } };
 
-  return {
-    title: `${product.name} - EZSim`,
+  return buildMetadata({
+    title: product.name,
     description: product.description,
-  };
+    image: product.image,
+    imageAlt: product.name,
+    canonicalPath: `/products/${product.slug}`,
+    type: "article",
+  });
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {

@@ -5,6 +5,7 @@ import Icon from "@/components/ui/Icon";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
+import { useAuth } from "@/hooks/useAuth";
 
 const menuItems: { label: string; icon: IconName; href: string }[] = [
   { label: "Trang chủ", icon: "home", href: "/" },
@@ -19,6 +20,7 @@ const menuItems: { label: string; icon: IconName; href: string }[] = [
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <>
@@ -70,14 +72,27 @@ export default function MobileMenu() {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 space-y-2">
-          <Link
-            href="/dang-nhap"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-          >
-            <Icon icon="user" className="w-4" />
-            Đăng nhập / Đăng ký
-          </Link>
+          {isAuthenticated && user ? (
+            <Link
+              href="/account"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+            >
+              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                {user.name.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase()}
+              </div>
+              <span className="truncate">{user.name}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+            >
+              <Icon icon="user" className="w-4" />
+              Đăng nhập / Đăng ký
+            </Link>
+          )}
           <Link
             href="#"
             onClick={() => setOpen(false)}

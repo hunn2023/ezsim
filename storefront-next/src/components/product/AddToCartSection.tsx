@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCartPlus, faBolt, faMinus, faPlus, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useCartStore } from "@/lib/cartStore";
 import { useCartAnimation } from "@/components/ui/CartAnimation";
+import { isAuthenticated } from "@/lib/authStore";
 
 interface Props {
   productId: string;
@@ -59,6 +60,10 @@ export default function AddToCartSection({
 
   const handleAddToCart = useCallback(async () => {
     if (!inStock || isAddingToCart) return;
+    if (!isAuthenticated()) {
+      router.push(`/login?returnUrl=/products/${productSlug}`);
+      return;
+    }
     setIsAddingToCart(true);
     try {
       await new Promise((r) => setTimeout(r, 300));
@@ -67,10 +72,14 @@ export default function AddToCartSection({
     } finally {
       setIsAddingToCart(false);
     }
-  }, [inStock, isAddingToCart, addToCart, cartItem, triggerFlyToCart, productImage]);
+  }, [inStock, isAddingToCart, addToCart, cartItem, triggerFlyToCart, productImage, productSlug, router]);
 
   const handleBuyNow = useCallback(async () => {
     if (!inStock || isBuyingNow) return;
+    if (!isAuthenticated()) {
+      router.push(`/login?returnUrl=/products/${productSlug}`);
+      return;
+    }
     setIsBuyingNow(true);
     try {
       addToCart(cartItem);
@@ -79,7 +88,7 @@ export default function AddToCartSection({
     } finally {
       setIsBuyingNow(false);
     }
-  }, [inStock, isBuyingNow, addToCart, cartItem, triggerFlyToCart, productImage, router]);
+  }, [inStock, isBuyingNow, addToCart, cartItem, triggerFlyToCart, productImage, productSlug, router]);
 
   if (!inStock) {
     return (

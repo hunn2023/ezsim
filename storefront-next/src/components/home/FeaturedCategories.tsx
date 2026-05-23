@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
+import SectionHeading from "@/components/ui/SectionHeading";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
 
 const categories: { name: string; icon: IconName; href: string; color: string }[] = [
@@ -14,13 +15,15 @@ export default function FeaturedCategories() {
   return (
     <section className="py-12 md:py-16">
       <div className="max-w-container mx-auto px-4 md:px-6">
-        <h2 className="text-center mb-8">Danh mục nổi bật</h2>
+        <div className="mb-8">
+          <SectionHeading eyebrow="Khám phá" title="Danh mục" highlight="nổi bật" />
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {categories.map((cat) => (
             <Link
               key={cat.name}
               href={cat.href}
-              className="card flex flex-col items-center gap-3 p-6 text-center hover:scale-[1.02]"
+              className="card flex flex-col items-center gap-3 p-6 text-center hover:scale-[1.04] hover:shadow-card-hover transition-all duration-200"
             >
               <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl ${cat.color}`}>
                 <Icon icon={cat.icon} />
