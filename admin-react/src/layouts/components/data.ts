@@ -145,6 +145,9 @@ export const menuItems: MenuItemType[] = [
         ],
       },
       { key: 'categories', label: 'Categories', url: '/categories' },
+      { key: 'countries-regions', label: 'Countries & Regions', url: '/countries-regions' },
+      { key: 'inventory', label: 'Inventory (Serial/PIN)', url: '/inventory' },
+      { key: 'payments', label: 'Payment Gateways', url: '/payments' },
       {
         key: 'orders',
         label: 'Orders',
@@ -787,6 +790,9 @@ export const horizontalMenuItems: MenuItemType[] = [
             ],
           },
           { key: 'categories', label: 'Categories', url: '/categories' },
+          { key: 'countries-regions', label: 'Countries & Regions', url: '/countries-regions' },
+          { key: 'inventory', label: 'Inventory (Serial/PIN)', url: '/inventory' },
+          { key: 'payments', label: 'Payment Gateways', url: '/payments' },
           {
             key: 'orders',
             label: 'Orders',

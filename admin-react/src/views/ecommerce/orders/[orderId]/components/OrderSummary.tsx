@@ -1,6 +1,5 @@
 import { Button, Card, CardBody, CardHeader, Table } from 'react-bootstrap'
-import { Link } from 'react-router'
-import { TbCalendar, TbPencil, TbPointFilled, TbTrash, TbTruck, TbQrcode, TbDeviceSim } from 'react-icons/tb'
+import { TbCalendar, TbPencil, TbTrash, TbTruck, TbQrcode, TbDeviceSim } from 'react-icons/tb'
 import { type OrderType } from '../../data'
 
 interface OrderSummaryProps {

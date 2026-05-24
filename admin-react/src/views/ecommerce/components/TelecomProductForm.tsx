@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { TbDeviceSim, TbCreditCard, TbCheck, TbX, TbCalculator } from 'react-icons/tb'
 
 import { useTelecomProducts } from '../../../hooks/useTelecomProducts'
+import { useCountriesRegions } from '../../../hooks/useCountriesRegions'
 import { type CarrierType, type SimCategory, type SimFormat, type SimStatus, type CardType, type CardStatus, type TelecomProduct } from '../../../types/telecom'
 
 interface TelecomProductFormProps {
@@ -32,12 +33,19 @@ const FACE_VALUES = [10000, 20000, 50000, 100000, 200000, 500000, 1000000]
 export const TelecomProductForm = ({ initialData, isEditMode = false }: TelecomProductFormProps) => {
   const navigate = useNavigate()
   const { addProduct, updateProduct } = useTelecomProducts()
+  const { countries } = useCountriesRegions()
+  const activeCountries = countries.filter(c => c.status)
 
   const [productType, setProductType] = useState<'sim' | 'card'>(initialData ? initialData.type : 'sim')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // SIM State
+  const [simCountryId, setSimCountryId] = useState(
+    initialData && initialData.type === 'sim' && (initialData as any).attributes?.countryId
+      ? (initialData as any).attributes.countryId
+      : ''
+  )
   const [simNumber, setSimNumber] = useState(initialData && initialData.type === 'sim' ? initialData.simNumber : '')
   const [simCarrier, setSimCarrier] = useState<CarrierType>(initialData && initialData.type === 'sim' ? initialData.carrier : 'Viettel')
   const [simCategory, setSimCategory] = useState<SimCategory>(initialData && initialData.type === 'sim' ? initialData.category : 'Số đẹp')
@@ -124,6 +132,7 @@ export const TelecomProductForm = ({ initialData, isEditMode = false }: TelecomP
           element,
           headCode: cleanNum.slice(0, 3),
           tailCode: cleanNum.slice(-4),
+          countryId: simCategory === 'Du lịch' ? simCountryId : undefined,
         },
         highlightFeatures: highlightFeatures.split(',').map((s) => s.trim()).filter(Boolean),
       }
@@ -259,6 +268,26 @@ export const TelecomProductForm = ({ initialData, isEditMode = false }: TelecomP
                 </Form.Select>
               </Form.Group>
             </Col>
+
+            {simCategory === 'Du lịch' && (
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label className="fw-bold text-dark fs-sm">Quốc gia của SIM du lịch *</Form.Label>
+                  <Form.Select 
+                    value={simCountryId} 
+                    onChange={(e) => setSimCountryId(e.target.value)} 
+                    className="fw-semibold" 
+                    required>
+                    <option value="" disabled>-- Chọn quốc gia --</option>
+                    {activeCountries.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.flagEmoji} {c.name} ({c.code})
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            )}
 
             <Col md={6}>
               <Form.Group>

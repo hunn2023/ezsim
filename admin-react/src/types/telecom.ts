@@ -55,3 +55,57 @@ export interface CardProduct {
 }
 
 export type TelecomProduct = SimProduct | CardProduct
+
+export interface Region {
+  id: string
+  name: string
+  code: string
+  description?: string
+  displayOrder: number
+  status: boolean
+  isPublished: boolean
+  isFeatured: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Country {
+  id: string
+  regionId: string // FK
+  name: string
+  code: string // ISO code (e.g. JP, KR)
+  flagEmoji: string
+  status: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type InventoryItemStatus = 'available' | 'sold' | 'expired' | 'locked'
+
+export interface InventoryItem {
+  id: string
+  productVariantId: string // ID of SIM product or Card product
+  productName: string // Cache product name for easy display
+  type: 'sim' | 'card' // eSIM/SIM vs Game Card/Phone Card
+  carrier: CarrierType
+  serialNumber: string
+  pinCode?: string // Only for cards
+  expirationDate?: string // Only for cards/some eSIM packages
+  status: InventoryItemStatus
+  importedAt: string
+  usedAt?: string
+}
+
+export type TransactionType = 'import' | 'export' | 'adjust'
+
+export interface InventoryTransaction {
+  id: string
+  inventoryItemId: string
+  productVariantId: string
+  productName: string
+  transactionType: TransactionType
+  quantity: number
+  note: string
+  createdAt: string
+}
+

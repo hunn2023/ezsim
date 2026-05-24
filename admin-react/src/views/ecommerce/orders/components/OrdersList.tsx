@@ -13,7 +13,7 @@ import {
 } from '@tanstack/react-table'
 import { Button, Card, CardFooter, CardHeader } from 'react-bootstrap'
 import { Link } from 'react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LuCalendar, LuCreditCard, LuPlus, LuSearch, LuTruck } from 'react-icons/lu'
 import {
   TbEdit,
@@ -295,7 +295,21 @@ const OrdersList = () => {
     },
   ]
 
-  const [data, setData] = useState<OrderType[]>(() => [...orders])
+  const [data, setData] = useState<OrderType[]>(() => {
+    const stored = localStorage.getItem('ezsim_orders')
+    if (stored) return JSON.parse(stored)
+    localStorage.setItem('ezsim_orders', JSON.stringify(orders))
+    return orders
+  })
+
+  useEffect(() => {
+    const handleSync = () => {
+      const stored = localStorage.getItem('ezsim_orders')
+      if (stored) setData(JSON.parse(stored))
+    }
+    window.addEventListener('orders_update', handleSync)
+    return () => window.removeEventListener('orders_update', handleSync)
+  }, [])
   const [globalFilter, setGlobalFilter] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -316,7 +330,7 @@ const OrdersList = () => {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: (row, columnId, filterValue) => {
+    globalFilterFn: (row, _, filterValue) => {
       const search = filterValue.toLowerCase()
       const matchCode = row.original.orderCode.toLowerCase().includes(search)
       const matchCust = row.original.customer.name.toLowerCase().includes(search) || row.original.customer.phone.includes(search)
@@ -345,7 +359,10 @@ const OrdersList = () => {
 
   const handleDelete = () => {
     const selectedIds = new Set(Object.keys(selectedRowIds))
-    setData((old) => old.filter((_, idx) => !selectedIds.has(idx.toString())))
+    const updatedData = data.filter((_, idx) => !selectedIds.has(idx.toString()))
+    setData(updatedData)
+    localStorage.setItem('ezsim_orders', JSON.stringify(updatedData))
+    window.dispatchEvent(new Event('orders_update'))
     setSelectedRowIds({})
     setPagination({ ...pagination, pageIndex: 0 })
     setShowDeleteModal(false)

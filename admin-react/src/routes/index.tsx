@@ -14,6 +14,9 @@ const ProductDetails = lazy(() => import('@/views/ecommerce/products/[productId]
 const AddProduct = lazy(() => import('@/views/ecommerce/add-product'))
 const EditProduct = lazy(() => import('@/views/ecommerce/edit-product'))
 const Categories = lazy(() => import('@/views/ecommerce/categories'))
+const CountriesRegions = lazy(() => import('@/views/ecommerce/countries-regions'))
+const InventoryDetails = lazy(() => import('@/views/ecommerce/inventory'))
+const Payments = lazy(() => import('@/views/ecommerce/payments'))
 const Orders = lazy(() => import('@/views/ecommerce/orders'))
 const OrderDetails = lazy(() => import('@/views/ecommerce/orders/[orderId]'))
 const Customers = lazy(() => import('@/views/ecommerce/customers'))
@@ -188,6 +191,9 @@ const ecommerceRoutes: RouteObject[] = [
   { path: '/products/edit/:productId', element: <EditProduct /> },
   { path: '/add-product', element: <AddProduct /> },
   { path: '/categories', element: <Categories /> },
+  { path: '/countries-regions', element: <CountriesRegions /> },
+  { path: '/inventory', element: <InventoryDetails /> },
+  { path: '/payments', element: <Payments /> },
   { path: '/orders', element: <Orders /> },
   { path: '/orders/:orderId', element: <OrderDetails /> },
   { path: '/customers', element: <Customers /> },

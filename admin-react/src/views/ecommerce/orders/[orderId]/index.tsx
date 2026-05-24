@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Col, Container, Row } from 'react-bootstrap'
 import { useParams } from 'react-router'
 import PageBreadcrumb from '@/components/PageBreadcrumb'
@@ -10,7 +11,23 @@ import { orders } from '../data'
 
 const Page = () => {
   const { orderId } = useParams<{ orderId: string }>()
-  const order = orders.find((o) => o.id === orderId) || orders[0]
+  
+  const [orderList, setOrderList] = useState(() => {
+    const stored = localStorage.getItem('ezsim_orders')
+    if (stored) return JSON.parse(stored)
+    return orders
+  })
+
+  useEffect(() => {
+    const handleSync = () => {
+      const stored = localStorage.getItem('ezsim_orders')
+      if (stored) setOrderList(JSON.parse(stored))
+    }
+    window.addEventListener('orders_update', handleSync)
+    return () => window.removeEventListener('orders_update', handleSync)
+  }, [])
+
+  const order = orderList.find((o: any) => o.id === orderId) || orderList[0]
 
   return (
     <Container fluid>

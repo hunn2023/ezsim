@@ -163,7 +163,7 @@ const CustomersCard = () => {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: (row, columnId, filterValue) => {
+    globalFilterFn: (row, _columnId, filterValue) => {
       const search = filterValue.toLowerCase()
       const matchName = row.original.name.toLowerCase().includes(search)
       const matchPhone = row.original.phone.includes(search)

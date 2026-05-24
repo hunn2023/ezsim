@@ -1,5 +1,5 @@
 import { Card, CardBody, CardHeader, CardTitle } from 'react-bootstrap'
-import { shippingTimeline } from '../../data'
+import { shippingTimeline, type TimelineEvent } from '../data'
 
 const ShippingActivity = () => {
   return (
@@ -9,7 +9,7 @@ const ShippingActivity = () => {
       </CardHeader>
       <CardBody className="p-4">
         <div className="timeline">
-          {shippingTimeline.map((item, idx) => (
+          {shippingTimeline.map((item: TimelineEvent, idx: number) => (
             <div key={idx} className="timeline-item d-flex align-items-stretch">
               <div className="timeline-time pe-3 text-muted fs-xs fw-medium" style={{ minWidth: '135px' }}>{item.time ?? ''}</div>
               <div className={`timeline-dot bg-${item.variant} shadow-sm`} />

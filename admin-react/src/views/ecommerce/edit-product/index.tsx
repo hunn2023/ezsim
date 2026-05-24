@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Container, Alert, Spinner, Button } from 'react-bootstrap'
-import { useParams, useNavigate, Link } from 'react-router'
+import { useParams, Link } from 'react-router'
 import { TbArrowLeft } from 'react-icons/tb'
 
 import PageBreadcrumb from '@/components/PageBreadcrumb'
@@ -10,7 +10,6 @@ import { type TelecomProduct } from '../../../types/telecom'
 
 const EditProductPage = () => {
   const { productId } = useParams<{ productId: string }>()
-  const navigate = useNavigate()
   const { products } = useTelecomProducts()
 
   const [loading, setLoading] = useState(true)
