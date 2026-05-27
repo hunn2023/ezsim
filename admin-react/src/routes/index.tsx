@@ -1,30 +1,34 @@
 import { lazy } from 'react'
 import { Navigate, type RouteObject } from 'react-router'
 import MainLayout from '@/layouts/MainLayout.tsx'
+import ProtectedRoute from '@/routes/ProtectedRoute'
 
 // Dashboards
-const Dashboard = lazy(() => import('@/views/dashboards/dashboard'))
+const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
 const Dashboard2 = lazy(() => import('@/views/dashboards/dashboard2'))
 const Dashboard3 = lazy(() => import('@/views/dashboards/dashboard3'))
 
 // Ecommerce
-const ProductList = lazy(() => import('@/views/ecommerce/products'))
+const ProductList = lazy(() => import('@/pages/products/ProductListPage'))
+const ProductCreate = lazy(() => import('@/pages/products/ProductCreatePage'))
+const ProductEdit = lazy(() => import('@/pages/products/ProductEditPage'))
 const ProductGrid = lazy(() => import('@/views/ecommerce/products-grid'))
 const ProductDetails = lazy(() => import('@/views/ecommerce/products/[productId]'))
 const AddProduct = lazy(() => import('@/views/ecommerce/add-product'))
-const EditProduct = lazy(() => import('@/views/ecommerce/edit-product'))
-const Categories = lazy(() => import('@/views/ecommerce/categories'))
+const Categories = lazy(() => import('@/pages/categories/CategoryListPage'))
 const CountriesRegions = lazy(() => import('@/views/ecommerce/countries-regions'))
 const InventoryDetails = lazy(() => import('@/views/ecommerce/inventory'))
 const Payments = lazy(() => import('@/views/ecommerce/payments'))
-const Orders = lazy(() => import('@/views/ecommerce/orders'))
-const OrderDetails = lazy(() => import('@/views/ecommerce/orders/[orderId]'))
+const Orders = lazy(() => import('@/pages/orders/OrderListPage'))
+const OrderDetails = lazy(() => import('@/pages/orders/OrderDetailPage'))
 const Customers = lazy(() => import('@/views/ecommerce/customers'))
 const Sellers = lazy(() => import('@/views/ecommerce/sellers'))
 const SellerDetails = lazy(() => import('@/views/ecommerce/sellers/[sellerId]'))
 const Reviews = lazy(() => import('@/views/ecommerce/reviews'))
 const ProductViews = lazy(() => import('@/views/ecommerce/reports/product-views'))
 const Sales = lazy(() => import('@/views/ecommerce/reports/sales'))
+const Banners = lazy(() => import('@/views/ecommerce/banners'))
+const Settings = lazy(() => import('@/views/settings'))
 
 // Other Apps
 const Companies = lazy(() => import('@/views/other-apps/companies'))
@@ -63,6 +67,9 @@ const Gallery = lazy(() => import('@/views/miscellaneous/gallery'))
 const Masonry = lazy(() => import('@/views/miscellaneous/masonry'))
 const Tour = lazy(() => import('@/views/miscellaneous/tour'))
 const Animation = lazy(() => import('@/views/miscellaneous/animation'))
+
+// Login (canonical entry point — real API auth)
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 
 // Auth
 const Auth1SignIn = lazy(() => import('@/views/auth/auth-1/sign-in'))
@@ -179,13 +186,15 @@ const otherPagesRoutes: RouteObject[] = [
 ]
 
 const dashboardRoutes: RouteObject[] = [
-  { path: '/dashboard', element: <Dashboard /> },
+  { path: '/dashboard', element: <DashboardPage /> },
   { path: '/dashboard2', element: <Dashboard2 /> },
   { path: '/dashboard3', element: <Dashboard3 /> },
 ]
 
 const ecommerceRoutes: RouteObject[] = [
   { path: '/products', element: <ProductList /> },
+  { path: '/products/create', element: <ProductCreate /> },
+  { path: '/products/edit/:productId', element: <ProductEdit /> },
   { path: '/products-grid', element: <ProductGrid /> },
   { path: '/products/:productId', element: <ProductDetails /> },
   { path: '/products/edit/:productId', element: <EditProduct /> },
@@ -202,6 +211,11 @@ const ecommerceRoutes: RouteObject[] = [
   { path: '/reviews', element: <Reviews /> },
   { path: '/reports/product-views', element: <ProductViews /> },
   { path: '/reports/sales', element: <Sales /> },
+  { path: '/banners', element: <Banners /> },
+]
+
+const settingsRoutes: RouteObject[] = [
+  { path: '/settings', element: <Settings /> },
 ]
 
 const otherAppsRoutes: RouteObject[] = [
@@ -279,20 +293,31 @@ const allRoutes: RouteObject[] = [
     element: <MainLayout />,
     children: [
       {
-        path: '/',
-        element: <Navigate to="/dashboard" replace />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: '/',
+            element: <Navigate to="/dashboard" replace />,
+          },
+          ...dashboardRoutes,
+          ...ecommerceRoutes,
+          ...otherAppsRoutes,
+          ...pagesRoutes,
+          ...miscellaneousRoutes,
+          ...layoutRoutes,
+          ...componentRoutes,
+          ...settingsRoutes,
+        ],
       },
-      ...dashboardRoutes,
-      ...ecommerceRoutes,
-      ...otherAppsRoutes,
-      ...pagesRoutes,
-      ...miscellaneousRoutes,
-      ...layoutRoutes,
-      ...componentRoutes,
     ],
   },
 ]
 
-const otherRoutes: RouteObject[] = [...authRoutes, ...errorRoutes, ...otherPagesRoutes]
+const otherRoutes: RouteObject[] = [
+  { path: '/login', element: <LoginPage /> },
+  ...authRoutes,
+  ...errorRoutes,
+  ...otherPagesRoutes,
+]
 
 export const routes: RouteObject[] = [...allRoutes, ...otherRoutes]
