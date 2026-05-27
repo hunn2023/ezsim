@@ -98,7 +98,7 @@ export const getRevenueChartOptions = (): EChartsOption => {
         yAxisIndex: 1,
       },
     ],
-    grid: { right: 40, left: 5, bottom: 5, top: 12, containLabel: true },
+    grid: { right: 40, left: 5, top: 10, bottom: 30, containLabel: true },
     legend: {
       bottom: 0,
       textStyle: { color: getColor('secondary-color'), fontSize: 11 },

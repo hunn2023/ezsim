@@ -17,6 +17,7 @@ const Categories = lazy(() => import('@/views/ecommerce/categories'))
 const CountriesRegions = lazy(() => import('@/views/ecommerce/countries-regions'))
 const InventoryDetails = lazy(() => import('@/views/ecommerce/inventory'))
 const Payments = lazy(() => import('@/views/ecommerce/payments'))
+const Providers = lazy(() => import('@/views/ecommerce/providers'))
 const Orders = lazy(() => import('@/views/ecommerce/orders'))
 const OrderDetails = lazy(() => import('@/views/ecommerce/orders/[orderId]'))
 const Customers = lazy(() => import('@/views/ecommerce/customers'))
@@ -26,18 +27,12 @@ const Reviews = lazy(() => import('@/views/ecommerce/reviews'))
 const ProductViews = lazy(() => import('@/views/ecommerce/reports/product-views'))
 const Sales = lazy(() => import('@/views/ecommerce/reports/sales'))
 
+// Users Management
+const UserContacts = lazy(() => import('@/views/users/contacts'))
+const UserRoles = lazy(() => import('@/views/users/roles'))
+const UserPermissions = lazy(() => import('@/views/users/permissions'))
+
 // Other Apps
-const Companies = lazy(() => import('@/views/other-apps/companies'))
-const Clients = lazy(() => import('@/views/other-apps/clients'))
-const OutlookView = lazy(() => import('@/views/other-apps/outlook-view'))
-const VoteList = lazy(() => import('@/views/other-apps/vote-list'))
-const IssueTracker = lazy(() => import('@/views/other-apps/issue-tracker'))
-const ApiKeys = lazy(() => import('@/views/other-apps/api-keys'))
-const Blogs = lazy(() => import('@/views/other-apps/blogs'))
-const Article = lazy(() => import('@/views/other-apps/article'))
-const PinBoard = lazy(() => import('@/views/other-apps/pin-board'))
-const ForumView = lazy(() => import('@/views/other-apps/forum-view'))
-const ForumPost = lazy(() => import('@/views/other-apps/forum-post'))
 
 // Pages
 const Profile = lazy(() => import('@/views/pages/profile'))
@@ -50,19 +45,7 @@ const ComingSoon = lazy(() => import('@/views/other-pages/coming-soon'))
 const TermsConditions = lazy(() => import('@/views/pages/terms-conditions'))
 
 // Miscellaneous
-const NestableList = lazy(() => import('@/views/miscellaneous/nestable-list'))
-const TextDifferent = lazy(() => import('@/views/miscellaneous/text-different'))
-const PdfViewer = lazy(() => import('@/views/miscellaneous/pdf-viewer'))
-const SweetAlert = lazy(() => import('@/views/miscellaneous/sweet-alert'))
-const IdleTimer = lazy(() => import('@/views/miscellaneous/idle-timer'))
-const PasswordMeter = lazy(() => import('@/views/miscellaneous/password-meter'))
-const Clipboard = lazy(() => import('@/views/miscellaneous/clipboard'))
-const TreeView = lazy(() => import('@/views/miscellaneous/tree-view'))
-const LoadingButtons = lazy(() => import('@/views/miscellaneous/loading-buttons'))
-const Gallery = lazy(() => import('@/views/miscellaneous/gallery'))
-const Masonry = lazy(() => import('@/views/miscellaneous/masonry'))
-const Tour = lazy(() => import('@/views/miscellaneous/tour'))
-const Animation = lazy(() => import('@/views/miscellaneous/animation'))
+
 
 // Auth
 const Auth1SignIn = lazy(() => import('@/views/auth/auth-1/sign-in'))
@@ -96,41 +79,11 @@ const Auth3LoginPin = lazy(() => import('@/views/auth/auth-3/login-pin'))
 const Auth3DeleteAccount = lazy(() => import('@/views/auth/auth-3/delete-account'))
 
 // Error
-const Error400 = lazy(() => import('@/views/error/400'))
-const Error401 = lazy(() => import('@/views/error/401'))
-const Error403 = lazy(() => import('@/views/error/403'))
-const Error404 = lazy(() => import('@/views/error/404'))
-const Error408 = lazy(() => import('@/views/error/408'))
-const Error500 = lazy(() => import('@/views/error/500'))
-const Maintenance = lazy(() => import('@/views/other-pages/maintenance'))
+
 
 // Layouts
-const ScrollableLayout = lazy(() => import('@/views/layouts/scrollable'))
-const CompactLayout = lazy(() => import('@/views/layouts/compact'))
-const BoxedLayout = lazy(() => import('@/views/layouts/boxed'))
-const HorizontalLayout = lazy(() => import('@/views/layouts/horizontal'))
-
-const SidebarCompact = lazy(() => import('@/views/layouts/sidebars/compact'))
-const SidebarIconView = lazy(() => import('@/views/layouts/sidebars/icon-view'))
-const SidebarOnHover = lazy(() => import('@/views/layouts/sidebars/on-hover'))
-const SidebarOnHoverActive = lazy(() => import('@/views/layouts/sidebars/on-hover-active'))
-const SidebarOffcanvas = lazy(() => import('@/views/layouts/sidebars/offcanvas'))
-const SidebarNoIconsLines = lazy(() => import('@/views/layouts/sidebars/no-icons-with-lines'))
-const SidebarWithLines = lazy(() => import('@/views/layouts/sidebars/with-lines'))
-const SidebarLight = lazy(() => import('@/views/layouts/sidebars/light'))
-const SidebarGradient = lazy(() => import('@/views/layouts/sidebars/gradient'))
-const SidebarGray = lazy(() => import('@/views/layouts/sidebars/gray'))
-const SidebarImage = lazy(() => import('@/views/layouts/sidebars/image'))
-
-const TopbarDark = lazy(() => import('@/views/layouts/topbars/dark'))
-const TopbarGray = lazy(() => import('@/views/layouts/topbars/gray'))
-const TopbarGradient = lazy(() => import('@/views/layouts/topbars/gradient'))
-const TopbarWithSubItems = lazy(() => import('@/views/layouts/topbars/with-sub-items'))
-const TopbarWithTools = lazy(() => import('@/views/layouts/topbars/with-tools'))
 
 // Components
-const Widgets = lazy(() => import('@/views/widgets'))
-const Metrics = lazy(() => import('@/views/metrics'))
 
 const authRoutes: RouteObject[] = [
   { path: '/auth-1/sign-in', element: <Auth1SignIn /> },
@@ -164,18 +117,11 @@ const authRoutes: RouteObject[] = [
   { path: '/auth-3/delete-account', element: <Auth3DeleteAccount /> },
 ]
 
-const errorRoutes: RouteObject[] = [
-  { path: '/error/400', element: <Error400 /> },
-  { path: '/error/401', element: <Error401 /> },
-  { path: '/error/403', element: <Error403 /> },
-  { path: '/error/404', element: <Error404 /> },
-  { path: '/error/408', element: <Error408 /> },
-  { path: '/error/500', element: <Error500 /> },
-]
+
 
 const otherPagesRoutes: RouteObject[] = [
   { path: '/coming-soon', element: <ComingSoon /> },
-  { path: '/maintenance', element: <Maintenance /> },
+
 ]
 
 const dashboardRoutes: RouteObject[] = [
@@ -194,6 +140,7 @@ const ecommerceRoutes: RouteObject[] = [
   { path: '/countries-regions', element: <CountriesRegions /> },
   { path: '/inventory', element: <InventoryDetails /> },
   { path: '/payments', element: <Payments /> },
+  { path: '/providers', element: <Providers /> },
   { path: '/orders', element: <Orders /> },
   { path: '/orders/:orderId', element: <OrderDetails /> },
   { path: '/customers', element: <Customers /> },
@@ -204,19 +151,13 @@ const ecommerceRoutes: RouteObject[] = [
   { path: '/reports/sales', element: <Sales /> },
 ]
 
-const otherAppsRoutes: RouteObject[] = [
-  { path: '/companies', element: <Companies /> },
-  { path: '/clients', element: <Clients /> },
-  { path: '/outlook-view', element: <OutlookView /> },
-  { path: '/vote-list', element: <VoteList /> },
-  { path: '/issue-tracker', element: <IssueTracker /> },
-  { path: '/api-keys', element: <ApiKeys /> },
-  { path: '/blogs', element: <Blogs /> },
-  { path: '/article', element: <Article /> },
-  { path: '/pin-board', element: <PinBoard /> },
-  { path: '/forum-view', element: <ForumView /> },
-  { path: '/forum-post', element: <ForumPost /> },
+const usersRoutes: RouteObject[] = [
+  { path: '/users/contacts', element: <UserContacts /> },
+  { path: '/users/roles', element: <UserRoles /> },
+  { path: '/users/permissions', element: <UserPermissions /> },
 ]
+
+
 
 const pagesRoutes: RouteObject[] = [
   { path: '/pages/profile', element: <Profile /> },
@@ -228,51 +169,11 @@ const pagesRoutes: RouteObject[] = [
   { path: '/pages/terms-conditions', element: <TermsConditions /> },
 ]
 
-const miscellaneousRoutes: RouteObject[] = [
-  { path: '/miscellaneous/nestable-list', element: <NestableList /> },
-  { path: '/miscellaneous/text-different', element: <TextDifferent /> },
-  { path: '/miscellaneous/pdf-viewer', element: <PdfViewer /> },
-  { path: '/miscellaneous/sweet-alert', element: <SweetAlert /> },
-  { path: '/miscellaneous/idle-timer', element: <IdleTimer /> },
-  { path: '/miscellaneous/password-meter', element: <PasswordMeter /> },
-  { path: '/miscellaneous/clipboard', element: <Clipboard /> },
-  { path: '/miscellaneous/tree-view', element: <TreeView /> },
-  { path: '/miscellaneous/loading-buttons', element: <LoadingButtons /> },
-  { path: '/miscellaneous/gallery', element: <Gallery /> },
-  { path: '/miscellaneous/masonry', element: <Masonry /> },
-  { path: '/miscellaneous/tour', element: <Tour /> },
-  { path: '/miscellaneous/animation', element: <Animation /> },
-]
 
-const layoutRoutes: RouteObject[] = [
-  { path: '/layouts/scrollable', element: <ScrollableLayout /> },
-  { path: '/layouts/compact', element: <CompactLayout /> },
-  { path: '/layouts/boxed', element: <BoxedLayout /> },
-  { path: '/layouts/horizontal', element: <HorizontalLayout /> },
 
-  { path: '/layouts/sidebars/compact', element: <SidebarCompact /> },
-  { path: '/layouts/sidebars/icon-view', element: <SidebarIconView /> },
-  { path: '/layouts/sidebars/on-hover', element: <SidebarOnHover /> },
-  { path: '/layouts/sidebars/on-hover-active', element: <SidebarOnHoverActive /> },
-  { path: '/layouts/sidebars/offcanvas', element: <SidebarOffcanvas /> },
-  { path: '/layouts/sidebars/no-icons-with-lines', element: <SidebarNoIconsLines /> },
-  { path: '/layouts/sidebars/with-lines', element: <SidebarWithLines /> },
-  { path: '/layouts/sidebars/light', element: <SidebarLight /> },
-  { path: '/layouts/sidebars/gradient', element: <SidebarGradient /> },
-  { path: '/layouts/sidebars/gray', element: <SidebarGray /> },
-  { path: '/layouts/sidebars/image', element: <SidebarImage /> },
 
-  { path: '/layouts/topbars/dark', element: <TopbarDark /> },
-  { path: '/layouts/topbars/gray', element: <TopbarGray /> },
-  { path: '/layouts/topbars/gradient', element: <TopbarGradient /> },
-  { path: '/layouts/topbars/with-sub-items', element: <TopbarWithSubItems /> },
-  { path: '/layouts/topbars/with-tools', element: <TopbarWithTools /> },
-]
 
-const componentRoutes: RouteObject[] = [
-  { path: '/widgets', element: <Widgets /> },
-  { path: '/metrics', element: <Metrics /> },
-]
+
 
 const allRoutes: RouteObject[] = [
   {
@@ -284,15 +185,12 @@ const allRoutes: RouteObject[] = [
       },
       ...dashboardRoutes,
       ...ecommerceRoutes,
-      ...otherAppsRoutes,
+      ...usersRoutes,
       ...pagesRoutes,
-      ...miscellaneousRoutes,
-      ...layoutRoutes,
-      ...componentRoutes,
     ],
   },
 ]
 
-const otherRoutes: RouteObject[] = [...authRoutes, ...errorRoutes, ...otherPagesRoutes]
+const otherRoutes: RouteObject[] = [...authRoutes, ...otherPagesRoutes]
 
 export const routes: RouteObject[] = [...allRoutes, ...otherRoutes]

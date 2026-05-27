@@ -106,7 +106,7 @@ const Page = () => {
                     </p>
 
                     <p className="text-center text-muted mt-4 mb-0">
-                      © 2014 - {currentYear} INSPINIA — by <span className="fw-semibold">{author}</span>
+                      © 2014 - {currentYear} EZSIM — by <span className="fw-semibold">{author}</span>
                     </p>
                   </div>
                 </Col>
@@ -126,3 +126,4 @@ const Page = () => {
 }
 
 export default Page
+

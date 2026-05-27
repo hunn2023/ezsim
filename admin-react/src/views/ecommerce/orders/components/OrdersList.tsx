@@ -396,7 +396,7 @@ const OrdersList = () => {
               value={globalFilter ?? ''}
               onChange={(e) => setGlobalFilter(e.target.value)}
             />
-            <LuSearch className="app-search-icon text-muted ms-2" />
+            <LuSearch className="app-search-icon text-muted -ms-2" />
           </div>
 
           <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -447,7 +447,7 @@ const OrdersList = () => {
             </div>
 
             <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border border-light-subtle">
-              <span className="text-muted fs-xs me-2">Hiển thị:</span>
+              <span className="text-muted fs-xs me-2 text-nowrap">Hiển thị:</span>
               <select
                 className="form-select form-select-sm bg-transparent border-0 shadow-none fw-bold text-dark"
                 value={table.getState().pagination.pageSize}

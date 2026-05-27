@@ -64,9 +64,9 @@ const Page = () => {
   const filteredCardItems = useMemo(() => {
     return inventoryItems.filter(item => {
       if (item.type !== 'card') return false
-      const matchSearch = item.serialNumber.includes(searchQuery) || 
-                          (item.pinCode && item.pinCode.includes(searchQuery)) || 
-                          item.productName.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchSearch = item.serialNumber.includes(searchQuery) ||
+        (item.pinCode && item.pinCode.includes(searchQuery)) ||
+        item.productName.toLowerCase().includes(searchQuery.toLowerCase())
       const matchStatus = statusFilter === 'All' || item.status === statusFilter
       const matchProduct = productFilter === 'All' || item.productVariantId === productFilter
       return matchSearch && matchStatus && matchProduct
@@ -76,9 +76,9 @@ const Page = () => {
   // Filters for Transactions
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
-      return tx.productName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-             tx.note.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             tx.inventoryItemId.includes(searchQuery)
+      return tx.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tx.note.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tx.inventoryItemId.includes(searchQuery)
     })
   }, [transactions, searchQuery])
 
@@ -430,24 +430,33 @@ const Page = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <LuSearch className="app-search-icon text-muted ms-2" />
+                <LuSearch className="app-search-icon text-muted -ms-2" />
               </div>
 
-              <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="d-flex align-items-center gap-2 flex-wrap flex-grow-1 ">
                 <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border">
-                  <span className="text-muted fs-xs me-2">Theo sản phẩm:</span>
+                  <span className="text-muted fs-xs me-2 text-nowrap">
+                    Theo sản phẩm:
+                  </span>
+
                   <select
                     className="form-select form-select-sm bg-transparent border-0 shadow-none fw-medium text-dark"
                     value={productFilter}
-                    onChange={(e) => setProductFilter(e.target.value)}>
+                    onChange={(e) => setProductFilter(e.target.value)}
+                  >
                     <option value="All">Tất cả sản phẩm</option>
+
                     {activeTab === 'sim' ? (
-                      simProducts.map(p => (
-                        <option key={p.id} value={p.id}>{p.simNumber} ({p.carrier})</option>
+                      simProducts.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.simNumber} ({p.carrier})
+                        </option>
                       ))
                     ) : (
-                      cardProducts.map(p => (
-                        <option key={p.id} value={p.id}>{p.carrier} {formatVND(p.faceValue)}</option>
+                      cardProducts.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.carrier} {formatVND(p.faceValue)}
+                        </option>
                       ))
                     )}
                   </select>
@@ -468,7 +477,7 @@ const Page = () => {
                 </div>
 
                 <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border">
-                  <span className="text-muted fs-xs me-2">Hiển thị:</span>
+                  <span className="text-muted fs-xs me-2 text-nowrap">Hiển thị:</span>
                   <select
                     className="form-select form-select-sm bg-transparent border-0 shadow-none fw-bold text-dark"
                     value={pageSize}
@@ -612,8 +621,8 @@ const Page = () => {
                     value={rawText}
                     onChange={(e) => setRawText(e.target.value)}
                     placeholder={
-                      importType === 'sim' 
-                        ? 'Ví dụ:\n8984040000001234567\n8984040000001234568\n8984040000001234569' 
+                      importType === 'sim'
+                        ? 'Ví dụ:\n8984040000001234567\n8984040000001234568\n8984040000001234569'
                         : 'Ví dụ (Hạn sử dụng có thể bỏ trống):\n1000123456789 | 1234567890123 | 2028-12-31\n1000123456790 | 1234567890124 | 2028-12-31\n1000123456791 | 1234567890125'
                     }
                     className="font-monospace fs-sm"

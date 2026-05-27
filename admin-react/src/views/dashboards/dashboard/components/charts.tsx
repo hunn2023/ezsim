@@ -8,7 +8,7 @@ export const RevenueChart = () => (
   <CustomEChart
     extensions={[LineChart, BarChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]}
     getOptions={getRevenueChartOptions}
-    style={{ height: 260 }}
+    style={{ height: 300 }}
   />
 )
 

@@ -64,7 +64,7 @@ const Page = () => {
               </p>
 
               <p className="text-center text-muted mt-auto mb-0">
-                © 2014 - <span>{currentYear}</span> INSPINIA — by <span className="fw-semibold">{author}</span>
+                © 2014 - <span>{currentYear}</span> EZSIM — by <span className="fw-semibold">{author}</span>
               </p>
             </CardBody>
           </Card>
@@ -75,3 +75,4 @@ const Page = () => {
 }
 
 export default Page
+

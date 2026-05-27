@@ -357,7 +357,7 @@ const ProductsListing = () => {
               </div>
             </div>
 
-            <div className="d-flex flex-wrap align-items-center gap-3 mt-4 pt-2 border-top">
+            <div className="d-flex flex-wrap align-items-center gap-3 mt-4 pt-2 border-top flex-grow-1">
               <div className="app-search flex-grow-1" style={{ minWidth: '260px' }}>
                 <input
                   type="search"
@@ -366,10 +366,10 @@ const ProductsListing = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <LuSearch className="app-search-icon text-muted ms-2" />
+                <LuSearch className="app-search-icon text-muted me-2" />
               </div>
 
-              <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
                 <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border">
                   <LuTag className="text-muted me-2 fs-sm" />
                   <select
@@ -408,25 +408,44 @@ const ProductsListing = () => {
                 )}
 
                 <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border">
-                  <span className="text-muted fs-xs me-2">Trạng thái:</span>
+                  <span className="text-muted fs-xs me-2 text-nowrap">
+                    Trạng thái:
+                  </span>
+
                   <select
                     className="form-select form-select-sm bg-transparent border-0 shadow-none fw-medium text-dark"
+                    style={{ minWidth: '140px' }}
                     value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}>
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                  >
                     <option value="All">Tất cả</option>
                     <option value="available">Sẵn sàng</option>
-                    {activeTab === 'sim' && <option value="reserved">Đang giữ số</option>}
-                    {activeTab === 'sim' && <option value="sold">Đã bán</option>}
-                    {activeTab === 'card' && <option value="out_of_stock">Hết kho</option>}
+
+                    {activeTab === 'sim' && (
+                      <option value="reserved">Đang giữ số</option>
+                    )}
+
+                    {activeTab === 'sim' && (
+                      <option value="sold">Đã bán</option>
+                    )}
+
+                    {activeTab === 'card' && (
+                      <option value="out_of_stock">Hết kho</option>
+                    )}
                   </select>
                 </div>
 
                 <div className="d-flex align-items-center bg-light rounded-pill px-3 py-1 border">
-                  <span className="text-muted fs-xs me-2">Hiển thị:</span>
+                  <span className="text-muted fs-xs me-2 text-nowrap">
+                    Hiển thị:
+                  </span>
+
                   <select
-                    className="form-select form-select-sm bg-transparent border-0 shadow-none fw-bold text-dark"
+                    className="form-select form-select-sm w-auto bg-transparent border-0 shadow-none fw-bold text-dark"
+                    style={{ minWidth: '90px' }}
                     value={pageSize}
-                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
+                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  >
                     {[5, 10, 15, 25].map((size) => (
                       <option key={size} value={size}>
                         {size}

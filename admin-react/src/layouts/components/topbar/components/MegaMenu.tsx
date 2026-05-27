@@ -64,7 +64,7 @@ const MegaMenu = () => {
               <Col className="col-12">
                 <div className="p-3 text-center bg-light bg-opacity-50">
                   <h4 className="mb-0 fs-lg fw-semibold">
-                    Welcome to <span className="text-primary">INSPINIA+</span> Admin Theme.
+                    Welcome to <span className="text-primary">EZSIM+</span> Admin Theme.
                   </h4>
                 </div>
               </Col>
@@ -95,3 +95,4 @@ const MegaMenu = () => {
 }
 
 export default MegaMenu
+
