@@ -1,55 +1,42 @@
+"use client";
+
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  image: string;
-  price: number;
-  category: string;
-}
-
-const mockNewProducts: Product[] = [
-  { id: "n1", name: "eSIM Úc 10 ngày - 4GB/ngày", slug: "esim-uc-10ngay", image: "/images/products/esim-aus.jpg", price: 249000, category: "eSIM" },
-  { id: "n2", name: "Thẻ Vinaphone 200K", slug: "the-vina-200k", image: "/images/products/vina-200k.jpg", price: 190000, category: "Thẻ nạp" },
-  { id: "n3", name: "eSIM Châu Âu 15 ngày - 5GB/ngày", slug: "esim-chau-au-15ngay", image: "/images/products/esim-eu.jpg", price: 399000, category: "eSIM" },
-  { id: "n4", name: "Thẻ Game Steam 500K", slug: "the-steam-500k", image: "/images/products/steam-500k.jpg", price: 475000, category: "Thẻ Game" },
-];
-
-function formatPrice(price: number) {
-  return price.toLocaleString("vi-VN") + "đ";
-}
+import ProductCard from "@/components/product/ProductCard";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { mockProducts } from "@/lib/mock-products";
+import { useCartStore } from "@/lib/cartStore";
+import { Product } from "@/types/product";
 
 export default function NewProducts() {
+  const addToCart = useCartStore((s) => s.addToCart);
+
+  const handleAddToCart = (product: Product) => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      image: product.image,
+      price: product.price,
+      quantity: 1,
+      stock: product.inStock ? 99 : 0,
+    });
+  };
+
+  const newProducts = mockProducts.slice(-4);
+
   return (
     <section className="py-12 md:py-16">
       <div className="max-w-container mx-auto px-4 md:px-6">
-        <div className="flex items-center justify-between mb-8">
-          <h2>Sản phẩm mới</h2>
-          <Link href="/products?sort=newest" className="text-primary text-sm font-semibold hover:underline">
+        <div className="flex items-end justify-between mb-8">
+          <SectionHeading eyebrow="Mới nhất" title="Sản phẩm" highlight="mới" align="left" />
+          <Link href="/products?sort=newest" className="text-primary text-sm font-semibold hover:underline flex items-center gap-1 flex-shrink-0 mb-1">
             Xem tất cả <Icon icon="arrow-right" />
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {mockNewProducts.map((p) => (
-            <Link key={p.id} href={`/san-pham/${p.slug}`} className="product-card">
-              <div className="relative">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="product-card-img bg-gray-100"
-                />
-                <span className="absolute top-2 left-2 bg-success text-white text-xs font-bold px-2 py-0.5 rounded">
-                  Mới
-                </span>
-              </div>
-              <div className="product-card-body">
-                <span className="text-xs text-gray-500 mb-1">{p.category}</span>
-                <h3 className="product-card-title">{p.name}</h3>
-                <span className="product-card-price">{formatPrice(p.price)}</span>
-              </div>
-            </Link>
+          {newProducts.map((product) => (
+            <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
           ))}
         </div>
       </div>

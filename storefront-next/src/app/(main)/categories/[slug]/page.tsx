@@ -1,7 +1,9 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { buildMetadata } from "@/lib/seo";
+import { SITE } from "@/lib/constants";
 import { Suspense } from "react";
-import { getCategoryBySlug, getProductsByCategory } from "@/lib/api/categories";
+import { getCategoryBySlug, getProductsByCategory } from "@/lib/api/categoriesApi";
 import { ProductQueryParams } from "@/types/product";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import CategoryProducts from "./CategoryProducts";
@@ -13,12 +15,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const category = await getCategoryBySlug(params.slug);
-  if (!category) return { title: "Không tìm thấy danh mục" };
+  if (!category) return { title: "Không tìm thấy danh mục", robots: { index: false } };
 
-  return {
-    title: `${category.name} - EZSim`,
-    description: category.description,
-  };
+  return buildMetadata({
+    title: category.name,
+    description:
+      category.description ??
+      `Khám phá các sản phẩm ${category.name} chính hãng tại ${SITE.name}. Giá tốt, giao hàng nhanh.`,
+    canonicalPath: `/categories/${category.slug}`,
+  });
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {

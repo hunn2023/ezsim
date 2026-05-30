@@ -1,12 +1,26 @@
 "use client";
 
+import { forwardRef } from "react";
+import { useEffect, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
+import { useCartStore } from "@/lib/cartStore";
 
-export default function CartIcon({ count = 0 }: { count?: number }) {
+const CartIcon = forwardRef<HTMLAnchorElement, object>(function CartIcon(_props, ref) {
+  const items = useCartStore((s) => s.items);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Compute count from items - this will re-render when items change
+  const count = mounted ? items.reduce((sum, i) => sum + i.quantity, 0) : 0;
+
   return (
     <Link
-      href="/gio-hang"
+      ref={ref}
+      href="/cart"
       className="relative w-10 h-10 rounded-[10px] bg-gray-100 flex items-center justify-center text-navy hover:bg-primary/10 transition"
       aria-label={`Giỏ hàng (${count} sản phẩm)`}
     >
@@ -18,4 +32,6 @@ export default function CartIcon({ count = 0 }: { count?: number }) {
       )}
     </Link>
   );
-}
+});
+
+export default CartIcon;

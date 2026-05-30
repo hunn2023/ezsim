@@ -56,7 +56,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.products.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-cyan transition">{l.label}</Link>
+                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-secondary transition">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -68,7 +68,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.support.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-cyan transition">{l.label}</Link>
+                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-secondary transition">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -80,7 +80,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.policies.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-cyan transition">{l.label}</Link>
+                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-secondary transition">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -101,11 +101,11 @@ export default function Footer() {
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between gap-3 text-[13px]">
           <div>© 2026 EZSIM Vietnam. All rights reserved.</div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/chinh-sach-bao-mat" className="text-slate-400 hover:text-cyan">Chính sách bảo mật</Link>
+            <Link href="/chinh-sach-bao-mat" className="text-slate-400 hover:text-secondary">Chính sách bảo mật</Link>
             <span>•</span>
-            <Link href="/dieu-khoan" className="text-slate-400 hover:text-cyan">Điều khoản</Link>
+            <Link href="/dieu-khoan" className="text-slate-400 hover:text-secondary">Điều khoản</Link>
             <span>•</span>
-            <Link href="#" className="text-slate-400 hover:text-cyan">Đã thông báo Bộ Công Thương</Link>
+            <Link href="#" className="text-slate-400 hover:text-secondary">Đã thông báo Bộ Công Thương</Link>
           </div>
         </div>
       </div>

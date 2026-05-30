@@ -8,22 +8,31 @@ interface BreadcrumbItem {
 
 export default function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
   return (
-    <div className="bg-white py-4 border-b border-gray-200">
-      <div className="max-w-container mx-auto px-6 flex items-center gap-2 text-[13px] text-gray-500">
-        <Link href="/" className="text-gray-500 hover:text-primary">
-          <Icon icon="home" />
-        </Link>
+    <div className="max-w-container mx-auto px-4 md:px-6 pt-4 pb-1">
+      <ol
+        className="flex items-center gap-1.5 text-xs text-gray-400 flex-wrap"
+        aria-label="Breadcrumb"
+      >
+        <li>
+          <Link href="/" className="hover:text-primary transition" aria-label="Trang chủ">
+            <Icon icon="home" className="text-[11px]" />
+          </Link>
+        </li>
         {items.map((item, i) => (
-          <span key={i} className="flex items-center gap-2">
-            <Icon icon="chevron-right" className="text-[10px]" />
+          <li key={i} className="flex items-center gap-1.5">
+            <Icon icon="chevron-right" className="text-[9px] text-gray-300" />
             {item.href ? (
-              <Link href={item.href} className="text-gray-500 hover:text-primary">{item.label}</Link>
+              <Link href={item.href} className="hover:text-primary transition">
+                {item.label}
+              </Link>
             ) : (
-              <span className="text-navy font-semibold">{item.label}</span>
+              <span className="text-navy font-semibold" aria-current="page">
+                {item.label}
+              </span>
             )}
-          </span>
+          </li>
         ))}
-      </div>
+      </ol>
     </div>
   );
 }

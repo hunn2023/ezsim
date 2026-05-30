@@ -8,10 +8,6 @@ import type { IconName } from "@fortawesome/fontawesome-svg-core";
 const menuItems: { label: string; icon: IconName; href: string }[] = [
   { label: "Trang chủ", icon: "home", href: "/" },
   { label: "Sản phẩm", icon: "list", href: "/products" },
-  { label: "eSIM Du lịch", icon: "globe-asia", href: "/products?categoryId=esim" },
-  { label: "Thẻ Viễn thông", icon: "sim-card", href: "/products?categoryId=the-nap" },
-  { label: "Thẻ Game", icon: "gamepad", href: "/products?categoryId=the-game" },
-  { label: "Data 4G/5G", icon: "wifi", href: "/products?categoryId=data" },
   { label: "Khuyến mãi", icon: "tag", href: "/khuyen-mai" },
 ];
 
