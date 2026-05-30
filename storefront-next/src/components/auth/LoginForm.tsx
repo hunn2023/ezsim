@@ -15,11 +15,17 @@ export default function LoginForm() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
   });
+
+  const fillTestAccount = () => {
+    setValue("email", "test@ezsim.vn", { shouldValidate: true });
+    setValue("password", "123456", { shouldValidate: true });
+  };
 
   return (
     <form
@@ -27,6 +33,28 @@ export default function LoginForm() {
       noValidate
       className="space-y-5"
     >
+      {/* Test account notice — TEMP, gỡ khi backend thật sẵn sàng */}
+      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm">
+        <div className="flex items-start gap-2">
+          <span className="text-amber-600 font-bold mt-0.5" aria-hidden>ℹ</span>
+          <div className="flex-1">
+            <div className="font-semibold text-amber-900">Tài khoản test tạm thời</div>
+            <div className="mt-1 text-amber-800">
+              Email: <code className="bg-white/60 px-1.5 py-0.5 rounded font-mono">test@ezsim.vn</code>
+              {" · "}
+              Mật khẩu: <code className="bg-white/60 px-1.5 py-0.5 rounded font-mono">123456</code>
+            </div>
+            <button
+              type="button"
+              onClick={fillTestAccount}
+              className="mt-2 text-xs font-semibold text-amber-900 hover:text-amber-700 underline underline-offset-2"
+            >
+              Điền sẵn tài khoản test
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Email */}
       <div>
         <label
