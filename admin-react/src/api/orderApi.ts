@@ -1,8 +1,17 @@
 import { useAuthStore } from '@/stores/authStore'
 import type {
   Order, OrderDetail, OrderFulfillmentStatus, OrderPaymentStatus,
-  OrdersResponse, PaymentProvider,
+  OrderStatusEvent, OrdersResponse, PaymentProvider,
 } from '@/types/order'
+
+const FULFILLMENT_LABELS: Record<OrderFulfillmentStatus, string> = {
+  qr_code_esim:          'Đã gửi QR eSIM',
+  activation_code:       'Đã gửi mã kích hoạt',
+  manual_processing:     'Đang xử lý thủ công',
+  physical_sim_shipping: 'Đang giao SIM vật lý',
+  delivered:             'Đã hoàn thành',
+  cancelled:             'Đã hủy đơn',
+}
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8000'
 
@@ -266,6 +275,39 @@ export const orderApi = {
         const o = MOCK_ORDERS.find((o) => o.id === id)
         if (!o) throw Object.assign(new Error('Không tìm thấy đơn hàng'), { status: 404 })
         return buildDetail(o)
+      },
+    ),
+
+  updateStatus: (id: string, status: OrderFulfillmentStatus, note?: string) =>
+    withDevFallback(
+      () => authRequest<OrderDetail>(`/api/admin/orders/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, note }),
+      }),
+      () => {
+        const idx = MOCK_ORDERS.findIndex((o) => o.id === id)
+        if (idx === -1) throw Object.assign(new Error('Không tìm thấy đơn hàng'), { status: 404 })
+
+        const current = MOCK_ORDERS[idx].fulfillmentStatus
+        if (current === 'delivered' || current === 'cancelled') {
+          throw Object.assign(new Error('Đơn đã hoàn tất hoặc đã hủy, không thể cập nhật trạng thái'), { status: 409 })
+        }
+
+        MOCK_ORDERS[idx] = { ...MOCK_ORDERS[idx], fulfillmentStatus: status }
+
+        const event: OrderStatusEvent = {
+          status,
+          label: FULFILLMENT_LABELS[status] ?? status,
+          createdAt: new Date().toISOString(),
+          ...(note ? { note } : {}),
+        }
+        const existing = MOCK_DETAILS[id] ?? {}
+        MOCK_DETAILS[id] = {
+          ...existing,
+          statusHistory: [...(existing.statusHistory ?? []), event],
+        }
+
+        return buildDetail(MOCK_ORDERS[idx])
       },
     ),
 }

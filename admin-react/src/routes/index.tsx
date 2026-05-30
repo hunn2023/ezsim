@@ -21,14 +21,17 @@ const InventoryDetails = lazy(() => import('@/views/ecommerce/inventory'))
 const Payments = lazy(() => import('@/views/ecommerce/payments'))
 const Orders = lazy(() => import('@/pages/orders/OrderListPage'))
 const OrderDetails = lazy(() => import('@/pages/orders/OrderDetailPage'))
-const Customers = lazy(() => import('@/views/ecommerce/customers'))
+const Customers = lazy(() => import('@/pages/customers/CustomerListPage'))
+const CustomerDetails = lazy(() => import('@/pages/customers/CustomerDetailPage'))
 const Sellers = lazy(() => import('@/views/ecommerce/sellers'))
 const SellerDetails = lazy(() => import('@/views/ecommerce/sellers/[sellerId]'))
 const Reviews = lazy(() => import('@/views/ecommerce/reviews'))
 const ProductViews = lazy(() => import('@/views/ecommerce/reports/product-views'))
 const Sales = lazy(() => import('@/views/ecommerce/reports/sales'))
-const Banners = lazy(() => import('@/views/ecommerce/banners'))
-const Settings = lazy(() => import('@/views/settings'))
+const Banners = lazy(() => import('@/pages/banners/BannerListPage'))
+const BannerCreate = lazy(() => import('@/pages/banners/BannerCreatePage'))
+const BannerEdit = lazy(() => import('@/pages/banners/BannerEditPage'))
+const Settings = lazy(() => import('@/pages/settings/SettingsPage'))
 
 // Other Apps
 const Companies = lazy(() => import('@/views/other-apps/companies'))
@@ -197,7 +200,6 @@ const ecommerceRoutes: RouteObject[] = [
   { path: '/products/edit/:productId', element: <ProductEdit /> },
   { path: '/products-grid', element: <ProductGrid /> },
   { path: '/products/:productId', element: <ProductDetails /> },
-  { path: '/products/edit/:productId', element: <EditProduct /> },
   { path: '/add-product', element: <AddProduct /> },
   { path: '/categories', element: <Categories /> },
   { path: '/countries-regions', element: <CountriesRegions /> },
@@ -206,12 +208,15 @@ const ecommerceRoutes: RouteObject[] = [
   { path: '/orders', element: <Orders /> },
   { path: '/orders/:orderId', element: <OrderDetails /> },
   { path: '/customers', element: <Customers /> },
+  { path: '/customers/:customerId', element: <CustomerDetails /> },
   { path: '/sellers', element: <Sellers /> },
   { path: '/sellers/:sellerId', element: <SellerDetails /> },
   { path: '/reviews', element: <Reviews /> },
   { path: '/reports/product-views', element: <ProductViews /> },
   { path: '/reports/sales', element: <Sales /> },
   { path: '/banners', element: <Banners /> },
+  { path: '/banners/new', element: <BannerCreate /> },
+  { path: '/banners/:bannerId/edit', element: <BannerEdit /> },
 ]
 
 const settingsRoutes: RouteObject[] = [

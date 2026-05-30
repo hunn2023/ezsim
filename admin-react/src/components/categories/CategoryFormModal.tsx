@@ -2,16 +2,18 @@ import { useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import {
-  Button, Form, FormControl, FormLabel, FormSelect,
-  InputGroup, Modal, ModalBody, ModalFooter, ModalHeader, Spinner,
+  Button, Form, InputGroup,
+  Modal, ModalBody, ModalFooter, ModalHeader, Spinner,
 } from 'react-bootstrap'
 import { TbRefresh } from 'react-icons/tb'
 import Swal from 'sweetalert2'
 import { z } from 'zod'
+import Input from '@/components/common/Input'
+import Select from '@/components/common/Select'
+import Textarea from '@/components/common/Textarea'
+import FormField from '@/components/common/FormField'
 import { categoryApi } from '@/api/categoryApi'
 import type { Category } from '@/types/category'
-
-// ─── Slug helpers ─────────────────────────────────────────────────────────────
 
 const toSlug = (str: string) =>
   str
@@ -23,8 +25,6 @@ const toSlug = (str: string) =>
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-
-// ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
   name: z.string().min(2, 'Tên phải có ít nhất 2 ký tự'),
@@ -40,8 +40,6 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface Props {
   show: boolean
   onHide: () => void
@@ -49,8 +47,6 @@ interface Props {
   categories: Category[]
   onSaved: (cat: Category) => void
 }
-
-// ─── Modal ────────────────────────────────────────────────────────────────────
 
 const toast = (icon: 'success' | 'error', title: string) =>
   Swal.fire({ toast: true, position: 'top-end', icon, title, timer: 2500, showConfirmButton: false, timerProgressBar: true })
@@ -70,7 +66,6 @@ const CategoryFormModal = ({ show, onHide, editId, categories, onSaved }: Props)
     defaultValues: { name: '', slug: '', description: '', image: '', parentId: '', status: 'active' },
   })
 
-  // Auto-generate slug as user types name (only when creating or slug hasn't been manually edited)
   const nameValue = watch('name')
   useEffect(() => {
     if (!isEdit) {
@@ -78,7 +73,6 @@ const CategoryFormModal = ({ show, onHide, editId, categories, onSaved }: Props)
     }
   }, [nameValue, isEdit, setValue])
 
-  // Load existing data when editing
   useEffect(() => {
     if (!show) return
     if (isEdit && editId) {
@@ -123,8 +117,9 @@ const CategoryFormModal = ({ show, onHide, editId, categories, onSaved }: Props)
     }
   }
 
-  // Exclude self + descendants from parent options when editing
-  const parentOptions = categories.filter((c) => c.id !== editId)
+  const parentOptions = categories
+    .filter((c) => c.id !== editId && !c.parentId)
+    .map((c) => ({ value: c.id, label: c.name }))
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg" backdrop="static">
@@ -134,29 +129,24 @@ const CategoryFormModal = ({ show, onHide, editId, categories, onSaved }: Props)
 
       <Form onSubmit={handleSubmit(onSubmit)}>
         <ModalBody className="d-flex flex-column gap-3">
-          {/* Tên */}
-          <Form.Group>
-            <FormLabel>Tên danh mục <span className="text-danger">*</span></FormLabel>
-            <FormControl
-              placeholder="VD: eSIM Du lịch"
-              isInvalid={!!errors.name}
-              {...register('name')}
-            />
-            <Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
-          </Form.Group>
+          <Input
+            label="Tên danh mục"
+            required
+            placeholder="VD: eSIM Du lịch"
+            error={errors.name?.message}
+            {...register('name')}
+          />
 
-          {/* Slug */}
-          <Form.Group>
-            <FormLabel>
-              Slug <span className="text-danger">*</span>
-              <span className="text-muted ms-2" style={{ fontSize: 12 }}>
-                (tự động tạo, có thể sửa thủ công)
-              </span>
-            </FormLabel>
+          <FormField
+            label={<>Slug <span className="text-muted ms-1" style={{ fontSize: 12 }}>(tự động tạo, có thể sửa thủ công)</span></>}
+            required
+            error={errors.slug?.message}
+          >
             <InputGroup>
-              <FormControl
+              <Input
+                bare
                 placeholder="esim-du-lich"
-                isInvalid={!!errors.slug}
+                error={errors.slug?.message}
                 {...register('slug')}
               />
               <Button
@@ -167,54 +157,46 @@ const CategoryFormModal = ({ show, onHide, editId, categories, onSaved }: Props)
               >
                 <TbRefresh />
               </Button>
-              <Form.Control.Feedback type="invalid">{errors.slug?.message}</Form.Control.Feedback>
             </InputGroup>
-          </Form.Group>
+          </FormField>
 
-          {/* Mô tả */}
-          <Form.Group>
-            <FormLabel>Mô tả</FormLabel>
-            <FormControl as="textarea" rows={3} placeholder="Mô tả ngắn về danh mục..." {...register('description')} />
-          </Form.Group>
+          <Textarea
+            label="Mô tả"
+            rows={3}
+            placeholder="Mô tả ngắn về danh mục..."
+            {...register('description')}
+          />
 
           <div className="row g-3">
-            {/* Ảnh */}
             <div className="col-md-6">
-              <Form.Group>
-                <FormLabel>URL ảnh</FormLabel>
-                <FormControl placeholder="https://..." {...register('image')} />
-                <Form.Text className="text-muted">Dán URL ảnh hoặc để trống</Form.Text>
-              </Form.Group>
+              <Input
+                label="URL ảnh"
+                placeholder="https://..."
+                hint="Dán URL ảnh hoặc để trống"
+                {...register('image')}
+              />
             </div>
 
-            {/* Danh mục cha */}
             <div className="col-md-6">
-              <Form.Group>
-                <FormLabel>Danh mục cha</FormLabel>
-                <FormSelect {...register('parentId')}>
-                  <option value="">— Không có —</option>
-                  {parentOptions.filter((c) => !c.parentId).map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </FormSelect>
-              </Form.Group>
+              <Select
+                label="Danh mục cha"
+                placeholder="— Không có —"
+                options={parentOptions}
+                {...register('parentId')}
+              />
             </div>
           </div>
 
-          {/* Trạng thái */}
-          <Form.Group>
-            <FormLabel>Trạng thái</FormLabel>
+          <FormField label="Trạng thái">
             <div className="d-flex gap-4">
-              <Form.Check type="radio" id="status-active" label="Hoạt động" value="active" {...register('status')} />
-              <Form.Check type="radio" id="status-inactive" label="Ẩn" value="inactive" {...register('status')} />
+              <Form.Check type="radio" id="status-active"   label="Hoạt động" value="active"   {...register('status')} />
+              <Form.Check type="radio" id="status-inactive" label="Ẩn"        value="inactive" {...register('status')} />
             </div>
-          </Form.Group>
+          </FormField>
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="secondary" onClick={onHide} disabled={isSubmitting}>
-            Hủy
-          </Button>
+          <Button variant="secondary" onClick={onHide} disabled={isSubmitting}>Hủy</Button>
           <Button type="submit" variant="primary" disabled={isSubmitting || isLoading} className="d-flex align-items-center gap-2">
             {isSubmitting && <Spinner animation="border" size="sm" />}
             {isEdit ? 'Lưu thay đổi' : 'Thêm danh mục'}

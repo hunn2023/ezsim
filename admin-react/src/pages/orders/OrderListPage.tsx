@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Alert, Badge, Button, Card, CardBody, CardFooter, CardHeader,
-  Col, Container, FormControl, FormSelect, InputGroup, Row, Spinner, Table,
+  Badge, Button, Col, Container, FormControl, FormSelect, InputGroup, Row,
 } from 'react-bootstrap'
-import {
-  TbAlertCircle, TbEye, TbRefresh, TbSearch,
-} from 'react-icons/tb'
+import { TbEye, TbRefresh, TbSearch } from 'react-icons/tb'
 import { useNavigate } from 'react-router'
 import PageBreadcrumb from '@/components/PageBreadcrumb'
+import DataTable, { type Column } from '@/components/common/DataTable'
 import { orderApi } from '@/api/orderApi'
 import type { Order, OrderFulfillmentStatus, OrderPaymentStatus, PaymentProvider } from '@/types/order'
 
@@ -21,13 +19,13 @@ const formatDate = (iso: string) =>
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
 
-const PAYMENT_STATUS_MAP: Record<OrderPaymentStatus, { bg: string; text: string; label: string }> = {
-  pending:    { bg: 'warning',   text: 'warning',   label: 'Chờ thanh toán' },
-  processing: { bg: 'info',      text: 'info',      label: 'Đang xử lý' },
-  paid:       { bg: 'success',   text: 'success',   label: 'Đã thanh toán' },
-  error:      { bg: 'danger',    text: 'danger',    label: 'Lỗi giao dịch' },
-  cancelled:  { bg: 'secondary', text: 'secondary', label: 'Đã hủy' },
-  refunded:   { bg: 'dark',      text: 'dark',      label: 'Đã hoàn tiền' },
+const PAYMENT_STATUS_MAP: Record<OrderPaymentStatus, { text: string; label: string }> = {
+  pending:    { text: 'warning',   label: 'Chờ thanh toán' },
+  processing: { text: 'info',      label: 'Đang xử lý' },
+  paid:       { text: 'success',   label: 'Đã thanh toán' },
+  error:      { text: 'danger',    label: 'Lỗi giao dịch' },
+  cancelled:  { text: 'secondary', label: 'Đã hủy' },
+  refunded:   { text: 'dark',      label: 'Đã hoàn tiền' },
 }
 
 const FULFILLMENT_MAP: Record<OrderFulfillmentStatus, { label: string }> = {
@@ -40,11 +38,9 @@ const FULFILLMENT_MAP: Record<OrderFulfillmentStatus, { label: string }> = {
 }
 
 const PaymentStatusBadge = ({ status }: { status: OrderPaymentStatus }) => {
-  const { bg, text, label } = PAYMENT_STATUS_MAP[status] ?? { bg: 'light', text: 'dark', label: status }
-  return <Badge bg={bg} className={`bg-opacity-15 text-${text}`}>{label}</Badge>
+  const { text, label } = PAYMENT_STATUS_MAP[status] ?? { text: 'secondary', label: status }
+  return <Badge bg="" className={`bg-${text}-subtle text-${text}-emphasis border border-${text}-subtle fw-semibold`}>{label}</Badge>
 }
-
-const ROWS_PER_PAGE = 10
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -54,14 +50,12 @@ const OrderListPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Filters (client-side in mock, sent as query params in production)
   const [keyword, setKeyword] = useState('')
   const [phone, setPhone] = useState('')
   const [filterStatus, setFilterStatus] = useState<OrderPaymentStatus | ''>('')
   const [filterMethod, setFilterMethod] = useState<PaymentProvider | ''>('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-  const [page, setPage] = useState(1)
 
   const fetchData = async () => {
     setLoading(true)
@@ -78,9 +72,6 @@ const OrderListPage = () => {
 
   useEffect(() => { void fetchData() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const resetPage = () => setPage(1)
-
-  // Client-side filter (mock already filters server-side, but this ensures correctness locally too)
   const filtered = useMemo(() => {
     return orders.filter((o) => {
       const kw = keyword.toLowerCase()
@@ -95,188 +86,122 @@ const OrderListPage = () => {
     })
   }, [orders, keyword, phone, filterStatus, filterMethod, fromDate, toDate])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE))
-  const currentPage = Math.min(page, totalPages)
-  const pageRows = filtered.slice((currentPage - 1) * ROWS_PER_PAGE, currentPage * ROWS_PER_PAGE)
+  const columns: Column<Order>[] = [
+    { id: 'index', header: '#', width: 48,
+      cell: (_o, idx) => <span className="text-muted" style={{ fontSize: 13 }}>{idx + 1}</span> },
+    { id: 'orderCode', header: 'Mã đơn', sortAccessor: (o) => o.orderCode,
+      cell: (o) => <span className="fw-semibold text-primary" style={{ fontSize: 13 }}>#{o.orderCode}</span> },
+    { id: 'customerName', header: 'Khách hàng', sortAccessor: (o) => o.customerName,
+      cell: (o) => <span className="fw-semibold">{o.customerName}</span> },
+    { id: 'customerPhone', header: 'Số điện thoại',
+      cell: (o) => <span className="text-muted" style={{ fontSize: 13 }}>{o.customerPhone}</span> },
+    { id: 'totalAmount', header: 'Tổng tiền', align: 'end', sortAccessor: (o) => o.totalAmount,
+      cell: (o) => <span className="text-nowrap fw-semibold text-danger">{formatVND(o.totalAmount)}</span> },
+    { id: 'paymentProvider', header: 'Phương thức', sortAccessor: (o) => o.paymentProvider,
+      cell: (o) => <Badge bg="light" text="dark" className="border" style={{ fontSize: 12 }}>{o.paymentProvider}</Badge> },
+    { id: 'paymentStatus', header: 'Trạng thái TT', align: 'center', sortAccessor: (o) => o.paymentStatus,
+      cell: (o) => <PaymentStatusBadge status={o.paymentStatus} /> },
+    { id: 'fulfillmentStatus', header: 'Xử lý / Giao hàng', sortAccessor: (o) => o.fulfillmentStatus,
+      cell: (o) => <span className="text-muted" style={{ fontSize: 12 }}>{FULFILLMENT_MAP[o.fulfillmentStatus]?.label ?? o.fulfillmentStatus}</span> },
+    { id: 'createdAt', header: 'Ngày đặt', sortAccessor: (o) => o.createdAt,
+      cell: (o) => <span className="text-muted text-nowrap" style={{ fontSize: 12 }}>{formatDate(o.createdAt)}</span> },
+    { id: 'actions', header: 'Thao tác', align: 'end',
+      cell: (o) => (
+        <div className="d-flex gap-1 justify-content-end" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="light" size="sm" className="btn-icon" title="Xem chi tiết"
+            onClick={() => void navigate(`/orders/${o.id}`)}
+          >
+            <TbEye className="fs-lg text-info" />
+          </Button>
+        </div>
+      ) },
+  ]
+
+  const toolbar = (
+    <Row className="g-2 align-items-end">
+      <Col xs={12} sm={6} md={3}>
+        <InputGroup>
+          <InputGroup.Text><TbSearch /></InputGroup.Text>
+          <FormControl
+            placeholder="Mã đơn hàng..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
+        </InputGroup>
+      </Col>
+      <Col xs={12} sm={6} md={2}>
+        <FormControl
+          placeholder="Số điện thoại..."
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+      </Col>
+      <Col xs={6} sm={4} md={2}>
+        <FormSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}>
+          <option value="">Tất cả trạng thái</option>
+          <option value="pending">Chờ thanh toán</option>
+          <option value="processing">Đang xử lý</option>
+          <option value="paid">Đã thanh toán</option>
+          <option value="error">Lỗi giao dịch</option>
+          <option value="cancelled">Đã hủy</option>
+          <option value="refunded">Đã hoàn tiền</option>
+        </FormSelect>
+      </Col>
+      <Col xs={6} sm={4} md={2}>
+        <FormSelect value={filterMethod} onChange={(e) => setFilterMethod(e.target.value as typeof filterMethod)}>
+          <option value="">Tất cả PT thanh toán</option>
+          <option value="VNPay">VNPay</option>
+          <option value="MoMo">MoMo</option>
+          <option value="ZaloPay">ZaloPay</option>
+          <option value="VietQR">VietQR</option>
+          <option value="Visa/Mastercard">Visa/Mastercard</option>
+          <option value="COD">COD</option>
+        </FormSelect>
+      </Col>
+      <Col xs={6} sm={4} md={1}>
+        <FormControl
+          type="date"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          title="Từ ngày"
+        />
+      </Col>
+      <Col xs={6} sm={4} md={1}>
+        <FormControl
+          type="date"
+          value={toDate}
+          min={fromDate || undefined}
+          onChange={(e) => setToDate(e.target.value)}
+          title="Đến ngày"
+        />
+      </Col>
+      <Col xs="auto">
+        <Button variant="outline-secondary" onClick={() => void fetchData()} title="Tải lại">
+          <TbRefresh />
+        </Button>
+      </Col>
+    </Row>
+  )
+
+  const isFiltered = !!(keyword || phone || filterStatus || filterMethod || fromDate || toDate)
 
   return (
     <Container fluid>
       <PageBreadcrumb title="Đơn hàng" subtitle="Quản lý" />
-
-      <Card>
-        {/* ── Toolbar ─────────────────────────────────── */}
-        <CardHeader>
-          <Row className="g-2 align-items-end">
-            {/* Search mã đơn */}
-            <Col xs={12} sm={6} md={3}>
-              <InputGroup>
-                <InputGroup.Text><TbSearch /></InputGroup.Text>
-                <FormControl
-                  placeholder="Mã đơn hàng..."
-                  value={keyword}
-                  onChange={(e) => { setKeyword(e.target.value); resetPage() }}
-                />
-              </InputGroup>
-            </Col>
-
-            {/* Search SĐT */}
-            <Col xs={12} sm={6} md={2}>
-              <FormControl
-                placeholder="Số điện thoại..."
-                value={phone}
-                onChange={(e) => { setPhone(e.target.value); resetPage() }}
-              />
-            </Col>
-
-            {/* Filter trạng thái */}
-            <Col xs={6} sm={4} md={2}>
-              <FormSelect value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value as typeof filterStatus); resetPage() }}>
-                <option value="">Tất cả trạng thái</option>
-                <option value="pending">Chờ thanh toán</option>
-                <option value="processing">Đang xử lý</option>
-                <option value="paid">Đã thanh toán</option>
-                <option value="error">Lỗi giao dịch</option>
-                <option value="cancelled">Đã hủy</option>
-                <option value="refunded">Đã hoàn tiền</option>
-              </FormSelect>
-            </Col>
-
-            {/* Filter phương thức */}
-            <Col xs={6} sm={4} md={2}>
-              <FormSelect value={filterMethod} onChange={(e) => { setFilterMethod(e.target.value as typeof filterMethod); resetPage() }}>
-                <option value="">Tất cả PT thanh toán</option>
-                <option value="VNPay">VNPay</option>
-                <option value="MoMo">MoMo</option>
-                <option value="ZaloPay">ZaloPay</option>
-                <option value="VietQR">VietQR</option>
-                <option value="Visa/Mastercard">Visa/Mastercard</option>
-                <option value="COD">COD</option>
-              </FormSelect>
-            </Col>
-
-            {/* Date range */}
-            <Col xs={6} sm={4} md={1}>
-              <FormControl
-                type="date"
-                value={fromDate}
-                onChange={(e) => { setFromDate(e.target.value); resetPage() }}
-                title="Từ ngày"
-              />
-            </Col>
-            <Col xs={6} sm={4} md={1}>
-              <FormControl
-                type="date"
-                value={toDate}
-                min={fromDate || undefined}
-                onChange={(e) => { setToDate(e.target.value); resetPage() }}
-                title="Đến ngày"
-              />
-            </Col>
-
-            {/* Refresh */}
-            <Col xs="auto">
-              <Button variant="outline-secondary" onClick={() => void fetchData()} title="Tải lại">
-                <TbRefresh />
-              </Button>
-            </Col>
-          </Row>
-        </CardHeader>
-
-        {/* ── Body ────────────────────────────────────── */}
-        <CardBody className="p-0">
-          {loading && (
-            <div className="d-flex justify-content-center py-5">
-              <Spinner animation="border" variant="primary" />
-            </div>
-          )}
-
-          {!loading && error && (
-            <Alert variant="danger" className="m-3 d-flex align-items-center gap-2">
-              <TbAlertCircle className="fs-20 flex-shrink-0" /> {error}
-            </Alert>
-          )}
-
-          {!loading && !error && filtered.length === 0 && (
-            <div className="text-center text-muted py-5">
-              {keyword || phone || filterStatus || filterMethod || fromDate || toDate
-                ? 'Không tìm thấy đơn hàng phù hợp'
-                : 'Chưa có đơn hàng nào'}
-            </div>
-          )}
-
-          {!loading && !error && pageRows.length > 0 && (
-            <Table responsive hover className="mb-0 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: 48 }}>#</th>
-                  <th>Mã đơn</th>
-                  <th>Khách hàng</th>
-                  <th>Số điện thoại</th>
-                  <th className="text-end">Tổng tiền</th>
-                  <th>Phương thức</th>
-                  <th className="text-center">Trạng thái TT</th>
-                  <th>Xử lý / Giao hàng</th>
-                  <th>Ngày đặt</th>
-                  <th className="text-end">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((order, idx) => (
-                  <tr key={order.id} style={{ cursor: 'pointer' }} onClick={() => void navigate(`/orders/${order.id}`)}>
-                    <td className="text-muted" style={{ fontSize: 13 }}>
-                      {(currentPage - 1) * ROWS_PER_PAGE + idx + 1}
-                    </td>
-                    <td>
-                      <span className="fw-semibold text-primary" style={{ fontSize: 13 }}>#{order.orderCode}</span>
-                    </td>
-                    <td className="fw-semibold">{order.customerName}</td>
-                    <td className="text-muted" style={{ fontSize: 13 }}>{order.customerPhone}</td>
-                    <td className="text-end text-nowrap fw-semibold text-danger">{formatVND(order.totalAmount)}</td>
-                    <td>
-                      <Badge bg="light" text="dark" className="border" style={{ fontSize: 12 }}>{order.paymentProvider}</Badge>
-                    </td>
-                    <td className="text-center">
-                      <PaymentStatusBadge status={order.paymentStatus} />
-                    </td>
-                    <td>
-                      <span className="text-muted" style={{ fontSize: 12 }}>
-                        {FULFILLMENT_MAP[order.fulfillmentStatus]?.label ?? order.fulfillmentStatus}
-                      </span>
-                    </td>
-                    <td className="text-muted text-nowrap" style={{ fontSize: 12 }}>{formatDate(order.createdAt)}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <div className="d-flex gap-1 justify-content-end">
-                        <Button
-                          variant="light" size="sm" className="btn-icon" title="Xem chi tiết"
-                          onClick={() => void navigate(`/orders/${order.id}`)}
-                        >
-                          <TbEye className="fs-lg text-info" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </CardBody>
-
-        {/* ── Phân trang ──────────────────────────────── */}
-        {!loading && !error && filtered.length > ROWS_PER_PAGE && (
-          <CardFooter className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-            <span className="text-muted" style={{ fontSize: 13 }}>
-              {(currentPage - 1) * ROWS_PER_PAGE + 1}–{Math.min(currentPage * ROWS_PER_PAGE, filtered.length)} / {filtered.length} đơn hàng
-            </span>
-            <div className="d-flex gap-1">
-              <Button variant="outline-secondary" size="sm" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>‹</Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Button key={p} size="sm" variant={p === currentPage ? 'primary' : 'outline-secondary'} onClick={() => setPage(p)}>{p}</Button>
-              ))}
-              <Button variant="outline-secondary" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>›</Button>
-            </div>
-          </CardFooter>
-        )}
-      </Card>
+      <DataTable<Order>
+        data={filtered}
+        columns={columns}
+        rowKey={(o) => o.id}
+        loading={loading}
+        error={error}
+        toolbar={toolbar}
+        isFiltered={isFiltered}
+        emptyText="Chưa có đơn hàng nào"
+        emptyFilteredText="Không tìm thấy đơn hàng phù hợp"
+        itemNoun="đơn hàng"
+        onRowClick={(o) => void navigate(`/orders/${o.id}`)}
+      />
     </Container>
   )
 }

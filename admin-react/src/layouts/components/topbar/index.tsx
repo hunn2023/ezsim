@@ -1,15 +1,16 @@
 import { useLayoutContext } from '@/context/useLayoutContext'
-import CustomizerToggler from '@/layouts/components/topbar/components/CustomizerToggler'
-import LanguageDropdown from '@/layouts/components/topbar/components/LanguageDropdown'
-import MegaMenu from '@/layouts/components/topbar/components/MegaMenu'
-import MessageDropdown from '@/layouts/components/topbar/components/MessageDropdown'
-import NotificationDropdown from '@/layouts/components/topbar/components/NotificationDropdown'
+// import CustomizerToggler from '@/layouts/components/topbar/components/CustomizerToggler'
+// import LanguageDropdown from '@/layouts/components/topbar/components/LanguageDropdown'
+// import MegaMenu from '@/layouts/components/topbar/components/MegaMenu'
+// import MessageDropdown from '@/layouts/components/topbar/components/MessageDropdown'
+// import NotificationDropdown from '@/layouts/components/topbar/components/NotificationDropdown'
 import ThemeToggler from '@/layouts/components/topbar/components/ThemeToggler'
 import UserProfile from '@/layouts/components/topbar/components/UserProfile'
 import { Image } from 'react-bootstrap'
 import { Link } from 'react-router'
-import { Button, Container, FormControl } from 'react-bootstrap'
-import { LuSearch } from 'react-icons/lu'
+import { Button, Container } from 'react-bootstrap'
+// import { FormControl } from 'react-bootstrap'
+// import { LuSearch } from 'react-icons/lu'
 import { TbMenu4 } from 'react-icons/tb'
 
 import logoDark from '@/assets/images/logo-black.png'
@@ -61,22 +62,22 @@ const Topbar = () => {
             <TbMenu4 className="fs-22" />
           </Button>
 
-          <div className="app-search d-none d-xl-flex">
+          {/* <div className="app-search d-none d-xl-flex">
             <FormControl type="search" className="topbar-search" name="search" placeholder="Search for something..." />
             <LuSearch className="app-search-icon text-muted" />
-          </div>
+          </div> */}
 
-          <MegaMenu />
+          {/* <MegaMenu /> */}
         </div>
 
         <div className="d-flex align-items-center gap-2">
-          <LanguageDropdown />
+          {/* <LanguageDropdown /> */}
 
-          <MessageDropdown />
+          {/* <MessageDropdown /> */}
 
-          <NotificationDropdown />
+          {/* <NotificationDropdown /> */}
 
-          <CustomizerToggler />
+          {/* <CustomizerToggler /> */}
 
           <ThemeToggler />
 

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Alert, Badge, Button, Card, CardBody, CardFooter, CardHeader,
-  Container, FormControl, FormSelect, InputGroup, Spinner, Table,
+  Badge, Button, Container, FormControl, FormSelect, InputGroup, Spinner,
 } from 'react-bootstrap'
 import {
-  TbAlertCircle, TbEdit, TbEye, TbPlus, TbRefresh,
+  TbEdit, TbEye, TbPlus, TbRefresh,
   TbSearch, TbToggleLeft, TbToggleRight, TbTrash,
 } from 'react-icons/tb'
 import { useNavigate } from 'react-router'
 import Swal from 'sweetalert2'
 import PageBreadcrumb from '@/components/PageBreadcrumb'
+import DataTable, { type Column } from '@/components/common/DataTable'
 import { productApi } from '@/api/productApi'
 import type { Product } from '@/types/product'
 
@@ -19,21 +19,16 @@ const formatVND = (n: number) =>
 const toast = (icon: 'success' | 'error', title: string) =>
   Swal.fire({ toast: true, position: 'top-end', icon, title, timer: 2500, showConfirmButton: false, timerProgressBar: true })
 
-const ROWS_PER_PAGE = 10
-
 const ProductListPage = () => {
   const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Filters
   const [search, setSearch] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all')
   const [filterStock, setFilterStock] = useState<'all' | 'in' | 'out'>('all')
-
-  const [page, setPage] = useState(1)
   const [toggling, setToggling] = useState<string | null>(null)
 
   const fetchData = async () => {
@@ -51,7 +46,6 @@ const ProductListPage = () => {
 
   useEffect(() => { void fetchData() }, [])
 
-  // Unique categories for filter dropdown
   const categoryOptions = useMemo(() => {
     const map = new Map<string, string>()
     products.forEach((p) => map.set(p.categoryId, p.categoryName))
@@ -71,12 +65,6 @@ const ProductListPage = () => {
       return matchSearch && matchCat && matchStatus && matchStock
     })
   }, [products, search, filterCategory, filterStatus, filterStock])
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE))
-  const currentPage = Math.min(page, totalPages)
-  const pageRows = filtered.slice((currentPage - 1) * ROWS_PER_PAGE, currentPage * ROWS_PER_PAGE)
-
-  const resetPage = () => setPage(1)
 
   const handleToggle = async (prod: Product) => {
     setToggling(prod.id)
@@ -113,200 +101,126 @@ const ProductListPage = () => {
     }
   }
 
+  const columns: Column<Product>[] = [
+    { id: 'index', header: '#', width: 48,
+      cell: (_p, idx) => <span className="text-muted" style={{ fontSize: 13 }}>{idx + 1}</span> },
+    { id: 'name', header: 'Sản phẩm', sortAccessor: (p) => p.name,
+      cell: (p) => (
+        <div className="d-flex align-items-center gap-2">
+          {p.image
+            ? <img src={p.image} alt={p.name} width={36} height={36} className="rounded object-fit-cover flex-shrink-0" />
+            : <div className="rounded bg-light d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 36, height: 36, fontSize: 12, color: '#aaa' }}>{p.name.charAt(0)}</div>}
+          <span className="fw-semibold" style={{ maxWidth: 220 }}>{p.name}</span>
+        </div>
+      ) },
+    { id: 'sku', header: 'SKU', sortAccessor: (p) => p.sku,
+      cell: (p) => <code className="text-muted" style={{ fontSize: 12 }}>{p.sku}</code> },
+    { id: 'category', header: 'Danh mục', sortAccessor: (p) => p.categoryName,
+      cell: (p) => <Badge bg="light" text="dark" className="border">{p.categoryName}</Badge> },
+    { id: 'price', header: 'Giá', align: 'end', sortAccessor: (p) => p.price,
+      cell: (p) => (
+        <span className={p.salePrice ? 'text-decoration-line-through text-muted' : ''}>
+          {formatVND(p.price)}
+        </span>
+      ) },
+    { id: 'salePrice', header: 'Sale', align: 'end', sortAccessor: (p) => p.salePrice ?? -1,
+      cell: (p) => p.salePrice
+        ? <span className="text-danger fw-semibold">{formatVND(p.salePrice)}</span>
+        : <span className="text-muted">—</span> },
+    { id: 'stock', header: 'Tồn kho', align: 'center', sortAccessor: (p) => p.stock,
+      cell: (p) => p.stock === 0
+        ? <Badge bg="" className="bg-danger-subtle text-danger-emphasis border border-danger-subtle fw-semibold">Hết hàng</Badge>
+        : <span className="text-success fw-semibold">{p.stock}</span> },
+    { id: 'status', header: 'Trạng thái', align: 'center', sortAccessor: (p) => p.status,
+      cell: (p) => p.status === 'active'
+        ? <Badge bg="" className="bg-success-subtle text-success-emphasis border border-success-subtle fw-semibold">Hoạt động</Badge>
+        : <Badge bg="" className="bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle fw-semibold">Ẩn</Badge> },
+    { id: 'createdAt', header: 'Ngày tạo', sortAccessor: (p) => p.createdAt,
+      cell: (p) => <span className="text-muted" style={{ fontSize: 12 }}>{new Date(p.createdAt).toLocaleDateString('vi-VN')}</span> },
+    { id: 'actions', header: 'Thao tác', align: 'end',
+      cell: (prod) => (
+        <div className="d-flex gap-1 justify-content-end">
+          <Button variant="light" size="sm" className="btn-icon" title="Xem nhanh">
+            <TbEye className="fs-lg text-info" />
+          </Button>
+          <Button
+            variant="light" size="sm" className="btn-icon"
+            title={prod.status === 'active' ? 'Ẩn' : 'Bật'}
+            disabled={toggling === prod.id}
+            onClick={() => void handleToggle(prod)}
+          >
+            {toggling === prod.id
+              ? <Spinner animation="border" size="sm" />
+              : prod.status === 'active'
+                ? <TbToggleRight className="fs-lg text-success" />
+                : <TbToggleLeft className="fs-lg text-muted" />}
+          </Button>
+          <Button variant="light" size="sm" className="btn-icon" title="Chỉnh sửa"
+            onClick={() => void navigate(`/products/edit/${prod.id}`)}>
+            <TbEdit className="fs-lg text-primary" />
+          </Button>
+          <Button variant="light" size="sm" className="btn-icon" title="Xóa"
+            onClick={() => void handleDelete(prod)}>
+            <TbTrash className="fs-lg text-danger" />
+          </Button>
+        </div>
+      ) },
+  ]
+
+  const toolbar = (
+    <div className="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+      <InputGroup style={{ maxWidth: 280 }}>
+        <InputGroup.Text><TbSearch /></InputGroup.Text>
+        <FormControl
+          placeholder="Tên hoặc SKU..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </InputGroup>
+
+      <div className="d-flex flex-wrap gap-2 align-items-center">
+        <FormSelect style={{ width: 170 }} value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+          <option value="">Tất cả danh mục</option>
+          {categoryOptions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+        </FormSelect>
+        <FormSelect style={{ width: 150 }} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="active">Hoạt động</option>
+          <option value="inactive">Ẩn</option>
+        </FormSelect>
+        <FormSelect style={{ width: 140 }} value={filterStock} onChange={(e) => setFilterStock(e.target.value as typeof filterStock)}>
+          <option value="all">Tất cả tồn kho</option>
+          <option value="in">Còn hàng</option>
+          <option value="out">Hết hàng</option>
+        </FormSelect>
+        <Button variant="outline-secondary" size="sm" onClick={() => void fetchData()} title="Tải lại">
+          <TbRefresh />
+        </Button>
+        <Button variant="primary" size="sm" className="d-flex align-items-center gap-1"
+          onClick={() => void navigate('/products/create')}>
+          <TbPlus /> Thêm sản phẩm
+        </Button>
+      </div>
+    </div>
+  )
+
+  const isFiltered = !!search || !!filterCategory || filterStatus !== 'all' || filterStock !== 'all'
+
   return (
     <Container fluid>
       <PageBreadcrumb title="Sản phẩm" subtitle="Quản lý" />
-
-      <Card>
-        {/* ── Toolbar ─────────────────────────────────── */}
-        <CardHeader className="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-          <InputGroup style={{ maxWidth: 280 }}>
-            <InputGroup.Text><TbSearch /></InputGroup.Text>
-            <FormControl
-              placeholder="Tên hoặc SKU..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); resetPage() }}
-            />
-          </InputGroup>
-
-          <div className="d-flex flex-wrap gap-2 align-items-center">
-            <FormSelect style={{ width: 170 }} value={filterCategory}
-              onChange={(e) => { setFilterCategory(e.target.value); resetPage() }}>
-              <option value="">Tất cả danh mục</option>
-              {categoryOptions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
-            </FormSelect>
-
-            <FormSelect style={{ width: 150 }} value={filterStatus}
-              onChange={(e) => { setFilterStatus(e.target.value as typeof filterStatus); resetPage() }}>
-              <option value="all">Tất cả trạng thái</option>
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Ẩn</option>
-            </FormSelect>
-
-            <FormSelect style={{ width: 140 }} value={filterStock}
-              onChange={(e) => { setFilterStock(e.target.value as typeof filterStock); resetPage() }}>
-              <option value="all">Tất cả tồn kho</option>
-              <option value="in">Còn hàng</option>
-              <option value="out">Hết hàng</option>
-            </FormSelect>
-
-            <Button variant="outline-secondary" size="sm" onClick={fetchData} title="Tải lại">
-              <TbRefresh />
-            </Button>
-            <Button variant="primary" size="sm" className="d-flex align-items-center gap-1"
-              onClick={() => void navigate('/products/create')}>
-              <TbPlus /> Thêm sản phẩm
-            </Button>
-          </div>
-        </CardHeader>
-
-        {/* ── Body ────────────────────────────────────── */}
-        <CardBody className="p-0">
-          {loading && (
-            <div className="d-flex justify-content-center py-5">
-              <Spinner animation="border" variant="primary" />
-            </div>
-          )}
-
-          {!loading && error && (
-            <Alert variant="danger" className="m-3 d-flex align-items-center gap-2">
-              <TbAlertCircle className="fs-20 flex-shrink-0" /> {error}
-            </Alert>
-          )}
-
-          {!loading && !error && filtered.length === 0 && (
-            <div className="text-center text-muted py-5">
-              {search || filterCategory || filterStatus !== 'all' || filterStock !== 'all'
-                ? 'Không tìm thấy sản phẩm phù hợp'
-                : 'Chưa có sản phẩm nào'}
-            </div>
-          )}
-
-          {!loading && !error && pageRows.length > 0 && (
-            <Table responsive hover className="mb-0 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th style={{ width: 48 }}>#</th>
-                  <th>Sản phẩm</th>
-                  <th>SKU</th>
-                  <th>Danh mục</th>
-                  <th className="text-end">Giá</th>
-                  <th className="text-end">Sale</th>
-                  <th className="text-center">Tồn kho</th>
-                  <th className="text-center">Trạng thái</th>
-                  <th>Ngày tạo</th>
-                  <th className="text-end">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.map((prod, idx) => (
-                  <tr key={prod.id}>
-                    <td className="text-muted" style={{ fontSize: 13 }}>
-                      {(currentPage - 1) * ROWS_PER_PAGE + idx + 1}
-                    </td>
-
-                    {/* Ảnh + tên */}
-                    <td>
-                      <div className="d-flex align-items-center gap-2">
-                        {prod.image ? (
-                          <img src={prod.image} alt={prod.name} width={36} height={36}
-                            className="rounded object-fit-cover flex-shrink-0" />
-                        ) : (
-                          <div className="rounded bg-light d-flex align-items-center justify-content-center flex-shrink-0"
-                            style={{ width: 36, height: 36, fontSize: 12, color: '#aaa' }}>
-                            {prod.name.charAt(0)}
-                          </div>
-                        )}
-                        <span className="fw-semibold" style={{ maxWidth: 220 }}>{prod.name}</span>
-                      </div>
-                    </td>
-
-                    <td><code className="text-muted" style={{ fontSize: 12 }}>{prod.sku}</code></td>
-                    <td><Badge bg="light" text="dark" className="border">{prod.categoryName}</Badge></td>
-
-                    {/* Giá gốc */}
-                    <td className="text-end text-nowrap">
-                      <span className={prod.salePrice ? 'text-decoration-line-through text-muted' : ''}>
-                        {formatVND(prod.price)}
-                      </span>
-                    </td>
-
-                    {/* Giá sale */}
-                    <td className="text-end text-nowrap">
-                      {prod.salePrice
-                        ? <span className="text-danger fw-semibold">{formatVND(prod.salePrice)}</span>
-                        : <span className="text-muted">—</span>}
-                    </td>
-
-                    {/* Tồn kho */}
-                    <td className="text-center">
-                      {prod.stock === 0
-                        ? <Badge bg="danger" className="bg-opacity-15 text-danger">Hết hàng</Badge>
-                        : <span className="text-success fw-semibold">{prod.stock}</span>}
-                    </td>
-
-                    {/* Trạng thái */}
-                    <td className="text-center">
-                      {prod.status === 'active'
-                        ? <Badge bg="success" className="bg-opacity-15 text-success">Hoạt động</Badge>
-                        : <Badge bg="secondary" className="bg-opacity-15 text-secondary">Ẩn</Badge>}
-                    </td>
-
-                    <td className="text-muted" style={{ fontSize: 12 }}>
-                      {new Date(prod.createdAt).toLocaleDateString('vi-VN')}
-                    </td>
-
-                    {/* Thao tác */}
-                    <td>
-                      <div className="d-flex gap-1 justify-content-end">
-                        <Button variant="light" size="sm" className="btn-icon" title="Xem nhanh">
-                          <TbEye className="fs-lg text-info" />
-                        </Button>
-                        <Button
-                          variant="light" size="sm" className="btn-icon"
-                          title={prod.status === 'active' ? 'Ẩn' : 'Bật'}
-                          disabled={toggling === prod.id}
-                          onClick={() => handleToggle(prod)}
-                        >
-                          {toggling === prod.id
-                            ? <Spinner animation="border" size="sm" />
-                            : prod.status === 'active'
-                              ? <TbToggleRight className="fs-lg text-success" />
-                              : <TbToggleLeft className="fs-lg text-muted" />}
-                        </Button>
-                        <Button variant="light" size="sm" className="btn-icon" title="Chỉnh sửa"
-                          onClick={() => void navigate(`/products/edit/${prod.id}`)}>
-                          <TbEdit className="fs-lg text-primary" />
-                        </Button>
-                        <Button variant="light" size="sm" className="btn-icon" title="Xóa"
-                          onClick={() => handleDelete(prod)}>
-                          <TbTrash className="fs-lg text-danger" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </CardBody>
-
-        {/* ── Phân trang ──────────────────────────────── */}
-        {!loading && !error && filtered.length > ROWS_PER_PAGE && (
-          <CardFooter className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-            <span className="text-muted" style={{ fontSize: 13 }}>
-              {(currentPage - 1) * ROWS_PER_PAGE + 1}–{Math.min(currentPage * ROWS_PER_PAGE, filtered.length)} / {filtered.length} sản phẩm
-            </span>
-            <div className="d-flex gap-1">
-              <Button variant="outline-secondary" size="sm" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>‹</Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Button key={p} size="sm" variant={p === currentPage ? 'primary' : 'outline-secondary'} onClick={() => setPage(p)}>{p}</Button>
-              ))}
-              <Button variant="outline-secondary" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>›</Button>
-            </div>
-          </CardFooter>
-        )}
-      </Card>
+      <DataTable<Product>
+        data={filtered}
+        columns={columns}
+        rowKey={(p) => p.id}
+        loading={loading}
+        error={error}
+        toolbar={toolbar}
+        isFiltered={isFiltered}
+        emptyText="Chưa có sản phẩm nào"
+        emptyFilteredText="Không tìm thấy sản phẩm phù hợp"
+        itemNoun="sản phẩm"
+      />
     </Container>
   )
 }

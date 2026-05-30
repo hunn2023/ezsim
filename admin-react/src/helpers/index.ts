@@ -1,16 +1,16 @@
-type CurrencyType = '₹' | '$' | '€'
+type CurrencyType = '₫' | '$' | '€'
 
-export const currency: CurrencyType = '$'
+export const currency: CurrencyType = '₫'
 
 export const currentYear = new Date().getFullYear()
 
-export const appName = 'Inspinia'
-export const appTitle = 'INSPINIA - Responsive Bootstrap 5 Admin Dashboard'
+export const appName = 'EZSIM'
+export const appTitle = 'EZSIM Admin'
 export const appDescription: string =
-  'Inspinia is the #1 best-selling admin dashboard template on WrapBootstrap. Perfect for building CRM, CMS, project management tools, and custom web apps with clean UI, responsive design, and powerful features.'
+  'Hệ thống quản trị EZSIM — quản lý sản phẩm, đơn hàng, khách hàng và cấu hình website.'
 
-export const author: string = 'WebAppLayers'
-export const authorWebsite: string = 'https://webapplayers.com/'
+export const author: string = ''
+export const authorWebsite: string = ''
 export const authorContact: string = ''
 
 export const basePath: string = ''

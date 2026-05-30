@@ -6,6 +6,7 @@ import {
 import { useNavigate, useParams } from 'react-router'
 import { TbAlertCircle, TbArrowLeft, TbBuilding, TbCalendar, TbCreditCard, TbMapPin, TbPhone, TbUser } from 'react-icons/tb'
 import PageBreadcrumb from '@/components/PageBreadcrumb'
+import OrderStatusActions from '@/components/orders/OrderStatusActions'
 import { orderApi } from '@/api/orderApi'
 import type { OrderDetail, OrderFulfillmentStatus, OrderPaymentStatus } from '@/types/order'
 
@@ -38,13 +39,13 @@ const FULFILLMENT: Record<OrderFulfillmentStatus, { label: string; bg: string; t
 }
 
 function PayBadge({ status }: { status: OrderPaymentStatus }) {
-  const { bg, text, label } = PAYMENT_STATUS[status] ?? { bg: 'light', text: 'dark', label: status }
-  return <Badge bg={bg} className={`bg-opacity-15 text-${text}`}>{label}</Badge>
+  const { text, label } = PAYMENT_STATUS[status] ?? { text: 'secondary', label: status }
+  return <Badge bg="" className={`bg-${text}-subtle text-${text}-emphasis border border-${text}-subtle fw-semibold`}>{label}</Badge>
 }
 
 function FulBadge({ status }: { status: OrderFulfillmentStatus }) {
-  const { bg, text, label } = FULFILLMENT[status] ?? { bg: 'light', text: 'dark', label: status }
-  return <Badge bg={bg} className={`bg-opacity-15 text-${text}`}>{label}</Badge>
+  const { text, label } = FULFILLMENT[status] ?? { text: 'secondary', label: status }
+  return <Badge bg="" className={`bg-${text}-subtle text-${text}-emphasis border border-${text}-subtle fw-semibold`}>{label}</Badge>
 }
 
 // ─── InfoRow helper ───────────────────────────────────────────────────────────
@@ -123,6 +124,9 @@ const OrderDetailPage = () => {
           <Row className="g-3">
             {/* ── Left column ─────────────────────── */}
             <Col lg={8}>
+              {/* Status actions */}
+              <OrderStatusActions order={order} onUpdated={setOrder} />
+
               {/* Product list */}
               <Card className="mb-3">
                 <CardHeader><strong>Sản phẩm trong đơn</strong></CardHeader>
