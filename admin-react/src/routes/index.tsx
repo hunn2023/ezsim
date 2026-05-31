@@ -32,6 +32,11 @@ const UserContacts = lazy(() => import('@/views/users/contacts'))
 const UserRoles = lazy(() => import('@/views/users/roles'))
 const UserPermissions = lazy(() => import('@/views/users/permissions'))
 
+// CMS Management
+const CmsPosts = lazy(() => import('@/views/cms/posts'))
+const CmsCategories = lazy(() => import('@/views/cms/categories'))
+const CmsPages = lazy(() => import('@/views/cms/pages'))
+
 // Other Apps
 
 // Pages
@@ -157,6 +162,12 @@ const usersRoutes: RouteObject[] = [
   { path: '/users/permissions', element: <UserPermissions /> },
 ]
 
+const cmsRoutes: RouteObject[] = [
+  { path: '/cms/posts', element: <CmsPosts /> },
+  { path: '/cms/categories', element: <CmsCategories /> },
+  { path: '/cms/pages', element: <CmsPages /> },
+]
+
 
 
 const pagesRoutes: RouteObject[] = [
@@ -186,6 +197,7 @@ const allRoutes: RouteObject[] = [
       ...dashboardRoutes,
       ...ecommerceRoutes,
       ...usersRoutes,
+      ...cmsRoutes,
       ...pagesRoutes,
     ],
   },

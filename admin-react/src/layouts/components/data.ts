@@ -176,6 +176,16 @@ export const menuItems: MenuItemType[] = [
     ],
   },
   {
+    key: 'cms',
+    label: 'CMS',
+    icon: TbNotebook,
+    children: [
+      { key: 'cms-posts', label: 'Posts', url: '/cms/posts' },
+      { key: 'cms-categories', label: 'Categories', url: '/cms/categories' },
+      { key: 'cms-pages', label: 'Pages', url: '/cms/pages' },
+    ],
+  },
+  {
     key: 'projects',
     label: 'Projects',
     icon: TbBriefcase,
@@ -415,6 +425,16 @@ export const horizontalMenuItems: MenuItemType[] = [
           { key: 'contacts', label: 'Contacts', url: '/users/contacts' },
           { key: 'roles', label: 'Roles', url: '/users/roles' },
           { key: 'permissions', label: 'Permissions', url: '/users/permissions' },
+        ],
+      },
+      {
+        key: 'cms',
+        label: 'CMS',
+        icon: TbNotebook,
+        children: [
+          { key: 'cms-posts', label: 'Posts', url: '/cms/posts' },
+          { key: 'cms-categories', label: 'Categories', url: '/cms/categories' },
+          { key: 'cms-pages', label: 'Pages', url: '/cms/pages' },
         ],
       },
 
