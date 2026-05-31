@@ -1,17 +1,15 @@
 import { Col, Container, Row } from 'react-bootstrap'
 
-import Discussions from './components/Discussions'
-import ProjectPerformance from './components/ProjectPerformance'
-import ProjectUpdates from './components/ProjectUpdates'
-import QuarterlyReports from './components/QuarterlyReports'
 import StatCards from './components/StatCards'
 import WelcomeRevenueProgress from './components/WelcomeRevenueProgress'
+import CarrierStockWidget from './components/CarrierStockWidget'
+import TopProductsWidget from './components/TopProductsWidget'
 import PageMetaData from '@/components/PageMetaData'
 
 const Page = () => {
   return (
     <>
-      <PageMetaData title="Dashboard" />
+      <PageMetaData title="Dashboard – EZSim Admin" />
       <Container fluid>
         <Row className="mt-3">
           <Col xs={12}>
@@ -21,19 +19,12 @@ const Page = () => {
 
         <StatCards />
 
-        <Row>
-          <Col xxl={4}>
-            <QuarterlyReports />
-
-            <ProjectPerformance />
-          </Col>
-
+        <Row className="g-3 mt-1">
           <Col xxl={4} xl={6}>
-            <ProjectUpdates />
+            <CarrierStockWidget />
           </Col>
-
-          <Col xxl={4} xl={6}>
-            <Discussions />
+          <Col xxl={8} xl={6}>
+            <TopProductsWidget />
           </Col>
         </Row>
       </Container>

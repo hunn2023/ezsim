@@ -376,7 +376,7 @@ const Customizer = () => {
                     </Col>
                     <Col sm={6}>
                         <Link
-                            to="https://wrapbootstrap.com/theme/inspinia-multipurpose-admin-dashboard-template-WB0R5L90S?ref=inspinia"
+                            to="https://wrapbootstrap.com/theme/EZSIM-multipurpose-admin-dashboard-template-WB0R5L90S?ref=EZSIM"
                             target="_blank"
                             className="btn btn-danger bg-gradient py-2 fw-semibold w-100">
                             Buy Now
@@ -389,3 +389,4 @@ const Customizer = () => {
 }
 
 export default Customizer
+

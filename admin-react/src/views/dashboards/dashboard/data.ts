@@ -1,560 +1,156 @@
 import type { EChartsOption } from 'echarts'
-import {
-  TbCalendarEvent,
-  TbChecklist,
-  TbCreditCard,
-  TbDatabase,
-  TbFileCheck,
-  TbMessageCircle,
-  TbPalette,
-  TbRocket,
-  TbShieldCheck,
-  TbUserPlus,
-  TbUsers,
-} from 'react-icons/tb'
-
 import { getColor } from '@/helpers/color'
-import { generateRandomEChartData } from '@/helpers/generators'
 
-import user1 from '@/assets/images/users/user-1.jpg'
-import user10 from '@/assets/images/users/user-10.jpg'
-import user4 from '@/assets/images/users/user-4.jpg'
-import user6 from '@/assets/images/users/user-6.jpg'
-import user7 from '@/assets/images/users/user-7.jpg'
-import user8 from '@/assets/images/users/user-8.jpg'
-import user9 from '@/assets/images/users/user-9.jpg'
-import type { IconType } from 'react-icons'
+const MONTH_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15',
+  '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30']
 
-type StatCard = {
-  id: number
-  title: string
-  value: number | string
-  suffix?: string
-  prefix?: string
-  badgeText: string
-  badgeVariant: 'primary' | 'secondary' | 'light'
-  icon: IconType
-  iconBg?: string
-  pointColor: string
-  description: string
-  total: string
-}
-
-type QuarterlyReport = {
-  id: number
-  quarter: string
-  period: string
-  revenue: string
-  expense: string
-  margin: string
-}
-
-type ProjectStat = {
-  id: number
-  title: string
-  count: string
-  percentage: number
-  variant: 'secondary' | 'info' | 'primary' | 'success' | 'warning' | 'danger' | 'light' | 'dark'
-  showPercentage: boolean
-}
-
-type TimelineEvent = {
-  id: number
-  icon: IconType
-  iconColor: string
-  title: string
-  time: string
-  description: string
-  tag: string
-  tagVariant: string
-  userName: string
-  userImage: any
-  userLink: string
-  hasDivider: boolean
-}
-
-type DiscussionMessage = {
-  id: number
-  userName: string
-  userImage?: any
-  userInitials?: string
-  userInitialsColor?: string
-  timeAgo: string
-  message: string
-  hasAvatar: boolean
-}
-
-type ActivityItem = {
-  id: number
-  text: string
-  time: string
-  badgeVariant: 'primary' | 'info' | 'secondary' | 'light' | 'warning' | 'danger' | 'success' | 'dark'
-  badgeText?: 'dark' | 'light'
-}
-
-export const statCards: StatCard[] = [
-  {
-    id: 1,
-    title: 'My Tasks',
-    value: 124,
-    badgeText: '+3 New',
-    badgeVariant: 'primary',
-    icon: TbChecklist,
-    pointColor: 'primary',
-    description: 'Total Tasks',
-    total: '12,450',
-  },
-  {
-    id: 2,
-    title: 'Messages',
-    value: 69.5,
-    suffix: 'k',
-    badgeText: '+5 New',
-    badgeVariant: 'secondary',
-    icon: TbMessageCircle,
-    pointColor: 'secondary',
-    description: 'Total Messages',
-    total: '32.1M',
-  },
-  {
-    id: 3,
-    title: 'Approvals',
-    value: 32,
-    badgeText: '+2 New',
-    badgeVariant: 'light',
-    icon: TbFileCheck,
-    pointColor: 'primary',
-    description: 'Total Approvals',
-    total: '1,024',
-  },
-  {
-    id: 4,
-    title: 'Clients',
-    value: 184,
-    badgeText: '+4 New',
-    badgeVariant: 'secondary',
-    icon: TbUsers,
-    pointColor: 'secondary',
-    description: 'Total Clients',
-    total: '9,835',
-  },
-  {
-    id: 5,
-    title: 'Revenue',
-    value: 125.5,
-    prefix: '$',
-    suffix: 'k',
-    badgeText: '+1.5%',
-    badgeVariant: 'primary',
-    icon: TbCreditCard,
-    pointColor: 'primary',
-    description: 'Total Revenue',
-    total: '$12.5M',
-  },
+const DAILY_REVENUE = [
+  8_500_000, 12_200_000, 9_800_000, 15_600_000, 11_300_000, 18_700_000, 22_400_000,
+  14_100_000, 10_900_000, 19_300_000, 24_500_000, 17_800_000, 13_200_000, 20_600_000, 28_100_000,
+  16_400_000, 21_700_000, 25_300_000, 12_800_000, 30_200_000, 18_500_000, 22_900_000, 27_600_000,
+  14_700_000, 19_100_000, 23_800_000, 31_500_000, 26_200_000, 20_400_000, 24_500_000,
 ]
 
-export const quarterlyReports: QuarterlyReport[] = [
-  {
-    id: 1,
-    quarter: 'Quarter 1',
-    period: 'January - March 2024',
-    revenue: '$210k',
-    expense: '$165k',
-    margin: '$45k',
-  },
-  {
-    id: 2,
-    quarter: 'Quarter 2',
-    period: 'April - June 2024',
-    revenue: '$225k',
-    expense: '$175k',
-    margin: '$50k',
-  },
-  {
-    id: 3,
-    quarter: 'Quarter 3',
-    period: 'July - September 2024',
-    revenue: '$240k',
-    expense: '$190k',
-    margin: '$50k',
-  },
-  {
-    id: 4,
-    quarter: 'Quarter 4',
-    period: 'October - December 2024',
-    revenue: '$260k',
-    expense: '$210k',
-    margin: '$50k',
-  },
+const DAILY_ORDERS = [
+  3, 5, 4, 7, 5, 8, 11, 6, 4, 9, 12, 8, 6, 10, 14,
+  7, 10, 13, 5, 15, 8, 11, 13, 6, 9, 11, 16, 12, 9, 7,
 ]
-
-export const projectStats: ProjectStat[] = [
-  {
-    id: 1,
-    title: 'Completed Projects',
-    count: '+ 180',
-    percentage: 54.2,
-    variant: 'secondary',
-    showPercentage: true,
-  },
-  {
-    id: 2,
-    title: 'Ongoing Projects',
-    count: '+ 120',
-    percentage: 36.15,
-    variant: 'info',
-    showPercentage: true,
-  },
-  {
-    id: 3,
-    title: 'Pending Approvals',
-    count: '+ 32',
-    percentage: 9.65,
-    variant: 'secondary',
-    showPercentage: true,
-  },
-]
-
-export const timelineEvents: TimelineEvent[] = [
-  {
-    id: 1,
-    icon: TbRocket,
-    iconColor: 'primary',
-    title: 'New Feature Released',
-    time: 'Today at 3:45 PM',
-    description: 'Launched the real-time chat feature across all user accounts.',
-    tag: 'Deploy',
-    tagVariant: 'info',
-    userName: 'Natalie Brooks',
-    userImage: user6,
-    userLink: '/pages/profile',
-    hasDivider: true,
-  },
-  {
-    id: 2,
-    icon: TbCalendarEvent,
-    iconColor: 'warning',
-    title: 'Team Sync-Up',
-    time: 'Today at 2:00 PM',
-    description: 'Reviewed sprint progress and discussed remaining tasks with the dev team.',
-    tag: 'Meeting',
-    tagVariant: 'secondary',
-    userName: 'Oliver Grant',
-    userImage: user4,
-    userLink: '/pages/profile',
-    hasDivider: true,
-  },
-  {
-    id: 3,
-    icon: TbPalette,
-    iconColor: 'success',
-    title: 'UI Design Review',
-    time: 'Today at 1:15 PM',
-    description: 'Updated component spacing and colors for improved accessibility.',
-    tag: 'Design',
-    tagVariant: 'success',
-    userName: 'Clara Jensen',
-    userImage: user9,
-    userLink: '/pages/profile',
-    hasDivider: true,
-  },
-  {
-    id: 4,
-    icon: TbDatabase,
-    iconColor: 'danger',
-    title: 'Database Optimization',
-    time: 'Today at 12:30 PM',
-    description: 'Improved DB query performance, reducing load time by 35%.',
-    tag: 'Backend',
-    tagVariant: 'danger',
-    userName: 'Leo Armstrong',
-    userImage: user10,
-    userLink: '/pages/profile',
-    hasDivider: true,
-  },
-  {
-    id: 5,
-    icon: TbShieldCheck,
-    iconColor: 'info',
-    title: 'Security Audit Completed',
-    time: 'Today at 11:00 AM',
-    description: 'Completed internal security audit with no critical issues found.',
-    tag: 'Audit',
-    tagVariant: 'warning',
-    userName: 'Liam Carter',
-    userImage: user8,
-    userLink: '/pages/profile',
-    hasDivider: true,
-  },
-  {
-    id: 6,
-    icon: TbUserPlus,
-    iconColor: 'success',
-    title: 'New Team Member Joined',
-    time: 'Today at 10:15 AM',
-    description: 'Michael Lee has joined the development team as a Frontend Engineer.',
-    tag: 'Onboarding',
-    tagVariant: 'primary',
-    userName: 'Emma Davis',
-    userImage: user7,
-    userLink: '/pages/profile',
-    hasDivider: false,
-  },
-]
-
-export const discussionMessages: DiscussionMessage[] = [
-  {
-    id: 1,
-    userName: 'Alex Johnson',
-    userImage: user8,
-    timeAgo: '10m ago',
-    message: 'Excited to share our latest project update with everyone!',
-    hasAvatar: true,
-  },
-  {
-    id: 2,
-    userName: 'Den Nowdya',
-    userInitials: 'DN',
-    userInitialsColor: 'purple',
-    timeAgo: '1h ago',
-    message: 'Looking forward to the upcoming team meeting.',
-    hasAvatar: false,
-  },
-  {
-    id: 3,
-    userName: 'Michael Brown',
-    userImage: user10,
-    timeAgo: '16h ago',
-    message: "Great insights shared in today's brainstorming session!",
-    hasAvatar: true,
-  },
-  {
-    id: 4,
-    userName: 'Emily Watson',
-    userImage: user1,
-    timeAgo: '20h ago',
-    message: 'Wrapping up an amazing design concept for the client.',
-    hasAvatar: true,
-  },
-  {
-    id: 5,
-    userName: 'Monica Smith',
-    userImage: user6,
-    timeAgo: '2 days ago',
-    message: 'Testing some new UI enhancements—excited for feedback!',
-    hasAvatar: true,
-  },
-]
-
-export const activityItems: ActivityItem[] = [
-  {
-    id: 1,
-    text: 'Reviewed project proposal',
-    time: '09:30 AM',
-    badgeVariant: 'primary',
-  },
-  {
-    id: 2,
-    text: 'Team stand-up meeting',
-    time: '11:00 AM',
-    badgeVariant: 'info',
-  },
-  {
-    id: 3,
-    text: 'Sent client invoice',
-    time: '01:15 PM',
-    badgeVariant: 'secondary',
-  },
-  {
-    id: 4,
-    text: 'Responded to support tickets',
-    time: '03:40 PM',
-    badgeVariant: 'light',
-    badgeText: 'dark',
-  },
-  {
-    id: 5,
-    text: 'Finalized design mockups',
-    time: '05:10 PM',
-    badgeVariant: 'warning',
-    badgeText: 'light',
-  },
-]
-
-export const getPieEchartOptions = (): EChartsOption => {
-  const charityData = generateRandomEChartData(['Charity A', 'Charity B', 'Charity C'])
-  return {
-    tooltip: { show: false },
-    series: [
-      {
-        type: 'pie',
-        radius: ['60%', '100%'],
-        // @ts-expect-error hoverAnimation is a valid property
-        hoverAnimation: false,
-        label: { show: false },
-        labelLine: { show: false },
-        data: charityData.map((item, index) => ({
-          value: item.value,
-          itemStyle: {
-            color: index === 0 ? getColor('primary') : index === 1 ? getColor('secondary') : '#bbcae14d',
-          },
-        })),
-      },
-    ],
-  }
-}
 
 export const getRevenueChartOptions = (): EChartsOption => {
-  const xLabels = Array.from({ length: 15 }, (_, i) => `Day ${i + 1}`)
-
   return {
     textStyle: { fontFamily: getComputedStyle(document.body).fontFamily },
     tooltip: {
       trigger: 'axis',
-      padding: [5, 0],
+      padding: [8, 12],
       backgroundColor: getColor('secondary-bg'),
       borderColor: getColor('border-color'),
       textStyle: { color: getColor('light-text-emphasis') },
       borderWidth: 1,
-      transitionDuration: 0.125,
+      transitionDuration: 0.1,
       axisPointer: { type: 'none' },
-      shadowBlur: 2,
+      shadowBlur: 4,
       shadowColor: 'rgba(76, 76, 92, 0.15)',
-      shadowOffsetX: 0,
-      shadowOffsetY: 1,
+      formatter: (params: any) => {
+        const day = params[0].name
+        const revenue = params[0]?.value ?? 0
+        const orders = params[1]?.value ?? 0
+        return `<b>Ngày ${day}</b><br/>
+          💰 Doanh thu: ${new Intl.NumberFormat('vi-VN').format(revenue)}₫<br/>
+          📦 Đơn hàng: ${orders} đơn`
+      },
     },
     xAxis: {
       type: 'category',
-      data: xLabels,
+      data: MONTH_LABELS,
       boundaryGap: false,
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: getColor('secondary-color'), margin: 15 },
+      axisLabel: { color: getColor('secondary-color'), margin: 10, fontSize: 11 },
       splitLine: { show: false },
     },
-    yAxis: {
-      max: 1800,
-      type: 'value',
-      splitLine: { lineStyle: { color: '#676b891f', type: 'dashed' } },
-      boundaryGap: [0, '100%'],
-      axisLabel: {
-        show: true,
-        color: getColor('secondary-color'),
-        margin: 15,
-        formatter: function (value) {
-          return '$' + value
-        },
-      },
-      axisTick: { show: false },
-      axisLine: { show: false },
-    },
-    series: [
+    yAxis: [
       {
-        name: 'Total Revenue',
-        type: 'line',
-        smooth: true,
-        symbolSize: 2,
-        itemStyle: {
-          color: getColor('primary'),
-          borderColor: getColor('primary'),
-          borderWidth: 2,
+        type: 'value',
+        name: 'VNĐ',
+        nameTextStyle: { color: getColor('secondary-color'), fontSize: 10 },
+        splitLine: { lineStyle: { color: '#676b891f', type: 'dashed' } },
+        axisLabel: {
+          color: getColor('secondary-color'),
+          margin: 10,
+          fontSize: 10,
+          formatter: (v: number) => {
+            if (v >= 1_000_000) return (v / 1_000_000).toFixed(0) + 'tr'
+            return v.toString()
+          },
         },
-        areaStyle: {
-          opacity: 0.2,
-          color: getColor('primary'),
-        },
-        lineStyle: {
-          color: getColor('primary'),
-        },
-        symbol: 'circle',
-        stack: 'data',
-        data: [45, 88, 120, 160, 210, 240, 350, 420, 380, 500, 640, 710, 890, 1150, 1200],
+        axisTick: { show: false },
+        axisLine: { show: false },
       },
       {
-        name: 'Orders',
-        type: 'line',
-        smooth: true,
-        symbolSize: 2,
-        itemStyle: {
-          color: getColor('secondary'),
-          borderColor: getColor('secondary'),
-          borderWidth: 2,
-        },
-        areaStyle: {
-          opacity: 0.2,
-          color: getColor('secondary'),
-        },
-        lineStyle: {
-          color: getColor('secondary'),
-        },
-        symbol: 'circle',
-        stack: 'data',
-        data: [15, 30, 35, 50, 55, 75, 95, 120, 135, 160, 180, 210, 250, 390, 450],
+        type: 'value',
+        name: 'Đơn',
+        nameTextStyle: { color: getColor('secondary-color'), fontSize: 10 },
+        splitLine: { show: false },
+        axisLabel: { color: getColor('secondary-color'), margin: 10, fontSize: 10 },
+        axisTick: { show: false },
+        axisLine: { show: false },
       },
     ],
-    grid: {
-      right: 20,
-      left: 5,
-      bottom: 5,
-      top: 8,
-      containLabel: true,
+    series: [
+      {
+        name: 'Doanh thu',
+        type: 'line',
+        smooth: true,
+        symbolSize: 3,
+        itemStyle: { color: getColor('primary'), borderColor: getColor('primary'), borderWidth: 2 },
+        areaStyle: { opacity: 0.15, color: getColor('primary') },
+        lineStyle: { color: getColor('primary'), width: 2 },
+        symbol: 'circle',
+        data: DAILY_REVENUE,
+        yAxisIndex: 0,
+      },
+      {
+        name: 'Đơn hàng',
+        type: 'bar',
+        barWidth: '40%',
+        itemStyle: { color: getColor('secondary'), opacity: 0.6, borderRadius: [3, 3, 0, 0] },
+        data: DAILY_ORDERS,
+        yAxisIndex: 1,
+      },
+    ],
+    grid: { right: 40, left: 5, top: 10, bottom: 30, containLabel: true },
+    legend: {
+      bottom: 0,
+      textStyle: { color: getColor('secondary-color'), fontSize: 11 },
+      itemWidth: 12,
+      itemHeight: 8,
     },
   }
 }
 
-export const getProgressChartOptions = (): EChartsOption => {
-  return {
-    tooltip: {
-      trigger: 'item',
-      padding: [8, 15],
-      backgroundColor: getColor('secondary-bg'),
-      borderColor: getColor('border-color'),
-      textStyle: { color: getColor('light-text-emphasis') },
-      borderWidth: 1,
-      transitionDuration: 0.125,
-      axisPointer: { type: 'none' },
-      shadowBlur: 2,
-      shadowColor: 'rgba(76, 76, 92, 0.15)',
-      shadowOffsetX: 0,
-      shadowOffsetY: 1,
-    },
-    textStyle: {
-      fontFamily: getComputedStyle(document.body).fontFamily,
-    },
-    series: [
-      {
-        name: 'Project Progress',
-        type: 'pie',
-        radius: [60, 100],
-        center: ['50%', '50%'],
-        roseType: 'area',
-        itemStyle: {
-          borderRadius: 8,
-        },
-        label: {
-          color: getColor('secondary-color'),
-        },
-        data: [
-          { value: 85, name: 'Website Redesign', itemStyle: { color: getColor('primary') } },
-          {
-            value: 70,
-            name: 'Mobile App',
-            itemStyle: { color: getColor('secondary') },
-          },
-          { value: 55, name: 'CRM Integration', itemStyle: { color: getColor('info') } },
-          {
-            value: 60,
-            name: 'Product Launch',
-            itemStyle: { color: getColor('success') },
-          },
-          { value: 75, name: 'Backend Refactor', itemStyle: { color: getColor('light') } },
-          {
-            value: 50,
-            name: 'Client Dashboard',
-            itemStyle: { color: getColor('warning') },
-          },
-        ],
+export const getCarrierPieOptions = (
+  data: { name: string; value: number }[]
+): EChartsOption => ({
+  tooltip: {
+    trigger: 'item',
+    padding: [8, 12],
+    backgroundColor: getColor('secondary-bg'),
+    borderColor: getColor('border-color'),
+    textStyle: { color: getColor('light-text-emphasis') },
+    borderWidth: 1,
+    formatter: '{b}: {c} SIM ({d}%)',
+  },
+  legend: {
+    orient: 'vertical',
+    right: 10,
+    top: 'center',
+    textStyle: { color: getColor('secondary-color'), fontSize: 11 },
+    itemWidth: 10,
+    itemHeight: 10,
+  },
+  series: [
+    {
+      name: 'Kho SIM',
+      type: 'pie',
+      radius: ['42%', '70%'],
+      center: ['38%', '50%'],
+      avoidLabelOverlap: false,
+      label: { show: false },
+      labelLine: { show: false },
+      data,
+      emphasis: {
+        itemStyle: { shadowBlur: 8, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.4)' },
       },
-    ],
-  }
-}
+    },
+  ],
+})
+
+// Keep old exports to avoid breaking other references
+export const getPieEchartOptions = (): EChartsOption => ({
+  tooltip: { show: false },
+  series: [{ type: 'pie', radius: ['60%', '100%'], label: { show: false }, data: [] }],
+})
+
+export const getProgressChartOptions = (): EChartsOption => ({
+  series: [{ type: 'pie', data: [] }],
+})

@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
+
+@layer base {
+  body {
+    @apply font-sans text-navy leading-relaxed bg-white antialiased;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  h1 { @apply text-3xl md:text-4xl font-bold; }
+  h2 { @apply text-2xl md:text-3xl font-bold; }
+  h3 { @apply text-xl md:text-2xl font-semibold; }
+  h4 { @apply text-lg font-semibold; }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold text-sm rounded-lg px-5 py-3 transition cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-dark shadow-btn;
+  }
+  .btn-secondary {
+    @apply btn bg-secondary text-white hover:bg-secondary-dark;
+  }
+  .btn-outline {
+    @apply btn border-2 border-primary text-primary hover:bg-primary hover:text-white;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:bg-red-600;
+  }
+  .btn-sm {
+    @apply text-xs px-3 py-2;
+  }
+  .btn-lg {
+    @apply text-base px-7 py-4;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10;
+  }
+  .input-error {
+    @apply border-danger focus:border-danger focus:ring-danger/10;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl border border-gray-200 shadow-card overflow-hidden transition hover:shadow-card-hover;
+  }
+  .card-body {
+    @apply p-4 md:p-6;
+  }
+
+  /* Product card */
+  .product-card {
+    @apply card flex flex-col;
+  }
+  .product-card-img {
+    @apply w-full aspect-[4/3] object-cover;
+  }
+  .product-card-body {
+    @apply p-4 flex flex-col flex-1;
+  }
+  .product-card-title {
+    @apply font-semibold text-sm text-navy line-clamp-2 mb-2;
+  }
+  .product-card-price {
+    @apply text-primary font-bold text-lg mt-auto;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: linear-gradient(135deg, #0066ff 0%, #00d4ff 100%);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #0066ff 0%, #00d4ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Smooth transitions for interactive elements */
+a, button {
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, transform 0.2s;
+}

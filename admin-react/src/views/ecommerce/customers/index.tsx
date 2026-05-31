@@ -6,7 +6,7 @@ import CustomersCard from './components/CustomersCard'
 const Page = () => {
   return (
     <Container fluid>
-      <PageBreadcrumb title="Customers" subtitle="Ecommerce" />
+      <PageBreadcrumb title="Hồ Sơ Khách Hàng" subtitle="Quản lý Khách hàng" />
 
       <Row className="justify-content-center">
         <Col xxl={10}>

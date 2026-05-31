@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EZSIM - Kết nối dễ như chớp mắt | eSIM, Thẻ ĐT, Thẻ Game, Data 4G/5G</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #0A1628;
+  background: #FFFFFF;
+  line-height: 1.6;
+}
+:root {
+  --primary: #0066FF;
+  --cyan: #00D4FF;
+  --navy: #0A1628;
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-500: #64748B;
+  --gray-700: #334155;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --gradient: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+}
+
+/* ===== TOP BAR ===== */
+.top-bar {
+  background: var(--navy);
+  color: #94A3B8;
+  font-size: 13px;
+  padding: 8px 0;
+}
+.top-bar-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.top-bar a { color: #94A3B8; text-decoration: none; margin-left: 20px; }
+.top-bar a:hover { color: #00D4FF; }
+
+/* ===== HEADER ===== */
+.header {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky; top: 0; z-index: 100;
+}
+.header-inner {
+  max-width: 1280px; margin: 0 auto; padding: 16px 24px;
+  display: flex; align-items: center; gap: 32px;
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 28px; font-weight: 800; letter-spacing: -1px;
+  text-decoration: none; color: var(--navy);
+}
+.logo-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--gradient);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 22px;
+}
+.logo .sim { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+.search-bar {
+  flex: 1; max-width: 480px;
+  position: relative;
+}
+.search-bar input {
+  width: 100%; padding: 12px 16px 12px 44px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 12px; font-size: 14px;
+  font-family: inherit; outline: none;
+  transition: border 0.2s;
+}
+.search-bar input:focus { border-color: var(--primary); }
+.search-bar i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-500); }
+
+.nav { display: flex; gap: 24px; align-items: center; }
+.nav a {
+  color: var(--gray-700); text-decoration: none;
+  font-weight: 500; font-size: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.nav a:hover { color: var(--primary); }
+.cart-btn {
+  position: relative;
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--gray-100);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--navy);
+}
+.cart-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: #EF4444; color: white;
+  width: 18px; height: 18px; border-radius: 50%;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ===== MAIN MENU ===== */
+.main-menu {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+.main-menu-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: flex; gap: 32px;
+}
+.menu-item {
+  padding: 14px 0; color: var(--gray-700); text-decoration: none;
+  font-weight: 500; font-size: 14px;
+  border-bottom: 2px solid transparent;
+  display: flex; align-items: center; gap: 6px;
+}
+.menu-item:hover, .menu-item.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ===== HERO ===== */
+.hero {
+  background: var(--gradient);
+  padding: 64px 0;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -50%; right: -10%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+  border-radius: 50%;
+}
+.hero-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px;
+  align-items: center; position: relative;
+}
+.hero h1 {
+  color: white; font-size: 48px; font-weight: 800;
+  line-height: 1.15; margin-bottom: 20px; letter-spacing: -1px;
+}
+.hero h1 .accent { color: #FFE66D; }
+.hero p {
+  color: rgba(255,255,255,0.9); font-size: 18px;
+  margin-bottom: 32px; max-width: 520px;
+}
+.hero-stats {
+  display: flex; gap: 32px; margin-bottom: 32px;
+}
+.hero-stat-num { color: white; font-size: 32px; font-weight: 800; }
+.hero-stat-lbl { color: rgba(255,255,255,0.85); font-size: 13px; }
+
+.hero-search {
+  background: white; border-radius: 16px;
+  padding: 8px; display: flex; gap: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.hero-search input {
+  flex: 1; padding: 16px 20px;
+  border: none; outline: none; font-size: 15px;
+  font-family: inherit;
+}
+.hero-search button {
+  background: var(--navy); color: white;
+  padding: 14px 28px; border: none; border-radius: 12px;
+  font-weight: 600; font-size: 15px; cursor: pointer;
+  font-family: inherit;
+}
+
+.hero-card {
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px; padding: 32px;
+  color: white;
+}
+.hero-card h3 { font-size: 18px; margin-bottom: 16px; font-weight: 700; }
+.hero-card-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+.hero-card-item {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 16px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 500;
+}
+.hero-card-item i { font-size: 20px; color: #FFE66D; }
+
+/* ===== TRUST BAR ===== */
+.trust-bar {
+  background: white; padding: 32px 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+.trust-bar-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
+}
+.trust-item {
+  display: flex; align-items: center; gap: 16px;
+}
+.trust-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(0,102,255,0.1); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.trust-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.trust-desc { font-size: 13px; color: var(--gray-500); }
+
+/* ===== SECTION ===== */
+.section { padding: 64px 0; }
+.section-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+.section-header {
+  display: flex; justify-content: space-between; align-items: end;
+  margin-bottom: 32px;
+}
+.section-title { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
+.section-subtitle { color: var(--gray-500); font-size: 15px; margin-top: 4px; }
+.section-link {
+  color: var(--primary); font-weight: 600; font-size: 14px;
+  text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ===== 4 PRODUCT CATEGORIES ===== */
+.categories-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+}
+.category-card {
+  background: white;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 20px; padding: 28px;
+  text-decoration: none; color: inherit;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+.category-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,102,255,0.1);
+}
+.category-card::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 100%; height: 4px;
+  background: var(--gradient);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.3s;
+}
+.category-card:hover::before { transform: scaleX(1); }
+.cat-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: var(--gradient);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 26px;
+  margin-bottom: 20px;
+}
+.cat-icon.alt-1 { background: linear-gradient(135deg, #F59E0B, #EF4444); }
+.cat-icon.alt-2 { background: linear-gradient(135deg, #8B5CF6, #EC4899); }
+.cat-icon.alt-3 { background: linear-gradient(135deg, #10B981, #06B6D4); }
+
+.cat-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.cat-desc { color: var(--gray-500); font-size: 14px; margin-bottom: 16px; line-height: 1.6; }
+.cat-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.cat-tag {
+  background: var(--gray-100); color: var(--gray-700);
+  padding: 4px 10px; border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+}
+.cat-link {
+  color: var(--primary); font-weight: 600; font-size: 14px;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ===== POPULAR DESTINATIONS ===== */
+.dest-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px;
+}
+.dest-card {
+  background: white; border: 1px solid var(--gray-200);
+  border-radius: 16px; padding: 20px;
+  text-align: center; text-decoration: none; color: inherit;
+  transition: all 0.2s;
+}
+.dest-card:hover {
+  border-color: var(--primary); transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,102,255,0.08);
+}
+.dest-flag {
+  width: 56px; height: 56px; border-radius: 50%;
+  margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 32px; background: var(--gray-100);
+}
+.dest-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.dest-price { color: var(--primary); font-size: 13px; font-weight: 600; }
+.dest-bestseller {
+  display: inline-block; background: #FEF3C7; color: #92400E;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 700;
+  margin-top: 6px;
+}
+
+/* ===== HOW IT WORKS ===== */
+.how-it-works { background: var(--gray-50); }
+.steps-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+  position: relative;
+}
+.steps-grid::before {
+  content: ''; position: absolute;
+  top: 40px; left: 16%; right: 16%; height: 2px;
+  background: linear-gradient(to right, transparent, var(--primary), transparent);
+  opacity: 0.3;
+}
+.step-card {
+  background: white; border-radius: 20px; padding: 32px;
+  text-align: center; position: relative;
+  border: 1px solid var(--gray-200);
+}
+.step-num {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--gradient); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 800;
+  margin: -64px auto 20px;
+  border: 6px solid var(--gray-50);
+}
+.step-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.step-desc { color: var(--gray-500); font-size: 14px; line-height: 1.6; }
+
+/* ===== GAME CARDS PROMO ===== */
+.promo-banner {
+  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+  border-radius: 24px; padding: 48px;
+  display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px;
+  align-items: center; color: white;
+  position: relative; overflow: hidden;
+}
+.promo-banner::before {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(168,85,247,0.4), transparent 70%);
+}
+.promo-banner h2 {
+  font-size: 36px; font-weight: 800; margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+.promo-banner p {
+  color: rgba(255,255,255,0.85); font-size: 16px;
+  margin-bottom: 24px;
+}
+.promo-cta {
+  background: white; color: var(--navy);
+  padding: 14px 28px; border-radius: 12px;
+  font-weight: 700; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.promo-games {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  position: relative;
+}
+.promo-game {
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 16px;
+  text-align: center; font-size: 12px; font-weight: 600;
+}
+.promo-game-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+
+/* ===== TESTIMONIALS ===== */
+.testimonials-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.testimonial {
+  background: white; border: 1px solid var(--gray-200);
+  border-radius: 20px; padding: 28px;
+}
+.test-stars { color: #F59E0B; margin-bottom: 12px; font-size: 16px; }
+.test-text { color: var(--gray-700); font-size: 14px; line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+.test-author { display: flex; align-items: center; gap: 12px; }
+.test-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--gradient); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.test-name { font-weight: 700; font-size: 14px; }
+.test-role { color: var(--gray-500); font-size: 12px; }
+
+/* ===== FOOTER ===== */
+.footer {
+  background: var(--navy); color: #94A3B8;
+  padding: 64px 0 24px;
+}
+.footer-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+.footer-grid {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 48px;
+  margin-bottom: 48px;
+}
+.footer-brand .logo { color: white; margin-bottom: 16px; }
+.footer-brand .logo .sim { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.footer-brand p { font-size: 14px; line-height: 1.7; max-width: 320px; }
+.footer-social { margin-top: 20px; display: flex; gap: 12px; }
+.footer-social a {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.1); color: white;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+}
+.footer-social a:hover { background: var(--primary); }
+.footer h4 { color: white; font-weight: 700; font-size: 15px; margin-bottom: 16px; }
+.footer ul { list-style: none; }
+.footer li { margin-bottom: 10px; }
+.footer a { color: #94A3B8; text-decoration: none; font-size: 13px; }
+.footer a:hover { color: var(--cyan); }
+.footer-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 24px;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  font-size: 13px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-inner">
+    <div><i class="fas fa-headset"></i> Hỗ trợ 24/7: 1900 1881</div>
+    <div>
+      <a href="#"><i class="fas fa-mobile-alt"></i> Tải app EZSIM</a>
+      <a href="#"><i class="fas fa-globe"></i> Tiếng Việt</a>
+      <a href="#"><i class="fas fa-user"></i> Đăng nhập / Đăng ký</a>
+    </div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+      ez<span class="sim">sim</span>
+    </a>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm kiếm quốc gia, gói data, thẻ game...">
+    </div>
+    <nav class="nav">
+      <a href="#"><i class="fas fa-headset"></i> Hỗ trợ</a>
+      <a href="#"><i class="fas fa-mobile-alt"></i> Kiểm tra thiết bị</a>
+      <a href="#" class="cart-btn">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge">2</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="main-menu">
+  <div class="main-menu-inner">
+    <a href="#" class="menu-item active"><i class="fas fa-home"></i> Trang chủ</a>
+    <a href="#" class="menu-item"><i class="fas fa-globe-asia"></i> eSIM Du lịch</a>
+    <a href="#" class="menu-item"><i class="fas fa-sim-card"></i> Thẻ Viễn thông</a>
+    <a href="#" class="menu-item"><i class="fas fa-gamepad"></i> Thẻ Game</a>
+    <a href="#" class="menu-item"><i class="fas fa-wifi"></i> Data 4G/5G</a>
+    <a href="#" class="menu-item"><i class="fas fa-tag"></i> Khuyến mãi</a>
+    <a href="#" class="menu-item"><i class="fas fa-blog"></i> Blog</a>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1>Kết nối <span class="accent">dễ như chớp mắt</span><br>cho mọi chuyến đi</h1>
+      <p>eSIM du lịch 200+ quốc gia, thẻ viễn thông trong nước, thẻ game, gói Data 4G/5G — tất cả trong 1 nơi. Kích hoạt trong 30 giây.</p>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-num">200+</div>
+          <div class="hero-stat-lbl">Quốc gia phủ sóng</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">100K+</div>
+          <div class="hero-stat-lbl">Khách hàng tin dùng</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">4.9★</div>
+          <div class="hero-stat-lbl">Đánh giá trung bình</div>
+        </div>
+      </div>
+      <div class="hero-search">
+        <input type="text" placeholder="Bạn đang đi đâu? Nhật Bản, Hàn Quốc, Mỹ...">
+        <button><i class="fas fa-search"></i> Tìm gói cho tôi</button>
+      </div>
+    </div>
+    <div class="hero-card">
+      <h3><i class="fas fa-fire"></i> Bán chạy nhất tuần này</h3>
+      <div class="hero-card-grid">
+        <div class="hero-card-item"><i class="fas fa-bolt"></i> Nhật 7 ngày 5GB</div>
+        <div class="hero-card-item"><i class="fas fa-bolt"></i> Hàn 10 ngày 10GB</div>
+        <div class="hero-card-item"><i class="fas fa-bolt"></i> Thái Lan 15GB</div>
+        <div class="hero-card-item"><i class="fas fa-bolt"></i> Châu Âu 30 nước</div>
+        <div class="hero-card-item"><i class="fas fa-bolt"></i> Mỹ 30 ngày Unl.</div>
+        <div class="hero-card-item"><i class="fas fa-bolt"></i> Toàn cầu 100+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="trust-bar">
+  <div class="trust-bar-inner">
+    <div class="trust-item">
+      <div class="trust-icon"><i class="fas fa-bolt"></i></div>
+      <div>
+        <div class="trust-title">Kích hoạt 30 giây</div>
+        <div class="trust-desc">Quét QR là dùng ngay</div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon"><i class="fas fa-shield-alt"></i></div>
+      <div>
+        <div class="trust-title">Hoàn tiền 100%</div>
+        <div class="trust-desc">Cam kết nếu không dùng được</div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon"><i class="fas fa-headset"></i></div>
+      <div>
+        <div class="trust-title">Hỗ trợ 24/7</div>
+        <div class="trust-desc">Tổng đài tiếng Việt</div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon"><i class="fas fa-tags"></i></div>
+      <div>
+        <div class="trust-title">Giá rẻ nhất</div>
+        <div class="trust-desc">Tiết kiệm tới 96% chuyển vùng</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Bạn đang cần gì?</h2>
+        <p class="section-subtitle">4 dòng sản phẩm - 1 nơi mua sắm tiện lợi</p>
+      </div>
+    </div>
+    <div class="categories-grid">
+
+      <a href="#" class="category-card">
+        <div class="cat-icon"><i class="fas fa-globe-asia"></i></div>
+        <h3 class="cat-title">eSIM Du lịch</h3>
+        <p class="cat-desc">Kết nối ngay khi đặt chân tới 200+ quốc gia. Không cần tháo SIM gốc.</p>
+        <div class="cat-tags">
+          <span class="cat-tag">200+ quốc gia</span>
+          <span class="cat-tag">Quét QR</span>
+          <span class="cat-tag">4G/5G</span>
+        </div>
+        <div class="cat-link">Xem điểm đến <i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="#" class="category-card">
+        <div class="cat-icon alt-1"><i class="fas fa-sim-card"></i></div>
+        <h3 class="cat-title">Thẻ Viễn thông</h3>
+        <p class="cat-desc">Nạp tiền điện thoại Viettel, Vinaphone, Mobifone, Vietnamobile chiết khấu cao.</p>
+        <div class="cat-tags">
+          <span class="cat-tag">Viettel</span>
+          <span class="cat-tag">Vina</span>
+          <span class="cat-tag">Mobi</span>
+        </div>
+        <div class="cat-link">Mua thẻ ngay <i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="#" class="category-card">
+        <div class="cat-icon alt-2"><i class="fas fa-gamepad"></i></div>
+        <h3 class="cat-title">Thẻ Game</h3>
+        <p class="cat-desc">Garena, Zing, Vcoin, Gate, Steam, Riot, MyCard. Nhận mã trong 1 phút.</p>
+        <div class="cat-tags">
+          <span class="cat-tag">Garena</span>
+          <span class="cat-tag">Zing</span>
+          <span class="cat-tag">Steam</span>
+        </div>
+        <div class="cat-link">Mua thẻ ngay <i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="#" class="category-card">
+        <div class="cat-icon alt-3"><i class="fas fa-wifi"></i></div>
+        <h3 class="cat-title">Data 4G/5G</h3>
+        <p class="cat-desc">Đăng ký gói data tốc độ cao của các nhà mạng VN. Có hiệu lực ngay.</p>
+        <div class="cat-tags">
+          <span class="cat-tag">Tháng</span>
+          <span class="cat-tag">Tuần</span>
+          <span class="cat-tag">Ngày</span>
+        </div>
+        <div class="cat-link">Đăng ký gói <i class="fas fa-arrow-right"></i></div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top: 0;">
+  <div class="section-inner">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Điểm đến phổ biến</h2>
+        <p class="section-subtitle">Top quốc gia khách Việt Nam mua nhiều nhất</p>
+      </div>
+      <a href="#" class="section-link">Xem tất cả 200+ quốc gia <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="dest-grid">
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇯🇵</div>
+        <div class="dest-name">Nhật Bản</div>
+        <div class="dest-price">Từ 99.000đ</div>
+        <span class="dest-bestseller">🔥 BÁN CHẠY</span>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇰🇷</div>
+        <div class="dest-name">Hàn Quốc</div>
+        <div class="dest-price">Từ 89.000đ</div>
+        <span class="dest-bestseller">🔥 BÁN CHẠY</span>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇹🇭</div>
+        <div class="dest-name">Thái Lan</div>
+        <div class="dest-price">Từ 69.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇨🇳</div>
+        <div class="dest-name">Trung Quốc</div>
+        <div class="dest-price">Từ 99.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇸🇬</div>
+        <div class="dest-name">Singapore</div>
+        <div class="dest-price">Từ 79.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇺🇸</div>
+        <div class="dest-name">Mỹ</div>
+        <div class="dest-price">Từ 199.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇫🇷</div>
+        <div class="dest-name">Pháp</div>
+        <div class="dest-price">Từ 159.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇬🇧</div>
+        <div class="dest-name">Anh Quốc</div>
+        <div class="dest-price">Từ 169.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇩🇪</div>
+        <div class="dest-name">Đức</div>
+        <div class="dest-price">Từ 149.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇦🇺</div>
+        <div class="dest-name">Úc</div>
+        <div class="dest-price">Từ 189.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇲🇾</div>
+        <div class="dest-name">Malaysia</div>
+        <div class="dest-price">Từ 69.000đ</div>
+      </a>
+      <a href="#" class="dest-card">
+        <div class="dest-flag">🇪🇺</div>
+        <div class="dest-name">Châu Âu</div>
+        <div class="dest-price">Từ 249.000đ</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section how-it-works">
+  <div class="section-inner">
+    <div class="section-header" style="justify-content: center; text-align: center; flex-direction: column; align-items: center;">
+      <h2 class="section-title">Mua và sử dụng cực dễ — chỉ 3 bước</h2>
+      <p class="section-subtitle">Tổng thời gian: dưới 60 giây kể từ lúc thanh toán</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3 class="step-title">Chọn sản phẩm</h3>
+        <p class="step-desc">Chọn quốc gia + gói data hoặc loại thẻ. Lọc theo ngân sách & số ngày.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3 class="step-title">Thanh toán nhanh</h3>
+        <p class="step-desc">Momo, ZaloPay, VNPay, thẻ ngân hàng, QR Banking — chọn cách bạn thích.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3 class="step-title">Nhận & dùng ngay</h3>
+        <p class="step-desc">Mã QR / mã thẻ gửi qua email + SMS. Quét là chạy, không cần đợi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-inner">
+    <div class="promo-banner">
+      <div>
+        <h2>Game thủ tiết kiệm 5-15%<br>khi mua thẻ tại EZSIM</h2>
+        <p>Garena, Zing, Vcoin, Gate, Steam, Riot, MyCard, BIT, Wing — nhận mã trong 1 phút sau khi thanh toán.</p>
+        <a href="#" class="promo-cta">Mua thẻ game ngay <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="promo-games">
+        <div class="promo-game">
+          <div class="promo-game-icon" style="background: rgba(239,68,68,0.3);">🎮</div>
+          Garena
+        </div>
+        <div class="promo-game">
+          <div class="promo-game-icon" style="background: rgba(59,130,246,0.3);">⚔️</div>
+          Zing
+        </div>
+        <div class="promo-game">
+          <div class="promo-game-icon" style="background: rgba(34,197,94,0.3);">🎯</div>
+          Steam
+        </div>
+        <div class="promo-game">
+          <div class="promo-game-icon" style="background: rgba(168,85,247,0.3);">👑</div>
+          Vcoin
+        </div>
+        <div class="promo-game">
+          <div class="promo-game-icon" style="background: rgba(245,158,11,0.3);">🏆</div>
+          Riot
+        </div>
+        <div class="promo-game">
+          <div class="promo-game-icon" style="background: rgba(236,72,153,0.3);">💎</div>
+          Gate
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background: var(--gray-50);">
+  <div class="section-inner">
+    <div class="section-header" style="justify-content: center; text-align: center; flex-direction: column; align-items: center;">
+      <h2 class="section-title">100.000+ khách hàng tin dùng</h2>
+      <p class="section-subtitle">Đánh giá thật từ người Việt đã sử dụng EZSIM</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-text">"Lần đầu mua eSIM đi Hàn, đặt 11h tối hôm trước, sáng ra sân bay quét QR là dùng được ngay. Quá nhanh và rẻ hơn roaming Viettel rất nhiều!"</p>
+        <div class="test-author">
+          <div class="test-avatar">MA</div>
+          <div>
+            <div class="test-name">Minh Anh</div>
+            <div class="test-role">Du lịch Hàn Quốc 2025</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-text">"Tôi mua thẻ Garena và data 4G ở đây thường xuyên. Giao diện dễ dùng, thanh toán Momo nhanh, nhận mã 30 giây. Hỗ trợ chat siêu nhanh."</p>
+        <div class="test-author">
+          <div class="test-avatar">TH</div>
+          <div>
+            <div class="test-name">Trần Hùng</div>
+            <div class="test-role">Game thủ Liên Quân</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="test-stars">★★★★★</div>
+        <p class="test-text">"Đi công tác Châu Âu 21 ngày, mua eSIM Schengen 30 nước, dùng được ở Pháp - Ý - Đức không gián đoạn. Tiết kiệm gần 4 triệu so với roaming."</p>
+        <div class="test-author">
+          <div class="test-avatar">LP</div>
+          <div>
+            <div class="test-name">Lê Phương</div>
+            <div class="test-role">CEO Startup</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="logo">
+          <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+          ez<span class="sim">sim</span>
+        </a>
+        <p>Kết nối dễ như chớp mắt — Connect in a Flash. Nền tảng cung cấp eSIM du lịch, thẻ viễn thông, thẻ game và gói Data hàng đầu Việt Nam.</p>
+        <div class="footer-social">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-tiktok"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      <div>
+        <h4>Sản phẩm</h4>
+        <ul>
+          <li><a href="#">eSIM Du lịch</a></li>
+          <li><a href="#">Thẻ Viễn thông</a></li>
+          <li><a href="#">Thẻ Game</a></li>
+          <li><a href="#">Data 4G/5G</a></li>
+          <li><a href="#">Khuyến mãi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Hỗ trợ</h4>
+        <ul>
+          <li><a href="#">Cài đặt eSIM</a></li>
+          <li><a href="#">Kiểm tra thiết bị</a></li>
+          <li><a href="#">Câu hỏi thường gặp</a></li>
+          <li><a href="#">Liên hệ</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Công ty</h4>
+        <ul>
+          <li><a href="#">Giới thiệu</a></li>
+          <li><a href="#">Tuyển dụng</a></li>
+          <li><a href="#">Đối tác đại lý</a></li>
+          <li><a href="#">Điều khoản</a></li>
+          <li><a href="#">Bảo mật</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Liên hệ</h4>
+        <ul>
+          <li><i class="fas fa-phone"></i> 1900 1881</li>
+          <li><i class="fas fa-envelope"></i> hello@ezsim.vn</li>
+          <li><i class="fas fa-map-marker-alt"></i> Hà Nội, Việt Nam</li>
+          <li><i class="fas fa-clock"></i> 24/7 - 365 ngày</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 EZSIM Vietnam. All rights reserved.</div>
+      <div>
+        <a href="#">Chính sách bảo mật</a> &nbsp;•&nbsp;
+        <a href="#">Điều khoản</a> &nbsp;•&nbsp;
+        <a href="#">Đã thông báo Bộ Công Thương</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

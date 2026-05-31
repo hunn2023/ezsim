@@ -1,18 +1,29 @@
-import { LineChart, PieChart } from 'echarts/charts'
-import { TooltipComponent } from 'echarts/components'
+import { LineChart, PieChart, BarChart } from 'echarts/charts'
+import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import CustomEChart from '@/components/CustomEChart.tsx'
+import { getCarrierPieOptions, getRevenueChartOptions } from '../data'
 
-import { getPieEchartOptions, getProgressChartOptions, getRevenueChartOptions } from '../data'
+export const RevenueChart = () => (
+  <CustomEChart
+    extensions={[LineChart, BarChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]}
+    getOptions={getRevenueChartOptions}
+    style={{ height: 300 }}
+  />
+)
 
-export const DonutChart = () => {
-  return <CustomEChart extensions={[PieChart, TooltipComponent, CanvasRenderer]} getOptions={getPieEchartOptions} style={{ height: 30, width: 30 }} />
+interface CarrierPieChartProps {
+  data: { name: string; value: number }[]
 }
 
-export const RevenueChart = () => {
-  return <CustomEChart extensions={[LineChart, TooltipComponent, CanvasRenderer]} getOptions={getRevenueChartOptions} style={{ height: 252 }} />
-}
+export const CarrierPieChart = ({ data }: CarrierPieChartProps) => (
+  <CustomEChart
+    extensions={[PieChart, TooltipComponent, LegendComponent, CanvasRenderer]}
+    getOptions={() => getCarrierPieOptions(data)}
+    style={{ height: 220 }}
+  />
+)
 
-export const ProjectProgressChart = () => {
-  return <CustomEChart extensions={[PieChart, TooltipComponent, CanvasRenderer]} getOptions={getProgressChartOptions} style={{ height: 278 }} />
-}
+// kept for backward compatibility
+export const DonutChart = () => <span />
+export const ProjectProgressChart = () => <span />

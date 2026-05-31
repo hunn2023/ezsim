@@ -19,10 +19,10 @@ type SearchResultType = {
 
 export const searchResults: SearchResultType[] = [
   {
-    title: 'INSPINIA - Multipurpose Admin Dashboard Template',
+    title: 'EZSIM - Multipurpose Admin Dashboard Template',
     description:
-      'INSPINIA is a premium admin dashboard template built with Bootstrap. It offers a wide range of UI components, layouts, and features for building modern web apps like CRMs, SaaS dashboards, and admin panels.',
-    url: 'https://wrapbootstrap.com/theme/inspinia-multipurpose-admin-dashboard-template-WB0R5L90S?ref=inspinia',
+      'EZSIM is a premium admin dashboard template built with Bootstrap. It offers a wide range of UI components, layouts, and features for building modern web apps like CRMs, SaaS dashboards, and admin panels.',
+    url: 'https://wrapbootstrap.com/theme/EZSIM-multipurpose-admin-dashboard-template-WB0R5L90S?ref=EZSIM',
     image: user4,
     author: 'WebAppLayers',
     publishedDate: 'Feb 1, 2025',
@@ -34,7 +34,7 @@ export const searchResults: SearchResultType[] = [
     title: 'Homer - Responsive Admin Theme',
     description:
       'Homer is a clean and fully responsive admin dashboard built with Bootstrap. It features a modern design, modular structure, and reusable UI components, making it ideal for analytics dashboards, CRM systems, and custom backend solutions.',
-    url: 'https://wrapbootstrap.com/theme/homer-responsive-admin-template-WB055J451?ref=inspinia',
+    url: 'https://wrapbootstrap.com/theme/homer-responsive-admin-template-WB055J451?ref=EZSIM',
     image: user5,
     author: 'WebAppLayers',
     publishedDate: 'Jan 20, 2025',
@@ -46,7 +46,7 @@ export const searchResults: SearchResultType[] = [
     title: 'LUNA - Responsive Admin Theme',
     description:
       'LUNA is a stylish and responsive admin theme built with Bootstrap. It includes clean layouts, powerful UI elements, and a lightweight structure—perfect for backend systems, SaaS products, and admin panels.',
-    url: 'https://wrapbootstrap.com/theme/luna-responsive-admin-dashboard-template-WB0J69TPB?ref=inspinia',
+    url: 'https://wrapbootstrap.com/theme/luna-responsive-admin-dashboard-template-WB0J69TPB?ref=EZSIM',
     image: user6,
     author: 'WebAppLayers',
     publishedDate: 'Dec 12, 2024',
@@ -58,7 +58,7 @@ export const searchResults: SearchResultType[] = [
     title: 'Homer - Responsive Admin Theme',
     description:
       'Homer is a clean and fully responsive admin dashboard built with Bootstrap. It features a modern design, modular structure, and reusable UI components, making it ideal for analytics dashboards, CRM systems, and custom backend solutions.',
-    url: 'https://wrapbootstrap.com/theme/homer-responsive-admin-template-WB055J451?ref=inspinia',
+    url: 'https://wrapbootstrap.com/theme/homer-responsive-admin-template-WB055J451?ref=EZSIM',
     image: user5,
     author: 'WebAppLayers',
     publishedDate: 'Jan 20, 2025',
@@ -69,3 +69,4 @@ export const searchResults: SearchResultType[] = [
 ]
 
 export const users = [user4, user5, user3, user8, user2]
+
