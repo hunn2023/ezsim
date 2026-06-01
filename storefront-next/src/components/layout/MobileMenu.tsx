@@ -93,14 +93,6 @@ export default function MobileMenu() {
               Đăng nhập / Đăng ký
             </Link>
           )}
-          <Link
-            href="#"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-          >
-            <Icon icon="headset" className="w-4" />
-            Hỗ trợ: 1900 1881
-          </Link>
         </div>
       </div>
     </>
