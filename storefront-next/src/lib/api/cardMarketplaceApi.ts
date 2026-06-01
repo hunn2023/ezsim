@@ -384,9 +384,9 @@ const contentByTab: Record<CardMarketplaceTab, CardMarketplaceContent> = {
   telecom: {
     tab: "telecom",
     breadcrumb: "Mua Thẻ viễn thông",
-    pageTitle: "Mua thẻ điện thoại online - Chiết khấu cao",
+    pageTitle: "Mua thẻ điện thoại & thẻ game online",
     pageSubtitle:
-      "Nạp tiền điện thoại Viettel, Vinaphone, Mobifone, Vietnamobile chiết khấu lên đến 10%. Nhận mã trong 30 giây qua email.",
+      "Nạp tiền điện thoại tất cả nhà mạng, mua thẻ game Garena, Zing, Steam, Vcoin... Chiết khấu cao - Nhận mã trong 30 giây.",
     step1Title: "Bước 1: Chọn nhà mạng viễn thông",
     step1Desc: "4 nhà mạng phổ biến tại Việt Nam - chiết khấu lên đến 10%",
     step2Title: "Bước 2: Chọn mệnh giá thẻ",
@@ -398,9 +398,9 @@ const contentByTab: Record<CardMarketplaceTab, CardMarketplaceContent> = {
   game: {
     tab: "game",
     breadcrumb: "Mua Thẻ Game",
-    pageTitle: "Mua thẻ game online - Chiết khấu cao",
+    pageTitle: "Mua thẻ điện thoại & thẻ game online",
     pageSubtitle:
-      "Garena, Zing, Vcoin, Gate, Steam, Riot, MyCard, BIT — nhận mã ngay sau khi thanh toán, chiết khấu lên đến 13%.",
+      "Nạp tiền điện thoại tất cả nhà mạng, mua thẻ game Garena, Zing, Steam, Vcoin... Chiết khấu cao - Nhận mã trong 30 giây.",
     step1Title: "Bước 1: Chọn nhà cung cấp game",
     step1Desc: "8 nhà cung cấp game phổ biến tại Việt Nam - chiết khấu lên đến 13%",
     step2Title: "Bước 2: Chọn mệnh giá thẻ",
