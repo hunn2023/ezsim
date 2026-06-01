@@ -2,31 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
-
 @layer base {
+  :root {
+    font-family: var(--font-be-vietnam-pro), sans-serif;
+  }
+
   body {
-    @apply font-sans text-navy leading-relaxed bg-white antialiased;
+    @apply font-sans text-navy bg-white antialiased;
+    font-size: 14px;
+    line-height: 1.6;
   }
   * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
   }
-  h1 { @apply text-3xl md:text-4xl font-bold; }
-  h2 { @apply text-2xl md:text-3xl font-bold; }
-  h3 { @apply text-xl md:text-2xl font-semibold; }
-  h4 { @apply text-lg font-semibold; }
+
+  /* Mockup exact typography */
+  h1 {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -1px;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  h4 {
+    font-size: 16px;
+    font-weight: 700;
+  }
 }
 
 @layer components {
-  /* Buttons */
+  /* Buttons - mockup style */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 font-semibold text-sm rounded-lg px-5 py-3 transition cursor-pointer;
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-lg px-5 py-3 transition cursor-pointer;
+    font-size: 15px;
   }
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-dark shadow-btn;
+    @apply btn bg-navy text-white hover:opacity-90;
   }
   .btn-secondary {
-    @apply btn bg-secondary text-white hover:bg-secondary-dark;
+    @apply btn bg-primary text-white hover:bg-primary-dark;
   }
   .btn-outline {
     @apply btn border-2 border-primary text-primary hover:bg-primary hover:text-white;
@@ -35,52 +59,98 @@
     @apply btn bg-danger text-white hover:bg-red-600;
   }
   .btn-sm {
-    @apply text-xs px-3 py-2;
+    @apply text-sm px-3 py-2;
   }
   .btn-lg {
     @apply text-base px-7 py-4;
   }
 
-  /* Inputs */
+  /* Inputs - mockup style */
   .input {
-    @apply w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10;
+    @apply w-full px-4 py-3 border rounded-lg outline-none transition;
+    border-width: 1.5px;
+    border-color: #E2E8F0;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .input:focus {
+    border-color: #0066FF;
   }
   .input-error {
-    @apply border-danger focus:border-danger focus:ring-danger/10;
+    @apply border-danger focus:border-danger;
   }
 
-  /* Cards */
+  /* Cards - mockup exact: 20px radius, 28px padding */
   .card {
-    @apply bg-white rounded-xl border border-gray-200 shadow-card overflow-hidden transition hover:shadow-card-hover;
+    @apply bg-white overflow-hidden transition;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 28px;
   }
-  .card-body {
-    @apply p-4 md:p-6;
+  .card:hover {
+    border-color: #0066FF;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,102,255,0.1);
   }
 
-  /* Product card */
+  .card-body {
+    padding: 28px;
+  }
+
+  /* Product card - mockup style */
   .product-card {
-    @apply card flex flex-col;
+    @apply bg-white flex flex-col overflow-hidden transition;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 20px;
+  }
+  .product-card:hover {
+    border-color: #0066FF;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,102,255,0.1);
   }
   .product-card-img {
     @apply w-full aspect-[4/3] object-cover;
   }
   .product-card-body {
-    @apply p-4 flex flex-col flex-1;
+    padding: 24px;
+    @apply flex flex-col flex-1;
   }
   .product-card-title {
-    @apply font-semibold text-sm text-navy line-clamp-2 mb-2;
+    @apply font-semibold text-navy line-clamp-2 mb-2;
+    font-size: 15px;
   }
   .product-card-price {
-    @apply text-primary font-bold text-lg mt-auto;
+    @apply text-primary font-bold mt-auto;
+    font-size: 18px;
+  }
+
+  /* Section - mockup style */
+  .section {
+    padding: 64px 0;
+  }
+  .section-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .section-title {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .section-subtitle {
+    color: #64748B;
+    font-size: 15px;
+    margin-top: 4px;
   }
 }
 
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, #0066ff 0%, #00d4ff 100%);
+    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
   }
   .gradient-text {
-    background: linear-gradient(135deg, #0066ff 0%, #00d4ff 100%);
+    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

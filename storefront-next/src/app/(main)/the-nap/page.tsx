@@ -1,48 +1,55 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Breadcrumb } from "@/components/ui";
 import {
   PageHeader,
   TabSwitcher,
-  ProviderGrid,
-  DenominationGrid,
-  CheckoutSection,
-  InfoRow,
-  HowToBuy,
+  CardMarketplaceBrowser,
 } from "@/components/the-nap";
+import { getCardMarketplaceContent } from "@/lib/api/cardMarketplaceApi";
+import type { CardMarketplaceTab } from "@/types/cardMarketplace";
 
 export const metadata: Metadata = {
   title: "Mua thẻ Viễn thông & Thẻ Game online - Chiết khấu cao | EZSIM",
+  description:
+    "Nạp tiền điện thoại tất cả nhà mạng, mua thẻ game Garena, Zing, Steam, Vcoin... Chiết khấu cao - Nhận mã trong 30 giây.",
 };
 
-export default function TheNapPage() {
+type Tab = "telecom" | "game" | "data" | "promo";
+
+const TAB_ICONS: Record<Tab, "credit-card" | "gamepad" | "wifi" | "fire"> = {
+  telecom: "credit-card",
+  game: "gamepad",
+  data: "wifi",
+  promo: "fire",
+};
+
+export default async function TheNapPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab: rawTab } = await searchParams;
+  const tab: Tab = (["telecom", "game", "data", "promo"] as const).includes(rawTab as Tab)
+    ? (rawTab as Tab)
+    : "telecom";
+
+  const content = await getCardMarketplaceContent(tab as CardMarketplaceTab);
+
   return (
     <>
-      <Breadcrumb items={[{ label: "Mua thẻ Viễn thông & Thẻ Game" }]} />
-      <PageHeader />
-      <TabSwitcher />
-      <div className="max-w-container mx-auto px-6 py-8">
-        <h2 className="text-2xl font-extrabold tracking-tight mb-2 flex items-center gap-2.5">
-          <div className="w-1 h-6 gradient-primary rounded-sm" />
-          Bước 1: Chọn nhà mạng / nhà cung cấp
-        </h2>
-        <p className="text-gray-500 text-sm mb-5">Tất cả nhà mạng & game hot tại Việt Nam đều có ở đây</p>
-        <ProviderGrid />
+      <Breadcrumb items={[{ label: content.breadcrumb }]} />
+      <PageHeader
+        title={content.pageTitle}
+        subtitle={content.pageSubtitle}
+        titleIcon={TAB_ICONS[tab]}
+      />
+      <Suspense fallback={<div className="h-[57px] bg-white border-b border-gray-200" />}>
+        <TabSwitcher />
+      </Suspense>
 
-        <h2 className="text-2xl font-extrabold tracking-tight mt-10 mb-2 flex items-center gap-2.5">
-          <div className="w-1 h-6 gradient-primary rounded-sm" />
-          Bước 2: Chọn mệnh giá thẻ Viettel
-        </h2>
-        <p className="text-gray-500 text-sm mb-5">Bạn được giảm giá ngay khi mua - giá thanh toán đã bao gồm chiết khấu 8%</p>
-        <DenominationGrid />
-
-        <h2 className="text-2xl font-extrabold tracking-tight mb-4 flex items-center gap-2.5">
-          <div className="w-1 h-6 gradient-primary rounded-sm" />
-          Bước 3: Hoàn tất đơn hàng
-        </h2>
-        <CheckoutSection />
-
-        <InfoRow />
-        <HowToBuy />
+      <div className="max-w-container mx-auto px-4 md:px-6" style={{ paddingTop: "32px", paddingBottom: "32px" }}>
+        <CardMarketplaceBrowser content={content} />
       </div>
     </>
   );

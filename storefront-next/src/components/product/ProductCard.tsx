@@ -10,7 +10,7 @@ import { formatPrice, calcDiscountPercent } from "@/lib/product";
 
 const FALLBACK_IMAGE = "/images/product-placeholder.svg";
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product, onAddToCart, hidePrice = false }: ProductCardProps & { hidePrice?: boolean }) {
   const [imgError, setImgError] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -39,11 +39,11 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   return (
     <Link
       href={`/products/${slug}`}
-      className="group product-card relative focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300"
+      className="group product-card relative focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
       aria-label={`Xem chi tiết ${name}`}
     >
       {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 rounded-t-[20px]">
         {imgError ? (
           <Image
             src={FALLBACK_IMAGE}
@@ -72,56 +72,65 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           </div>
         )}
 
-        {/* Sale badge */}
-        {isOnSale && inStock && (
-          <span className="absolute top-2 left-2 bg-danger text-white text-xs font-bold px-2 py-0.5 rounded">
-            -{discountPercent}%
-          </span>
-        )}
+        {/* Badges hidden in listing view per mockup - only show on hover or detail page */}
+        {!hidePrice && (
+          <>
+            {/* Sale badge */}
+            {isOnSale && inStock && (
+              <span className="absolute top-2 left-2 bg-danger text-white text-xs font-bold px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                -{discountPercent}%
+              </span>
+            )}
 
-        {/* Custom badge */}
-        {badge && !isOnSale && (
-          <span className="absolute top-2 left-2 bg-secondary text-white text-xs font-bold px-2 py-0.5 rounded">
-            {badge}
-          </span>
+            {/* Custom badge */}
+            {badge && !isOnSale && (
+              <span className="absolute top-2 left-2 bg-secondary text-white text-xs font-bold px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                {badge}
+              </span>
+            )}
+          </>
         )}
       </div>
 
-      {/* Body */}
-      <div className="product-card-body">
+      {/* Body - mockup exact: 24px padding */}
+      <div className="p-6">
         <h3 className="product-card-title">{name}</h3>
 
-        {/* Price */}
-        <div className="flex items-baseline gap-2 mt-auto">
-          <span className="product-card-price">{formatPrice(price)}</span>
-          {isOnSale && (
-            <span className="text-gray-400 text-xs line-through">
-              {formatPrice(originalPrice)}
-            </span>
-          )}
-        </div>
+        {/* Price - hidden in listing per mockup, show on hover */}
+        {!hidePrice && (
+          <div className="flex items-baseline gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="product-card-price">{formatPrice(price)}</span>
+            {isOnSale && (
+              <span className="text-gray-400 text-xs line-through">
+                {formatPrice(originalPrice)}
+              </span>
+            )}
+          </div>
+        )}
 
-        {/* Add to cart button */}
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!inStock || isAdding}
-          aria-label={
-            !inStock
-              ? "Sản phẩm hết hàng"
-              : isAdding
-              ? "Đang thêm vào giỏ"
-              : `Thêm ${name} vào giỏ hàng`
-          }
-          className="mt-3 w-full btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isAdding ? (
-            <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-          ) : (
-            <FontAwesomeIcon icon={faCartPlus} />
-          )}
-          <span>{isAdding ? "Đang thêm..." : "Thêm vào giỏ"}</span>
-        </button>
+        {/* Add to cart button - show on hover */}
+        {!hidePrice && (
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={!inStock || isAdding}
+            aria-label={
+              !inStock
+                ? "Sản phẩm hết hàng"
+                : isAdding
+                ? "Đang thêm vào giỏ"
+                : `Thêm ${name} vào giỏ hàng`
+            }
+            className="mt-3 w-full btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            {isAdding ? (
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+            ) : (
+              <FontAwesomeIcon icon={faCartPlus} />
+            )}
+            <span>{isAdding ? "Đang thêm..." : "Thêm vào giỏ"}</span>
+          </button>
+        )}
       </div>
     </Link>
   );

@@ -8,18 +8,11 @@ export default function HeaderUserMenu() {
   const { user, isAuthenticated, initialized } = useAuth();
 
   if (!initialized) {
-    return <div className="hidden lg:block w-20 h-4 bg-gray-200 rounded animate-pulse" />;
+    return null;
   }
 
   if (!isAuthenticated || !user) {
-    return (
-      <Link
-        href="/login"
-        className="hidden lg:flex text-gray-700 font-medium text-sm items-center gap-1.5 hover:text-primary transition"
-      >
-        <Icon icon="user" /> Đăng nhập
-      </Link>
-    );
+    return null;
   }
 
   const initials = user.name

@@ -1,111 +1,122 @@
-import Link from "next/link";
 import Icon from "@/components/ui/Icon";
+
+const bestsellers = [
+  "Nhật 7 ngày 5GB",
+  "Hàn 10 ngày 10GB",
+  "Thái Lan 15GB",
+  "Châu Âu 30 nước",
+  "Mỹ 30 ngày Unl.",
+  "Toàn cầu 100+",
+];
 
 export default function HeroBanner() {
   return (
-    <section className="gradient-primary text-white py-16 md:py-24">
-      <div className="max-w-container mx-auto px-4 md:px-6 flex flex-col md:flex-row items-center gap-10">
-        <div className="flex-1 text-center md:text-left">
-          <h1 className="text-white text-3xl md:text-5xl font-extrabold leading-tight mb-4">
-            Kết nối dễ như <br className="hidden md:block" />chớp mắt
-          </h1>
-          <p className="text-white/80 text-base md:text-lg mb-8 max-w-[480px] mx-auto md:mx-0">
-            eSIM du lịch 200+ quốc gia, thẻ viễn thông, thẻ game, gói Data 4G/5G — tất cả trong 1 nơi.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-            <Link href="/esim" className="btn bg-white text-primary font-bold hover:bg-gray-100">
-              <Icon icon="globe-asia" /> Mua eSIM ngay
-            </Link>
-            <Link href="/the-nap" className="btn border-2 border-white text-white hover:bg-white/10">
-              <Icon icon="sim-card" /> Nạp thẻ điện thoại
-            </Link>
-          </div>
-          <div className="flex gap-6 mt-8 justify-center md:justify-start text-sm text-white/70">
-            <span><Icon icon="bolt" className="text-yellow-300 mr-1" />Kích hoạt tức thì</span>
-            <span><Icon icon="shield-alt" className="mr-1" />Bảo hành 100%</span>
-            <span><Icon icon="headset" className="mr-1" />Hỗ trợ 24/7</span>
-          </div>
-        </div>
-        {/* Right: floating stat cards */}
-        <div className="flex-1 hidden md:flex justify-center items-center relative min-h-[320px]">
-          <div className="relative w-[280px] h-[280px]">
-            {/* Ambient pulse ring */}
-            <div
-              className="absolute inset-0 rounded-full border-2 border-white/20"
-              style={{ animation: "ping 3s cubic-bezier(0,0,0.2,1) infinite" }}
-            />
-            {/* Central circle */}
-            <div className="absolute inset-6 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
-              <div className="text-center">
-                <Icon icon="globe-asia" className="text-5xl text-white/50 mb-1" />
-                <div className="text-white font-extrabold text-4xl leading-none">200+</div>
-                <div className="text-white/60 text-xs mt-1 tracking-widest uppercase">quốc gia</div>
+    <section className="gradient-primary text-white relative overflow-hidden" style={{ padding: "64px 0" }}>
+      {/* Decorative radial circle - mockup exact */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: "-50%",
+          right: "-10%",
+          width: "600px",
+          height: "600px",
+          background: "radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%)",
+          borderRadius: "50%",
+        }}
+      />
+
+      <div className="max-w-container mx-auto px-6 relative">
+        <div className="grid md:grid-cols-[1.2fr_1fr] gap-12 items-center">
+          {/* Left: content */}
+          <div>
+            <h1 className="text-white mb-5">
+              Kết nối <span style={{ color: "#FFE66D" }}>dễ như chớp mắt</span>
+              <br />
+              cho mọi chuyến đi
+            </h1>
+            <p className="text-white/90 mb-8 max-w-[520px]" style={{ fontSize: "18px" }}>
+              eSIM du lịch 200+ quốc gia, thẻ viễn thông trong nước, thẻ game, gói Data 4G/5G — tất cả trong 1 nơi. Kích hoạt trong 30 giây.
+            </p>
+
+            {/* Stats */}
+            <div className="flex gap-8 mb-8">
+              <div>
+                <div className="text-white font-extrabold leading-none" style={{ fontSize: "32px" }}>200+</div>
+                <div className="text-white/85" style={{ fontSize: "13px" }}>Quốc gia phủ sóng</div>
+              </div>
+              <div>
+                <div className="text-white font-extrabold leading-none" style={{ fontSize: "32px" }}>100K+</div>
+                <div className="text-white/85" style={{ fontSize: "13px" }}>Khách hàng tin dùng</div>
+              </div>
+              <div>
+                <div className="text-white font-extrabold leading-none" style={{ fontSize: "32px" }}>4.9★</div>
+                <div className="text-white/85" style={{ fontSize: "13px" }}>Đánh giá trung bình</div>
               </div>
             </div>
 
-            {/* Stat: top-left */}
-            <div className="absolute -top-3 -left-10 bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 shadow-lg min-w-[128px]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-yellow-400/20 flex items-center justify-center flex-shrink-0">
-                  <Icon icon="bolt" className="text-yellow-300 text-xs" />
-                </div>
-                <div>
-                  <div className="text-white font-bold text-sm leading-none">Tức thì</div>
-                  <div className="text-white/60 text-[10px] mt-0.5">Kích hoạt ngay</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stat: top-right */}
-            <div className="absolute -top-5 -right-6 bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 shadow-lg min-w-[128px]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-green-400/20 flex items-center justify-center flex-shrink-0">
-                  <Icon icon="users" className="text-green-300 text-xs" />
-                </div>
-                <div>
-                  <div className="text-white font-bold text-sm leading-none">10,000+</div>
-                  <div className="text-white/60 text-[10px] mt-0.5">khách hàng</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stat: bottom-right */}
-            <div className="absolute -bottom-3 -right-10 bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 shadow-lg min-w-[128px]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-yellow-300/20 flex items-center justify-center flex-shrink-0">
-                  <Icon icon="star" className="text-yellow-300 text-xs" />
-                </div>
-                <div>
-                  <div className="text-white font-bold text-sm leading-none">4.9 ★</div>
-                  <div className="text-white/60 text-[10px] mt-0.5">đánh giá</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stat: bottom-left */}
-            <div className="absolute -bottom-5 -left-6 bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-3 py-2.5 shadow-lg min-w-[128px]">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-300/20 flex items-center justify-center flex-shrink-0">
-                  <Icon icon="shield-alt" className="text-blue-200 text-xs" />
-                </div>
-                <div>
-                  <div className="text-white font-bold text-sm leading-none">Bảo hành</div>
-                  <div className="text-white/60 text-[10px] mt-0.5">100% hoàn tiền</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Country flag strip */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-            {["🇯🇵", "🇰🇷", "🇹🇭", "🇸🇬", "🇺🇸", "🇬🇧"].map((flag) => (
-              <div
-                key={flag}
-                className="w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-base"
+            {/* Hero search */}
+            <form
+              action="/esim-du-lich"
+              method="GET"
+              className="bg-white flex gap-2 max-w-[600px]"
+              style={{
+                borderRadius: "16px",
+                padding: "8px",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+              }}
+            >
+              <input
+                type="text"
+                name="q"
+                placeholder="Bạn đang đi đâu? Nhật Bản, Hàn Quốc, Mỹ..."
+                className="flex-1 border-none outline-none text-navy font-sans"
+                style={{ padding: "16px 20px", fontSize: "15px" }}
+              />
+              <button
+                type="submit"
+                className="bg-navy text-white font-semibold hover:opacity-90 transition flex items-center gap-2"
+                style={{
+                  padding: "14px 28px",
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                }}
               >
-                {flag}
-              </div>
-            ))}
+                <Icon icon="search" /> Tìm gói cho tôi
+              </button>
+            </form>
+          </div>
+
+          {/* Right: bestseller card - mockup exact */}
+          <div
+            className="hidden md:block text-white"
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              borderRadius: "20px",
+              padding: "32px",
+            }}
+          >
+            <h3 className="font-bold mb-4 flex items-center gap-2" style={{ fontSize: "18px" }}>
+              <Icon icon="fire" /> Bán chạy nhất tuần này
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {bestsellers.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-2.5 font-medium"
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    fontSize: "14px",
+                  }}
+                >
+                  <Icon icon="bolt" style={{ color: "#FFE66D", fontSize: "20px" }} />
+                  {item}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

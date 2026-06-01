@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { SITE } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
-import {
-  HeroBanner,
-  FeaturedCategories,
-  FeaturedProducts,
-  NewProducts,
-  PromotionSection,
-} from "@/components/home";
+import HeroBanner from "@/components/home/HeroBanner";
+import TrustBar from "@/components/home/TrustBar";
+import FeaturedCategories from "@/components/home/FeaturedCategories";
+import PopularDestinations from "@/components/home/PopularDestinations";
+import HowItWorks from "@/components/home/HowItWorks";
+import GamePromo from "@/components/home/GamePromo";
+import Testimonials from "@/components/home/Testimonials";
 
 export const metadata: Metadata = buildMetadata({
   absoluteTitle: `${SITE.name} - ${SITE.tagline} | eSIM, Thẻ ĐT, Thẻ Game, Data 4G/5G`,
@@ -20,10 +20,12 @@ export default function HomePage() {
   return (
     <>
       <HeroBanner />
+      <TrustBar />
       <FeaturedCategories />
-      <FeaturedProducts />
-      <NewProducts />
-      <PromotionSection />
+      <PopularDestinations />
+      <HowItWorks />
+      <GamePromo />
+      <Testimonials />
     </>
   );
 }

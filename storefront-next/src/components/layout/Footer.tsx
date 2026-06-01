@@ -4,11 +4,11 @@ import Logo from "./Logo";
 
 const footerLinks = {
   products: [
-    { label: "eSIM Du lịch", href: "/esim" },
-    { label: "Thẻ Viễn thông", href: "/the-nap" },
-    { label: "Thẻ Game", href: "/the-game" },
-    { label: "Data 4G/5G", href: "/data" },
-    { label: "Khuyến mãi", href: "/khuyen-mai" },
+    { label: "eSIM Du lịch", href: "/esim-du-lich" },
+    { label: "Thẻ Viễn thông", href: "/the-nap?tab=telecom" },
+    { label: "Thẻ Game", href: "/the-nap?tab=game" },
+    { label: "Data 4G/5G", href: "/the-nap?tab=data" },
+    { label: "Khuyến mãi", href: "/the-nap?tab=promo" },
   ],
   support: [
     { label: "Cài đặt eSIM", href: "/huong-dan/cai-dat-esim" },
@@ -28,13 +28,13 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="bg-navy text-slate-400 pt-12 md:pt-16 pb-6">
-      <div className="max-w-container mx-auto px-4 md:px-6">
+    <footer className="bg-navy text-gray-400 pt-16 pb-6">
+      <div className="max-w-container mx-auto px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="mb-4"><Logo /></div>
-            <p className="text-sm leading-7 max-w-[320px]">
+            <p className="text-sm leading-relaxed max-w-[320px]">
               Kết nối dễ như chớp mắt — Connect in a Flash. Nền tảng cung cấp eSIM du lịch, thẻ viễn thông, thẻ game và gói Data hàng đầu Việt Nam.
             </p>
             <div className="mt-5 flex gap-3">
@@ -42,7 +42,7 @@ export default function Footer() {
                 <Link
                   key={icon}
                   href="#"
-                  className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-primary transition"
+                  className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-cyan transition"
                 >
                   <Icon icon={["fab", icon]} />
                 </Link>
@@ -56,7 +56,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.products.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-secondary transition">{l.label}</Link>
+                  <Link href={l.href} className="text-[13px] hover:text-cyan transition">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -68,7 +68,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.support.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-secondary transition">{l.label}</Link>
+                  <Link href={l.href} className="text-[13px] hover:text-cyan transition">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -80,7 +80,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.policies.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-[13px] text-slate-400 hover:text-secondary transition">{l.label}</Link>
+                  <Link href={l.href} className="text-[13px] hover:text-cyan transition">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -90,10 +90,10 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold text-[15px] mb-4">Liên hệ</h4>
             <ul className="space-y-2.5 text-[13px]">
-              <li><Icon icon="phone" className="mr-2" />1900 1881</li>
-              <li><Icon icon="envelope" className="mr-2" />hello@ezsim.vn</li>
-              <li><Icon icon="map-marker-alt" className="mr-2" />Hà Nội, Việt Nam</li>
-              <li><Icon icon="clock" className="mr-2" />24/7 - 365 ngày</li>
+              <li className="flex items-center gap-2"><Icon icon="phone" />1900 1234</li>
+              <li className="flex items-center gap-2"><Icon icon="envelope" />support@ezsim.vn</li>
+              <li className="flex items-center gap-2"><Icon icon="map-marker-alt" />Hà Nội, Việt Nam</li>
+              <li className="flex items-center gap-2"><Icon icon="clock" />24/7 - 365 ngày</li>
             </ul>
           </div>
         </div>
@@ -101,11 +101,11 @@ export default function Footer() {
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between gap-3 text-[13px]">
           <div>© 2026 EZSIM Vietnam. All rights reserved.</div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/chinh-sach-bao-mat" className="text-slate-400 hover:text-secondary">Chính sách bảo mật</Link>
+            <Link href="/chinh-sach-bao-mat" className="hover:text-cyan transition">Chính sách bảo mật</Link>
             <span>•</span>
-            <Link href="/dieu-khoan" className="text-slate-400 hover:text-secondary">Điều khoản</Link>
+            <Link href="/dieu-khoan" className="hover:text-cyan transition">Điều khoản</Link>
             <span>•</span>
-            <Link href="#" className="text-slate-400 hover:text-secondary">Đã thông báo Bộ Công Thương</Link>
+            <Link href="#" className="hover:text-cyan transition">Đã thông báo Bộ Công Thương</Link>
           </div>
         </div>
       </div>

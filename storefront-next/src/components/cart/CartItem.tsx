@@ -17,12 +17,13 @@ export default function CartItem({ item }: Props) {
   const removeFromCart = useCartStore((s) => s.removeFromCart);
 
   const subtotal = item.price * item.quantity;
+  const itemHref = item.href ?? `/products/${item.slug}`;
 
   return (
     <div className="flex gap-4 py-4 border-b border-gray-100 last:border-b-0">
       {/* Image */}
       <Link
-        href={`/products/${item.slug}`}
+        href={itemHref}
         className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100"
       >
         <Image
@@ -39,7 +40,7 @@ export default function CartItem({ item }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <Link
-            href={`/products/${item.slug}`}
+            href={itemHref}
             className="text-sm font-semibold text-navy line-clamp-2 hover:text-primary transition"
           >
             {item.name}
