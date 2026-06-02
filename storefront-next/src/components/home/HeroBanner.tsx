@@ -58,7 +58,7 @@ export default function HeroBanner() {
             <form
               action="/esim-du-lich"
               method="GET"
-              className="bg-white flex gap-2 max-w-[600px]"
+              className="bg-white flex flex-col sm:flex-row gap-2 max-w-[600px]"
               style={{
                 borderRadius: "16px",
                 padding: "8px",
@@ -69,19 +69,21 @@ export default function HeroBanner() {
                 type="text"
                 name="q"
                 placeholder="Bạn đang đi đâu? Nhật Bản, Hàn Quốc, Mỹ..."
-                className="flex-1 border-none outline-none text-navy font-sans"
-                style={{ padding: "16px 20px", fontSize: "15px" }}
+                className="flex-1 border-none outline-none text-navy font-sans min-w-0"
+                style={{ padding: "12px 14px", fontSize: "14px" }}
               />
               <button
                 type="submit"
-                className="bg-navy text-white font-semibold hover:opacity-90 transition flex items-center gap-2"
+                className="bg-navy text-white font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 whitespace-nowrap"
                 style={{
-                  padding: "14px 28px",
-                  borderRadius: "12px",
-                  fontSize: "15px",
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  fontSize: "14px",
                 }}
               >
-                <Icon icon="search" /> Tìm gói cho tôi
+                <Icon icon="search" />
+                <span className="sm:hidden">Tìm gói</span>
+                <span className="hidden sm:inline">Tìm gói cho tôi</span>
               </button>
             </form>
           </div>
