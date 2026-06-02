@@ -72,10 +72,16 @@ export default function Header() {
               Tiếng Việt
             </a>
             {initialized && !isAuthenticated && (
-              <Link href="/login" className="hover:text-cyan transition flex items-center gap-1.5">
-                <Icon icon="user" />
-                Đăng nhập / Đăng ký
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link href="/login" className="hover:text-cyan transition flex items-center gap-1.5">
+                  <Icon icon="user" />
+                  Đăng nhập
+                </Link>
+                <span className="text-gray-500">/</span>
+                <Link href="/register" className="hover:text-cyan transition">
+                  Đăng ký
+                </Link>
+              </div>
             )}
           </div>
         </div>

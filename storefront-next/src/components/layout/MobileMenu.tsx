@@ -3,23 +3,46 @@
 import { useState } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
 import { useAuth } from "@/hooks/useAuth";
 
-const menuItems: { label: string; icon: IconName; href: string }[] = [
-  { label: "Trang chủ", icon: "home", href: "/" },
-  { label: "Sản phẩm", icon: "list", href: "/products" },
-  { label: "eSIM Du lịch", icon: "globe-asia", href: "/products?categoryId=esim" },
-  { label: "Thẻ Viễn thông", icon: "sim-card", href: "/products?categoryId=the-nap" },
-  { label: "Thẻ Game", icon: "gamepad", href: "/products?categoryId=the-game" },
-  { label: "Data 4G/5G", icon: "wifi", href: "/products?categoryId=data" },
-  { label: "Khuyến mãi", icon: "tag", href: "/khuyen-mai" },
+interface MobileMenuItem {
+  label: string;
+  icon: IconName;
+  href: string;
+  matchPath: string;
+  matchTab?: string;
+}
+
+const menuItems: MobileMenuItem[] = [
+  { label: "Trang chủ", icon: "home", href: "/", matchPath: "/" },
+  { label: "eSIM Du lịch", icon: "globe-asia", href: "/esim-du-lich", matchPath: "/esim-du-lich" },
+  { label: "Thẻ Viễn thông", icon: "mobile-alt", href: "/the-nap?tab=telecom", matchPath: "/the-nap", matchTab: "telecom" },
+  { label: "Thẻ Game", icon: "gamepad", href: "/the-nap?tab=game", matchPath: "/the-nap", matchTab: "game" },
+  { label: "Data 4G/5G", icon: "wifi", href: "/the-nap?tab=data", matchPath: "/the-nap", matchTab: "data" },
+  { label: "Khuyến mãi", icon: "tag", href: "/the-nap?tab=promo", matchPath: "/the-nap", matchTab: "promo" },
 ];
+
+function isMenuActive(item: MobileMenuItem, pathname: string, currentTab: string | null): boolean {
+  if (item.matchPath === "/") return pathname === "/";
+
+  const pathMatches = pathname === item.matchPath || pathname.startsWith(item.matchPath + "/");
+  if (!pathMatches) return false;
+
+  if (item.matchTab) {
+    const effectiveTab = currentTab ?? (item.matchPath === "/the-nap" ? "telecom" : null);
+    return effectiveTab === item.matchTab;
+  }
+
+  return true;
+}
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab");
   const { user, isAuthenticated } = useAuth();
 
   return (
@@ -52,7 +75,7 @@ export default function MobileMenu() {
 
         <nav className="p-4 space-y-1">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = isMenuActive(item, pathname ?? "", currentTab);
             return (
               <Link
                 key={item.label}
@@ -84,14 +107,23 @@ export default function MobileMenu() {
               <span className="truncate">{user.name}</span>
             </Link>
           ) : (
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-            >
-              <Icon icon="user" className="w-4" />
-              Đăng nhập / Đăng ký
-            </Link>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 border border-gray-200 transition"
+              >
+                <Icon icon="user" className="w-4" />
+                Đăng nhập
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center px-3 py-3 rounded-lg text-sm font-medium text-white gradient-primary transition"
+              >
+                Đăng ký
+              </Link>
+            </div>
           )}
         </div>
       </div>
