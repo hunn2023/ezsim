@@ -8,14 +8,27 @@ import { useCartStore } from "@/lib/cartStore";
 
 const CartIcon = forwardRef<HTMLAnchorElement, object>(function CartIcon(_props, ref) {
   const items = useCartStore((s) => s.items);
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const persistApi = useCartStore.persist;
+    if (!persistApi) {
+      setHydrated(true);
+      return;
+    }
+
+    const unsubscribeHydrate = persistApi.onHydrate(() => setHydrated(false));
+    const unsubscribeFinishHydration = persistApi.onFinishHydration(() => setHydrated(true));
+    setHydrated(persistApi.hasHydrated());
+
+    return () => {
+      unsubscribeHydrate();
+      unsubscribeFinishHydration();
+    };
   }, []);
 
   // Compute count from items - this will re-render when items change
-  const count = mounted ? items.reduce((sum, i) => sum + i.quantity, 0) : 0;
+  const count = hydrated ? items.reduce((sum, i) => sum + i.quantity, 0) : 0;
 
   return (
     <Link

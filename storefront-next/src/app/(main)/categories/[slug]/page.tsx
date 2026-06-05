@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { buildMetadata } from "@/lib/seo";
 import { SITE } from "@/lib/constants";
 import { Suspense } from "react";
@@ -13,8 +14,12 @@ interface PageProps {
   searchParams: ProductQueryParams;
 }
 
+export const revalidate = 300;
+
+const getCachedCategoryBySlug = cache(async (slug: string) => getCategoryBySlug(slug));
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const category = await getCategoryBySlug(params.slug);
+  const category = await getCachedCategoryBySlug(params.slug);
   if (!category) return { title: "Không tìm thấy danh mục", robots: { index: false } };
 
   return buildMetadata({
@@ -27,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
-  const category = await getCategoryBySlug(params.slug);
+  const category = await getCachedCategoryBySlug(params.slug);
   if (!category) notFound();
 
   const { products, totalPages } = await getProductsByCategory(params.slug, searchParams);
@@ -36,7 +41,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <>
       <Breadcrumb
         items={[
-          { label: "Danh mục", href: "/products" },
+          { label: "Danh mục", href: "/esim-du-lich" },
           { label: category.name },
         ]}
       />

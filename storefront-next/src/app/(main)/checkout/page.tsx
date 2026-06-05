@@ -10,17 +10,35 @@ export default function CheckoutPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
 
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const persistApi = useCartStore.persist;
+    if (!persistApi) {
+      setHydrated(true);
+      return;
+    }
+
+    const unsubscribeHydrate = persistApi.onHydrate(() => setHydrated(false));
+    const unsubscribeFinishHydration = persistApi.onFinishHydration(() => setHydrated(true));
+    setHydrated(persistApi.hasHydrated());
+
+    return () => {
+      unsubscribeHydrate();
+      unsubscribeFinishHydration();
+    };
   }, []);
 
-  // Hydration loading
-  if (!mounted) {
+  // Show skeleton only while persisted cart state is hydrating.
+  if (!hydrated) {
     return (
       <>
-        <Breadcrumb items={[{ label: "Giỏ hàng", href: "/cart" }, { label: "Thanh toán" }]} />
+        <Breadcrumb
+          items={[
+            { label: "Giỏ hàng", href: "/cart" },
+            { label: "Thanh toán" },
+          ]}
+        />
         <section className="max-w-container mx-auto px-4 md:px-6 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-48" />
@@ -37,18 +55,22 @@ export default function CheckoutPage() {
     );
   }
 
-  // Cart empty guard - redirect to products
+  // Cart empty guard - redirect to eSIM du lich page
   if (items.length === 0) {
-    router.push("/products");
+    router.push("/esim-du-lich");
     return null;
   }
 
   return (
     <>
-      <Breadcrumb items={[{ label: "Giỏ hàng", href: "/cart" }, { label: "Thanh toán" }]} />
+      <Breadcrumb
+        items={[{ label: "Giỏ hàng", href: "/cart" }, { label: "Thanh toán" }]}
+      />
 
       <section className="max-w-container mx-auto px-4 md:px-6 py-6 md:py-10">
-        <h1 className="text-xl md:text-2xl font-bold text-navy mb-6">Thanh toán</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-navy mb-6">
+          Thanh toán
+        </h1>
         <CheckoutForm />
       </section>
     </>

@@ -7,8 +7,6 @@ import type {
   PackageQuickTag,
 } from "@/types/esim";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const buildPackage = (countrySlug: string, pkg: Omit<EsimPackage, "id" | "slug" | "name" | "image" | "stock"> & { idSuffix: string; stock?: number }) => ({
   ...pkg,
   id: `${countrySlug}-${pkg.idSuffix}`,
@@ -228,7 +226,6 @@ const countries: EsimCountryDetail[] = [
 ];
 
 export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
-  await delay(120);
   return countries.map((country) => ({
     slug: country.slug,
     flag: country.flag,
@@ -241,7 +238,6 @@ export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
 }
 
 export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail | null> {
-  await delay(120);
   return countries.find((country) => country.slug === slug) ?? null;
 }
 

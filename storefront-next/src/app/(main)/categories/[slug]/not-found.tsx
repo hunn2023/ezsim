@@ -9,7 +9,7 @@ export default function NotFound() {
       <p className="text-gray-500 mb-8">
         Danh mục bạn đang tìm không tồn tại hoặc đã bị xóa.
       </p>
-      <Link href="/products" className="btn-primary">
+      <Link href="/esim-du-lich" className="btn-primary">
         Xem tất cả sản phẩm
       </Link>
     </section>

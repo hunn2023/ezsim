@@ -61,12 +61,11 @@ export default function AddToCartSection({
   const handleAddToCart = useCallback(async () => {
     if (!inStock || isAddingToCart) return;
     if (!isAuthenticated()) {
-      router.push(`/login?returnUrl=/products/${productSlug}`);
+      router.push(`/login?returnUrl=/esim-du-lich/${productSlug}`);
       return;
     }
     setIsAddingToCart(true);
     try {
-      await new Promise((r) => setTimeout(r, 300));
       addToCart(cartItem);
       triggerFlyToCart(productImage, addButtonRef.current);
     } finally {
@@ -77,7 +76,7 @@ export default function AddToCartSection({
   const handleBuyNow = useCallback(async () => {
     if (!inStock || isBuyingNow) return;
     if (!isAuthenticated()) {
-      router.push(`/login?returnUrl=/products/${productSlug}`);
+      router.push(`/login?returnUrl=/esim-du-lich/${productSlug}`);
       return;
     }
     setIsBuyingNow(true);

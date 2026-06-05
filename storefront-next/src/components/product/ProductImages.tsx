@@ -27,7 +27,6 @@ export default function ProductImages({ images, productName }: Props) {
           sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover"
           priority
-          unoptimized
           onError={() => handleError(activeIndex)}
         />
       </div>
@@ -53,7 +52,6 @@ export default function ProductImages({ images, productName }: Props) {
                 fill
                 sizes="80px"
                 className="object-cover"
-                unoptimized
                 onError={() => handleError(i)}
               />
             </button>

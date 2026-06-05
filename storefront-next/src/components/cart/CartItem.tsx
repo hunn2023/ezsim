@@ -17,7 +17,7 @@ export default function CartItem({ item }: Props) {
   const removeFromCart = useCartStore((s) => s.removeFromCart);
 
   const subtotal = item.price * item.quantity;
-  const itemHref = item.href ?? `/products/${item.slug}`;
+  const itemHref = item.href ?? `/esim-du-lich/${item.slug}`;
 
   return (
     <div className="flex gap-4 py-4 border-b border-gray-100 last:border-b-0">
@@ -32,7 +32,6 @@ export default function CartItem({ item }: Props) {
           fill
           sizes="96px"
           className="object-cover"
-          unoptimized
         />
       </Link>
 

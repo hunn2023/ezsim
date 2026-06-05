@@ -2,14 +2,23 @@
 
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
 import Logo from "./Logo";
 import CartIcon from "./CartIcon";
-import MobileMenu from "./MobileMenu";
-import HeaderUserMenu from "./HeaderUserMenu";
 import { useCartAnimation } from "@/components/ui/CartAnimation";
 import { useAuth } from "@/hooks/useAuth";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
+
+const MobileMenu = dynamic(() => import("./MobileMenu"), {
+  ssr: false,
+  loading: () => <div className="lg:hidden w-10 h-10" aria-hidden="true" />,
+});
+
+const HeaderUserMenu = dynamic(() => import("./HeaderUserMenu"), {
+  ssr: false,
+  loading: () => <div className="hidden lg:block w-20 h-8" aria-hidden="true" />,
+});
 
 interface MainMenuItem {
   label: string;
@@ -24,15 +33,49 @@ interface MainMenuItem {
 }
 
 const MAIN_MENU: MainMenuItem[] = [
-  { label: "Trang chủ",      icon: "home",       href: "/",                       matchPath: "/" },
-  { label: "eSIM Du lịch",   icon: "globe-asia", href: "/esim-du-lich",           matchPath: "/esim-du-lich" },
-  { label: "Thẻ Viễn thông", icon: "mobile-alt", href: "/the-nap?tab=telecom",    matchPath: "/the-nap", matchTab: "telecom" },
-  { label: "Thẻ Game",       icon: "gamepad",    href: "/the-nap?tab=game",       matchPath: "/the-nap", matchTab: "game" },
-  { label: "Data 4G/5G",     icon: "wifi",       href: "/the-nap?tab=data",       matchPath: "/the-nap", matchTab: "data" },
-  { label: "Khuyến mãi",     icon: "tag",        href: "/the-nap?tab=promo",      matchPath: "/the-nap", matchTab: "promo", highlight: true },
+  { label: "Trang chủ", icon: "home", href: "/", matchPath: "/" },
+  {
+    label: "eSIM Du lịch",
+    icon: "globe-asia",
+    href: "/esim-du-lich",
+    matchPath: "/esim-du-lich",
+  },
+  {
+    label: "Thẻ Viễn thông",
+    icon: "mobile-alt",
+    href: "/the-nap?tab=telecom",
+    matchPath: "/the-nap",
+    matchTab: "telecom",
+  },
+  {
+    label: "Thẻ Game",
+    icon: "gamepad",
+    href: "/the-nap?tab=game",
+    matchPath: "/the-nap",
+    matchTab: "game",
+  },
+  {
+    label: "Data 4G/5G",
+    icon: "wifi",
+    href: "/the-nap?tab=data",
+    matchPath: "/the-nap",
+    matchTab: "data",
+  },
+  {
+    label: "Khuyến mãi",
+    icon: "tag",
+    href: "/the-nap?tab=promo",
+    matchPath: "/the-nap",
+    matchTab: "promo",
+    highlight: true,
+  },
 ];
 
-function isMenuActive(item: MainMenuItem, pathname: string, currentTab: string | null): boolean {
+function isMenuActive(
+  item: MainMenuItem,
+  pathname: string,
+  currentTab: string | null
+): boolean {
   if (item.matchPath === "/") return pathname === "/";
 
   const pathMatches =
@@ -41,7 +84,8 @@ function isMenuActive(item: MainMenuItem, pathname: string, currentTab: string |
 
   if (item.matchTab) {
     // Treat no-query as "telecom" default for /the-nap
-    const effectiveTab = currentTab ?? (item.matchPath === "/the-nap" ? "telecom" : null);
+    const effectiveTab =
+      currentTab ?? (item.matchPath === "/the-nap" ? "telecom" : null);
     return effectiveTab === item.matchTab;
   }
 
@@ -60,20 +104,32 @@ export default function Header() {
   return (
     <>
       {/* TOP BAR */}
-      <div className="bg-navy" style={{ color: "#94A3B8", fontSize: "13px", padding: "8px 0" }}>
+      <div
+        className="bg-navy"
+        style={{ color: "#94A3B8", fontSize: "13px", padding: "8px 0" }}
+      >
         <div className="max-w-container mx-auto px-6 flex justify-end items-center">
           <div className="flex items-center gap-5">
-            <a href="#" className="hover:text-cyan transition hidden md:flex items-center gap-1.5">
+            <a
+              href="#"
+              className="hover:text-cyan transition hidden md:flex items-center gap-1.5"
+            >
               <Icon icon="mobile-alt" />
               Tải app EZSIM
             </a>
-            <a href="#" className="hover:text-cyan transition hidden md:flex items-center gap-1.5">
+            <a
+              href="#"
+              className="hover:text-cyan transition hidden md:flex items-center gap-1.5"
+            >
               <Icon icon="globe" />
               Tiếng Việt
             </a>
             {initialized && !isAuthenticated && (
               <div className="flex items-center gap-3">
-                <Link href="/login" className="hover:text-cyan transition flex items-center gap-1.5">
+                <Link
+                  href="/login"
+                  className="hover:text-cyan transition flex items-center gap-1.5"
+                >
                   <Icon icon="user" />
                   Đăng nhập
                 </Link>
@@ -95,7 +151,10 @@ export default function Header() {
 
           {/* Search bar */}
           <div className="hidden md:block flex-1 max-w-[480px] relative">
-            <Icon icon="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Icon
+              icon="search"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+            />
             <input
               type="text"
               placeholder="Tìm kiếm quốc gia, gói data, thẻ game..."
@@ -113,7 +172,10 @@ export default function Header() {
         {/* Mobile search */}
         <div className="md:hidden px-4 pb-3">
           <div className="relative">
-            <Icon icon="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+            <Icon
+              icon="search"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"
+            />
             <input
               type="text"
               placeholder="Tìm kiếm..."
@@ -136,11 +198,7 @@ export default function Header() {
                   className="font-medium text-sm flex items-center gap-1.5 transition"
                   style={{
                     padding: "14px 0",
-                    color: active
-                      ? "#0066FF"
-                      : item.highlight
-                        ? "#F59E0B"
-                        : "#334155",
+                    color: active ? "#0066FF" : "#334155",
                     borderBottom: active
                       ? "2px solid #0066FF"
                       : "2px solid transparent",

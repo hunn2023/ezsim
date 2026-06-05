@@ -17,7 +17,7 @@ export default function ProductSort() {
   const handleChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("sort", value);
-    router.push(`/products?${params.toString()}`);
+    router.push(`/esim-du-lich?${params.toString()}`);
   };
 
   return (

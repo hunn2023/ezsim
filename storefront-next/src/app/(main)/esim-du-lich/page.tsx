@@ -4,6 +4,8 @@ import { Breadcrumb } from "@/components/ui";
 import { getEsimCountries } from "@/lib/api/esimApi";
 import type { EsimCountrySummary } from "@/types/esim";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "eSIM Du lịch 200+ quốc gia | EZSIM",
   description: "Chọn quốc gia bạn đang đến để xem các gói eSIM phù hợp. Kích hoạt 30 giây.",

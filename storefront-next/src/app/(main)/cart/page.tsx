@@ -41,7 +41,7 @@ export default function CartPage() {
           <p className="text-gray-500 mb-8">
             Bạn chưa có sản phẩm nào trong giỏ hàng.
           </p>
-          <Link href="/products" className="btn-primary">
+          <Link href="/esim-du-lich" className="btn-primary">
             Tiếp tục mua hàng
           </Link>
         </section>

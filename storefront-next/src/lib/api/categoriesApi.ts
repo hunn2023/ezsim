@@ -153,7 +153,6 @@ const allProducts: Product[] = [
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   // Simulate API: GET /api/categories/{slug}
-  await new Promise((r) => setTimeout(r, 100));
   return categories.find((c) => c.slug === slug) ?? null;
 }
 
@@ -162,8 +161,6 @@ export async function getProductsByCategory(
   params: ProductQueryParams = {}
 ): Promise<PaginatedProducts> {
   // Simulate API: GET /api/products?categorySlug={slug}&sort=...&minPrice=...&maxPrice=...&pageIndex=...
-  await new Promise((r) => setTimeout(r, 150));
-
   let filtered = allProducts.filter((p) => p.category === categorySlug);
 
   // Price filter

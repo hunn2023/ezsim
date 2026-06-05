@@ -8,6 +8,10 @@ import PopularDestinations from "@/components/home/PopularDestinations";
 import HowItWorks from "@/components/home/HowItWorks";
 import GamePromo from "@/components/home/GamePromo";
 import Testimonials from "@/components/home/Testimonials";
+import { BlogSection } from "@/components/blog";
+import { Suspense } from "react";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = buildMetadata({
   absoluteTitle: `${SITE.name} - ${SITE.tagline} | eSIM, Thẻ ĐT, Thẻ Game, Data 4G/5G`,
@@ -26,6 +30,32 @@ export default function HomePage() {
       <HowItWorks />
       <GamePromo />
       <Testimonials />
+      <Suspense
+        fallback={
+          <section className="py-12 md:py-16 bg-gradient-to-b from-white to-[#F8FBFF]">
+            <div className="max-w-container mx-auto px-4 md:px-6">
+              <div className="animate-pulse space-y-5">
+                <div className="h-4 bg-gray-200 rounded w-56" />
+                <div className="h-8 bg-gray-200 rounded w-72" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="rounded-2xl border border-gray-200 overflow-hidden">
+                      <div className="aspect-[16/9] bg-gray-200" />
+                      <div className="p-5 space-y-3">
+                        <div className="h-3 bg-gray-200 rounded w-24" />
+                        <div className="h-5 bg-gray-200 rounded w-4/5" />
+                        <div className="h-4 bg-gray-200 rounded w-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        }
+      >
+        <BlogSection />
+      </Suspense>
     </>
   );
 }

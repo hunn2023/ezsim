@@ -1,7 +1,5 @@
 import type { CardMarketplaceContent, CardMarketplaceTab, CardProvider } from "@/types/cardMarketplace";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const telecomProviders: CardProvider[] = [
   {
     id: "viettel",
@@ -440,7 +438,6 @@ const contentByTab: Record<CardMarketplaceTab, CardMarketplaceContent> = {
 };
 
 export async function getCardMarketplaceContent(tab: CardMarketplaceTab): Promise<CardMarketplaceContent> {
-  await delay(80);
   return contentByTab[tab] ?? contentByTab.telecom;
 }
 

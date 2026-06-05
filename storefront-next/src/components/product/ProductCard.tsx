@@ -38,7 +38,7 @@ export default function ProductCard({ product, onAddToCart, hidePrice = false }:
 
   return (
     <Link
-      href={`/products/${slug}`}
+      href={`/esim-du-lich/${slug}`}
       className="group product-card relative focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
       aria-label={`Xem chi tiết ${name}`}
     >
@@ -59,7 +59,6 @@ export default function ProductCard({ product, onAddToCart, hidePrice = false }:
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setImgError(true)}
-            unoptimized
           />
         )}
 

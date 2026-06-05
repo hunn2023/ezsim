@@ -9,6 +9,8 @@ import {
 import { getCardMarketplaceContent } from "@/lib/api/cardMarketplaceApi";
 import type { CardMarketplaceTab } from "@/types/cardMarketplace";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Mua thẻ Viễn thông & Thẻ Game online - Chiết khấu cao | EZSIM",
   description:

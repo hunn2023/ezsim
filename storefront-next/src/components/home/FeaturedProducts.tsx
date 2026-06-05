@@ -28,7 +28,7 @@ export default function FeaturedProducts() {
       <div className="max-w-container mx-auto px-4 md:px-6">
         <div className="flex items-end justify-between mb-8">
           <SectionHeading eyebrow="Bán chạy" title="Sản phẩm" highlight="nổi bật" align="left" />
-          <Link href="/products" className="text-primary text-sm font-semibold hover:underline flex items-center gap-1 flex-shrink-0 mb-1">
+          <Link href="/esim-du-lich" className="text-primary text-sm font-semibold hover:underline flex items-center gap-1 flex-shrink-0 mb-1">
             Xem tất cả <Icon icon="arrow-right" />
           </Link>
         </div>

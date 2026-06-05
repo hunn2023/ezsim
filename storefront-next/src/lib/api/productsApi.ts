@@ -224,7 +224,6 @@ const productDetails: ProductDetail[] = [
 ];
 
 export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
-  await new Promise((r) => setTimeout(r, 100));
   return productDetails.find((p) => p.slug === slug) ?? null;
 }
 
@@ -232,7 +231,6 @@ export async function getRelatedProducts(
   categoryId: string,
   excludeId: string
 ): Promise<Product[]> {
-  await new Promise((r) => setTimeout(r, 100));
   return productDetails
     .filter((p) => p.categoryId === categoryId && p.id !== excludeId)
     .slice(0, 4)

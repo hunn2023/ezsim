@@ -33,7 +33,7 @@ export default function ProductGrid({ products, totalPages, loading }: Props) {
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("pageIndex", String(page));
-    router.push(`/products?${params.toString()}`);
+    router.push(`/esim-du-lich?${params.toString()}`);
   };
 
   if (loading) {
@@ -66,7 +66,7 @@ export default function ProductGrid({ products, totalPages, loading }: Props) {
     <div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         {products.map((p) => (
-          <Link key={p.id} href={`/products/${p.slug}`} className="product-card">
+          <Link key={p.id} href={`/esim-du-lich/${p.slug}`} className="product-card">
             <div className="relative">
               <img src={p.image} alt={p.name} className="product-card-img bg-gray-100" />
               {p.badge && (

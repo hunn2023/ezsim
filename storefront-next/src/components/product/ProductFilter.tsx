@@ -28,7 +28,7 @@ export default function ProductFilter() {
         else params.delete(k);
       });
       params.delete("pageIndex");
-      router.push(`/products?${params.toString()}`);
+      router.push(`/esim-du-lich?${params.toString()}`);
     },
     [router, searchParams]
   );

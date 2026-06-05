@@ -38,7 +38,7 @@ export default function CartSummary() {
       </Link>
 
       <Link
-        href="/products"
+        href="/esim-du-lich"
         className="block text-center text-sm text-gray-500 hover:text-primary transition mt-2"
       >
         Tiếp tục mua hàng

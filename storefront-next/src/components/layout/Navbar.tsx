@@ -7,7 +7,7 @@ import type { IconName } from "@fortawesome/fontawesome-svg-core";
 
 const menuItems: { label: string; icon: IconName; href: string }[] = [
   { label: "Trang chủ", icon: "home", href: "/" },
-  { label: "Sản phẩm", icon: "list", href: "/products" },
+  { label: "Sản phẩm", icon: "list", href: "/esim-du-lich" },
   { label: "Khuyến mãi", icon: "tag", href: "/khuyen-mai" },
 ];
 
