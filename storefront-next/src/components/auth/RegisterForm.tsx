@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -34,7 +34,9 @@ function Field({ id, label, error, children }: FieldProps) {
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const { handleRegister, isLoading } = useRegister();
+  const [otpCode, setOtpCode] = useState("");
+  const [remainingMs, setRemainingMs] = useState(0);
+  const { requestOtp, verifyOtpAndRegister, resendOtp, cancelOtp, otpSession, isLoading } = useRegister();
 
   const {
     register,
@@ -45,8 +47,103 @@ export default function RegisterForm() {
     mode: "onBlur",
   });
 
+  useEffect(() => {
+    if (!otpSession) {
+      setOtpCode("");
+      setRemainingMs(0);
+      return;
+    }
+
+    const updateCountdown = () => {
+      setRemainingMs(Math.max(0, otpSession.expiresAt - Date.now()));
+    };
+
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(interval);
+  }, [otpSession]);
+
+  const otpExpired = otpSession ? remainingMs <= 0 : false;
+  const otpCountdownText = `${String(Math.floor(remainingMs / 60000)).padStart(2, "0")}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, "0")}`;
+
+  const handleOtpSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await verifyOtpAndRegister(otpCode);
+  };
+
+  if (otpSession) {
+    return (
+      <form onSubmit={handleOtpSubmit} noValidate className="space-y-5">
+        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <p className="text-sm font-semibold text-navy">Xác thực email để hoàn tất đăng ký</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Mã OTP gồm 6 số đã được gửi tới <span className="font-semibold text-navy">{otpSession.maskedEmail}</span>.
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            Mã còn hiệu lực: <span className={`font-semibold ${otpExpired ? "text-danger" : "text-primary"}`}>{otpExpired ? "Đã hết hạn" : otpCountdownText}</span>
+          </p>
+        </div>
+
+        <div>
+          <label htmlFor="register-otp" className="block text-sm font-medium text-navy mb-1.5">
+            Mã OTP
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <Icon icon="shield-alt" className="text-sm" />
+            </span>
+            <input
+              id="register-otp"
+              type="text"
+              value={otpCode}
+              onChange={(event) => {
+                const normalizedValue = event.target.value.replace(/\D/g, "").slice(0, 6);
+                setOtpCode(normalizedValue);
+              }}
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              placeholder="Nhập 6 số OTP"
+              disabled={isLoading}
+              className="input pl-10 tracking-[0.35em]"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading || otpExpired}
+          aria-busy={isLoading}
+          className="btn btn-primary w-full py-3.5 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isLoading ? "Đang xác thực..." : "Xác thực OTP và tạo tài khoản"}
+        </button>
+
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <button
+            type="button"
+            onClick={resendOtp}
+            disabled={isLoading}
+            className="font-semibold text-primary hover:text-primary-dark transition disabled:opacity-60"
+          >
+            Gửi lại mã OTP
+          </button>
+          <button
+            type="button"
+            onClick={cancelOtp}
+            disabled={isLoading}
+            className="font-semibold text-gray-500 hover:text-navy transition disabled:opacity-60"
+          >
+            Chỉnh sửa thông tin
+          </button>
+        </div>
+      </form>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit(handleRegister)} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit(requestOtp)} noValidate className="space-y-4">
 
       {/* Name + Phone — 2 columns on sm+ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -179,11 +276,11 @@ export default function RegisterForm() {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Đang tạo tài khoản...
+            Đang gửi OTP...
           </>
         ) : (
           <>
-            Tạo tài khoản
+            Tiếp tục nhận OTP
             <Icon icon="arrow-right" className="text-sm" />
           </>
         )}

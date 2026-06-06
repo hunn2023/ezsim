@@ -22,6 +22,7 @@ const menuItems: MobileMenuItem[] = [
   { label: "Thẻ Game", icon: "gamepad", href: "/the-nap?tab=game", matchPath: "/the-nap", matchTab: "game" },
   { label: "Data 4G/5G", icon: "wifi", href: "/the-nap?tab=data", matchPath: "/the-nap", matchTab: "data" },
   { label: "Khuyến mãi", icon: "tag", href: "/the-nap?tab=promo", matchPath: "/the-nap", matchTab: "promo" },
+  { label: "Blog", icon: "blog", href: "/blog", matchPath: "/blog" },
 ];
 
 function isMenuActive(item: MobileMenuItem, pathname: string, currentTab: string | null): boolean {
@@ -43,7 +44,7 @@ export default function MobileMenu() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, initialized, logout } = useAuth();
 
   return (
     <>
@@ -95,17 +96,30 @@ export default function MobileMenu() {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 space-y-2">
-          {isAuthenticated && user ? (
-            <Link
-              href="/account"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-            >
-              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                {user.name.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase()}
-              </div>
-              <span className="truncate">{user.name}</span>
-            </Link>
+          {!initialized ? null : isAuthenticated && user ? (
+            <>
+              <Link
+                href="/account"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+              >
+                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {user.name.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase()}
+                </div>
+                <span className="truncate">{user.name}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition"
+              >
+                <Icon icon="sign-out-alt" className="w-4" />
+                Đăng xuất
+              </button>
+            </>
           ) : (
             <div className="grid grid-cols-2 gap-2">
               <Link

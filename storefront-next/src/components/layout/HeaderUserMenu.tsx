@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Icon from "@/components/ui/Icon";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function HeaderUserMenu() {
@@ -27,13 +26,14 @@ export default function HeaderUserMenu() {
   return (
     <Link
       href="/account"
-      className="hidden lg:flex items-center gap-2 hover:text-primary transition"
+      className="flex items-center gap-2 hover:text-primary transition"
       title={user.name}
+      aria-label="Tài khoản của bạn"
     >
       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
         {initials}
       </div>
-      <span className="text-sm font-medium text-gray-700 max-w-[90px] truncate hover:text-primary transition">
+      <span className="hidden lg:inline text-sm font-medium text-gray-700 max-w-[90px] truncate hover:text-primary transition">
         {firstName}
       </span>
     </Link>

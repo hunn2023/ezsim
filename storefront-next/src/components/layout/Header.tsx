@@ -69,6 +69,12 @@ const MAIN_MENU: MainMenuItem[] = [
     matchTab: "promo",
     highlight: true,
   },
+  {
+    label: "Blog",
+    icon: "blog",
+    href: "/blog",
+    matchPath: "/blog",
+  },
 ];
 
 function isMenuActive(

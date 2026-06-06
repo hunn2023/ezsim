@@ -90,7 +90,7 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
   };
 
   return (
-    <aside className="bg-white rounded-2xl p-6 border border-gray-200 h-fit lg:sticky lg:top-[120px]">
+    <aside className="relative z-20 bg-white rounded-2xl p-6 border border-gray-200 h-fit md:sticky md:top-[120px]">
       <h3 className="text-lg font-bold mb-5 flex items-center gap-2">
         <Icon icon="filter" /> Lọc gói
       </h3>
