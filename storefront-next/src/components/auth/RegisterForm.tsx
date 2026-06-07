@@ -175,10 +175,10 @@ export default function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(requestOtp)} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit(requestOtp)} noValidate className="space-y-3.5 md:space-y-4">
 
       {/* Name + Phone — 2 columns on sm+ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
         <Field id="reg-name" label={text.fullName} error={errors.name?.message}>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -233,7 +233,7 @@ export default function RegisterForm() {
       </Field>
 
       {/* Password + Confirm — 2 columns on sm+ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
         <Field id="reg-password" label={text.password} error={errors.password?.message}>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -290,7 +290,7 @@ export default function RegisterForm() {
         type="submit"
         disabled={isLoading}
         aria-busy={isLoading}
-        className="btn btn-primary w-full py-3.5 text-base mt-1 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
+        className="btn btn-primary w-full py-3 text-base mt-1 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
       >
         {isLoading ? (
           <>
@@ -328,7 +328,7 @@ export default function RegisterForm() {
       {/* Login link */}
       <Link
         href="/login"
-        className="btn btn-outline w-full py-3 text-sm hover:shadow-btn transition"
+        className="btn btn-outline w-full py-2.5 text-sm hover:shadow-btn transition"
       >
         {text.login}
       </Link>

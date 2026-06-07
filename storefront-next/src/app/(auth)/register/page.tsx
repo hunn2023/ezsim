@@ -63,24 +63,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-12 md:py-16">
-      {/* Auth background image with subtle blur so form stays prominent */}
+    <div className="relative h-[100dvh] flex items-center justify-center overflow-hidden px-4 py-3 md:py-4">
+      {/* Auth background — desktop only */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/images/auth/background-auth-ezim.jpg')" }}
       />
-      <div aria-hidden className="absolute inset-0 bg-white/68" />
+      <div aria-hidden className="hidden md:block absolute inset-0 bg-white/68" />
       <div
         aria-hidden
-        className="absolute inset-0 bg-black/35 backdrop-blur-[3px]"
+        className="hidden md:block absolute inset-0 bg-black/35 backdrop-blur-[3px]"
       />
 
       {/* Main card */}
       <div className="relative z-10 w-full max-w-[640px]">
-        <div className="rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100/80">
-          <div className="bg-white/95 flex flex-col justify-center px-6 py-10 sm:px-8 md:px-10">
-            <div className="flex items-center justify-center mb-8">
+        <div className="md:rounded-2xl md:overflow-hidden md:shadow-[0_20px_60px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.04)] md:border md:border-gray-100/80">
+          <div className="bg-white flex flex-col justify-center px-5 py-6 sm:px-7 sm:py-7 md:bg-white/95 md:px-8 md:py-7 lg:px-10 lg:py-9">
+            <div className="flex items-center justify-center mb-6 md:mb-7">
               <Link href="/" className="inline-flex items-center gap-2">
                 <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-white">
                   <Icon icon="bolt" className="text-xs" />
@@ -92,7 +92,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Heading */}
-            <div className="mb-6">
+            <div className="mb-4 md:mb-5">
               <h1 className="text-2xl font-bold text-navy mb-1">{text.heading}</h1>
               <p className="text-sm text-gray-500">
                 {text.subheading}
@@ -105,7 +105,7 @@ export default function RegisterPage() {
             </Suspense>
 
             {/* Back to home */}
-            <p className="mt-6 text-center text-xs text-gray-400">
+            <p className="mt-4 text-center text-xs text-gray-400">
               <Link href="/" className="inline-flex items-center gap-1 hover:text-primary transition">
                 <Icon icon="chevron-left" className="text-[10px]" />
                 {text.backHome}

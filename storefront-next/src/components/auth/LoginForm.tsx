@@ -47,7 +47,7 @@ export default function LoginForm() {
     <form
       onSubmit={handleSubmit(handleLogin)}
       noValidate
-      className="space-y-5"
+      className="space-y-4 md:space-y-5"
     >
       {/* Test account notice — TEMP, gỡ khi backend thật sẵn sàng */}
       <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm">
@@ -152,7 +152,7 @@ export default function LoginForm() {
         type="submit"
         disabled={isLoading}
         aria-busy={isLoading}
-        className="btn btn-primary w-full py-3.5 text-base mt-2 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
+        className="btn btn-primary w-full py-3 text-base mt-1.5 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
       >
         {isLoading ? (
           <>
@@ -197,7 +197,7 @@ export default function LoginForm() {
       {/* Register link */}
       <Link
         href="/register"
-        className="btn btn-outline w-full py-3 text-sm hover:shadow-btn transition"
+        className="btn btn-outline w-full py-2.5 text-sm hover:shadow-btn transition"
       >
         {text.createAccount}
       </Link>

@@ -141,7 +141,7 @@ export default function Header() {
     <>
       {/* TOP BAR */}
       <div
-        className="bg-navy"
+        className="bg-navy relative z-[300]"
         style={{ color: "#94A3B8", fontSize: "13px", padding: "8px 0" }}
       >
         <div className="max-w-container mx-auto px-6 flex justify-end items-center">
@@ -174,7 +174,7 @@ export default function Header() {
                 <Icon icon="chevron-down" className="text-[10px]" />
               </button>
               {languageOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] min-w-[160px] rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-xl z-[130]">
+                <div className="absolute right-0 top-[calc(100%+8px)] min-w-[160px] rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-xl z-[320]">
                   {(["vi", "en"] as Language[]).map((itemLanguage) => (
                     <button
                       key={itemLanguage}
@@ -233,12 +233,12 @@ export default function Header() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="font-medium text-sm flex items-center gap-1.5 transition"
+                    className="font-semibold text-[15px] flex items-center gap-2 transition"
                     style={{
                       color: active ? "#0066FF" : "#334155",
                     }}
                   >
-                    <Icon icon={item.icon} className="text-sm" />
+                    <Icon icon={item.icon} className="text-[15px]" />
                     {item.labels[language]}
                   </Link>
                 );
