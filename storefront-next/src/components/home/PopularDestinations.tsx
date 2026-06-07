@@ -132,17 +132,17 @@ export default async function PopularDestinations() {
                   }}
                 />
                 <span
-                  className="absolute top-3 left-3 inline-flex items-center justify-center rounded-full bg-white/95 border border-white/80 shadow-sm overflow-hidden"
-                  style={{ width: "34px", height: "34px" }}
+                  className="absolute top-3 left-3 inline-flex items-center justify-center rounded-md bg-white/95 border border-white/80 shadow-sm overflow-hidden"
+                  style={{ width: "38px", height: "26px" }}
                   aria-label={`Cờ ${d.name}`}
                 >
                   <img
                     src={`https://flagcdn.com/w40/${flagCode}.png`}
                     alt={d.name}
-                    width={34}
-                    height={34}
+                    width={38}
+                    height={26}
                     loading="lazy"
-                    className="w-full h-full rounded-full object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </span>
                 {d.bestseller && (

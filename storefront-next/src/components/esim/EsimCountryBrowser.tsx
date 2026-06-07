@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import { useCartStore } from "@/lib/cartStore";
 import { useCartAnimation } from "@/components/ui/CartAnimation";
@@ -21,6 +21,20 @@ const INITIAL_FILTERS: EsimPackageFilters = {
 };
 
 type ViewMode = "grid" | "list";
+type GbGroupKey = "1" | "2" | "3" | "5" | "10" | "15" | "20" | "unlimited";
+
+const GB_GROUP_ORDER: GbGroupKey[] = ["1", "2", "3", "5", "10", "15", "20", "unlimited"];
+
+function getGbGroupKey(dataGB: number | null): GbGroupKey {
+  if (dataGB === null) return "unlimited";
+  if (dataGB <= 1) return "1";
+  if (dataGB <= 2) return "2";
+  if (dataGB <= 3) return "3";
+  if (dataGB <= 5) return "5";
+  if (dataGB <= 10) return "10";
+  if (dataGB <= 15) return "15";
+  return "20";
+}
 
 export default function EsimCountryBrowser({ country }: { country: EsimCountryDetail }) {
   const addToCart = useCartStore((state) => state.addToCart);
@@ -29,13 +43,57 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
   const [filters, setFilters] = useState<EsimPackageFilters>(INITIAL_FILTERS);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [visibleCount, setVisibleCount] = useState(6);
+  const [activeGbGroup, setActiveGbGroup] = useState<GbGroupKey | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const gbScrollRef = useRef<HTMLDivElement>(null);
 
   const filteredPackages = useMemo(
     () => filterEsimPackages(country.packages, filters),
     [country.packages, filters]
   );
 
-  const visiblePackages = filteredPackages.slice(0, visibleCount);
+  // Group packages by GB
+  const gbGroups = useMemo(() => {
+    const grouped: Record<GbGroupKey, EsimCountryDetail["packages"]> = {
+      "1": [], "2": [], "3": [], "5": [], "10": [], "15": [], "20": [], unlimited: [],
+    };
+    for (const pkg of filteredPackages) {
+      grouped[getGbGroupKey(pkg.dataGB)].push(pkg);
+    }
+    return GB_GROUP_ORDER.map((key) => ({ key, packages: grouped[key] }));
+  }, [filteredPackages]);
+
+  // Auto-select first non-empty group
+  useEffect(() => {
+    const firstNonEmpty = gbGroups.find((g) => g.packages.length > 0);
+    if (!firstNonEmpty) { setActiveGbGroup(null); return; }
+    if (!activeGbGroup || !gbGroups.find((g) => g.key === activeGbGroup && g.packages.length > 0)) {
+      setActiveGbGroup(firstNonEmpty.key);
+      setVisibleCount(6);
+    }
+  }, [gbGroups, activeGbGroup]);
+
+  const activeGroupPackages = useMemo(
+    () => gbGroups.find((g) => g.key === activeGbGroup)?.packages ?? [],
+    [activeGbGroup, gbGroups]
+  );
+
+  const activeGroupDays = useMemo(
+    () => Array.from(new Set(activeGroupPackages.map((pkg) => pkg.days))).sort((a, b) => a - b),
+    [activeGroupPackages]
+  );
+
+  const visiblePackages = activeGroupPackages.slice(0, visibleCount);
+
+  const handleGbGroupChange = (key: GbGroupKey) => {
+    if (key === activeGbGroup) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setActiveGbGroup(key);
+      setVisibleCount(6);
+      setTimeout(() => setIsTransitioning(false), 20);
+    }, 150);
+  };
 
   const handleQuickTagChange = (quickTag: PackageQuickTag | "all") => {
     setFilters((current) => ({ ...current, quickTag }));
@@ -69,7 +127,6 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
       quantity,
       stock: pkg.stock,
     });
-
     triggerFlyToCart(pkg.image, triggerElement);
   };
 
@@ -93,10 +150,17 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
     clearFilters: language === "vi" ? "Xóa bộ lọc" : "Clear filters",
     showMore: language === "vi" ? "Xem thêm" : "Show more",
     packageSuffix: language === "vi" ? "gói" : "packages",
+    gbGroupBy: language === "vi" ? "Chọn dung lượng" : "Select data",
+    unlimitedLabel: language === "vi" ? "Vô hạn" : "Unlimited",
+    daysList: language === "vi" ? "Số ngày khả dụng" : "Available days",
+    daysSuffix: language === "vi" ? "ngày" : "days",
   };
 
+  const getGbLabel = (key: GbGroupKey) =>
+    key === "unlimited" ? text.unlimitedLabel : key === "20" ? "20+ GB" : `${key} GB`;
+
   return (
-    <div className="max-w-container mx-auto px-6 grid md:grid-cols-[280px_1fr] gap-6" style={{ padding: "32px 24px" }}>
+    <div className="max-w-container mx-auto w-full overflow-x-hidden px-4 md:px-6 py-8 grid md:grid-cols-[280px_1fr] gap-6">
       <Sidebar
         packages={country.packages}
         appliedFilters={{
@@ -110,12 +174,68 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
         onReset={handleReset}
       />
 
-      <main>
-        <QuickPills
-          packages={country.packages}
-          activeTag={filters.quickTag}
-          onSelect={handleQuickTagChange}
-        />
+      <main className="min-w-0">
+        <div className="hidden md:block">
+          <QuickPills
+            packages={country.packages}
+            activeTag={filters.quickTag}
+            onSelect={handleQuickTagChange}
+          />
+        </div>
+
+        {/* GB Group Tabs — horizontally scrollable on mobile */}
+        {gbGroups.some((g) => g.packages.length > 0) && (
+          <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-3 md:p-4">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">
+              {text.gbGroupBy}
+            </div>
+
+            {/* Scroll container — fixed width, no page overflow */}
+            <div
+              ref={gbScrollRef}
+              className="relative -mx-3 px-3 md:-mx-4 md:px-4"
+            >
+              <div
+                className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory hide-scrollbar"
+                style={{ WebkitOverflowScrolling: "touch" }}
+              >
+                {gbGroups.map((group) => {
+                  const isActive = group.key === activeGbGroup;
+                  const isEmpty = group.packages.length === 0;
+                  return (
+                    <button
+                      key={group.key}
+                      type="button"
+                      onClick={() => !isEmpty && handleGbGroupChange(group.key)}
+                      disabled={isEmpty}
+                      className={`snap-start shrink-0 whitespace-nowrap px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                        isActive
+                          ? "bg-primary text-white shadow-md"
+                          : isEmpty
+                            ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                            : "bg-slate-50 text-slate-700 border border-slate-200 active:scale-95"
+                      }`}
+                    >
+                      {getGbLabel(group.key)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Available days for active group */}
+            {activeGroupDays.length > 0 && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-sm">
+                <span className="font-semibold text-navy text-xs">{text.daysList}:</span>
+                {activeGroupDays.map((day) => (
+                  <span key={day} className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                    {day} {text.daysSuffix}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div
           className="bg-white flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center"
@@ -126,9 +246,9 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
             marginBottom: "20px",
           }}
         >
-          <div className="text-gray-700" style={{ fontSize: "14px" }}>
+          <div className="hidden md:block text-gray-700" style={{ fontSize: "14px" }}>
             {text.showing} <b className="text-navy">{visiblePackages.length === 0 ? 0 : 1}-{visiblePackages.length}</b> {text.inTotal}{" "}
-            <b className="text-navy">{filteredPackages.length}</b> {text.packages} {country.name}
+            <b className="text-navy">{activeGroupPackages.length}</b> {text.packages} {country.name}
           </div>
 
           <div className="flex flex-wrap items-center gap-3" style={{ fontSize: "14px" }}>
@@ -150,7 +270,7 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
               <option value="bestseller">{text.sortBestSeller}</option>
               <option value="rating">{text.sortRating}</option>
             </select>
-            <div className="flex gap-1">
+            <div className="hidden md:flex gap-1">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
@@ -187,31 +307,34 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
           </div>
         </div>
 
-        {visiblePackages.length > 0 ? (
-          <div className={`grid gap-4 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}>
-            {visiblePackages.map((pkg) => (
-              <PackageCard key={pkg.id} pkg={pkg} onBuy={handleBuy} />
-            ))}
-          </div>
-        ) : (
-          <div
-            className="bg-white text-center"
-            style={{ borderRadius: "16px", border: "1px solid #E2E8F0", padding: "48px 24px" }}
-          >
-            <div className="text-4xl mb-3">🧭</div>
-            <h3 className="text-navy font-bold mb-2">{text.noPackageTitle}</h3>
-            <p className="text-gray-500 mb-4">{text.noPackageDescription}</p>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="btn-outline"
+        {/* Package cards with transition */}
+        <div className={`transition-opacity duration-200 ${isTransitioning ? "opacity-0" : "opacity-100"}`}>
+          {visiblePackages.length > 0 ? (
+            <div className={`grid gap-4 ${viewMode === "grid" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
+              {visiblePackages.map((pkg) => (
+                <PackageCard key={pkg.id} pkg={pkg} onBuy={handleBuy} />
+              ))}
+            </div>
+          ) : (
+            <div
+              className="bg-white text-center"
+              style={{ borderRadius: "16px", border: "1px solid #E2E8F0", padding: "48px 24px" }}
             >
-              {text.clearFilters}
-            </button>
-          </div>
-        )}
+              <div className="text-4xl mb-3">🧭</div>
+              <h3 className="text-navy font-bold mb-2">{text.noPackageTitle}</h3>
+              <p className="text-gray-500 mb-4">{text.noPackageDescription}</p>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="btn-outline"
+              >
+                {text.clearFilters}
+              </button>
+            </div>
+          )}
+        </div>
 
-        {visiblePackages.length < filteredPackages.length && (
+        {visiblePackages.length < activeGroupPackages.length && (
           <div className="text-center" style={{ marginTop: "32px" }}>
             <button
               type="button"
@@ -223,7 +346,7 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
                 fontSize: "14px",
               }}
             >
-              <Icon icon="plus" /> {text.showMore} {Math.min(6, filteredPackages.length - visiblePackages.length)} {text.packageSuffix}
+              <Icon icon="plus" /> {text.showMore} {Math.min(6, activeGroupPackages.length - visiblePackages.length)} {text.packageSuffix}
             </button>
           </div>
         )}

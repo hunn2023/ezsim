@@ -8,6 +8,7 @@ import TrustBar from "@/components/home/TrustBar";
 import PopularDestinations from "@/components/home/PopularDestinations";
 import HowItWorks from "@/components/home/HowItWorks";
 import Testimonials from "@/components/home/Testimonials";
+import FAQSection from "@/components/home/FAQSection";
 import { BlogSection } from "@/components/blog";
 import { Suspense } from "react";
 
@@ -67,6 +68,7 @@ export default function HomePage() {
       >
         <BlogSection />
       </Suspense>
+      <FAQSection />
     </>
   );
 }

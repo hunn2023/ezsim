@@ -150,7 +150,23 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
 
       {/* Footer */}
       <div className="mt-1 flex flex-col gap-3">
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+        <div className="relative rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+          {pkg.discount && (
+            <span
+              className="absolute font-bold"
+              style={{
+                top: "8px",
+                right: "8px",
+                background: "#FEE2E2",
+                color: "#991B1B",
+                padding: "2px 8px",
+                borderRadius: "6px",
+                fontSize: "11px",
+              }}
+            >
+              {pkg.discount}
+            </span>
+          )}
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{text.unitPrice}</p>
           {pkg.oldPrice && (
             <div
@@ -164,20 +180,6 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
             <span className="font-extrabold text-navy" style={{ fontSize: "24px", letterSpacing: "-0.5px" }}>
               {formatPrice(pkg.price)}
             </span>
-            {pkg.discount && (
-              <span
-                className="font-bold"
-                style={{
-                  background: "#FEE2E2",
-                  color: "#991B1B",
-                  padding: "2px 8px",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                }}
-              >
-                {pkg.discount}
-              </span>
-            )}
           </div>
         </div>
 

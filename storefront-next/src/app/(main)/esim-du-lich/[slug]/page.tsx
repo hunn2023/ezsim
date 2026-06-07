@@ -11,6 +11,14 @@ export const revalidate = 300;
 
 const getCachedEsimCountryBySlug = cache(async (slug: string) => getEsimCountryBySlug(slug));
 
+const COUNTRY_FLAG_CODES: Record<string, string> = {
+  "nhat-ban": "jp",
+  "han-quoc": "kr",
+  "thai-lan": "th",
+  "chau-au": "eu",
+  "my": "us",
+};
+
 // ─── Next.js metadata + params ───────────────────────────────────────────────
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -71,6 +79,7 @@ export default async function EsimCountryPage({ params }: { params: Promise<{ sl
 
       <CountryHero
         flag={country.flag}
+        flagCode={COUNTRY_FLAG_CODES[country.slug]}
         name={country.name}
         nameEn={country.nameEn}
         tags={country.tags}

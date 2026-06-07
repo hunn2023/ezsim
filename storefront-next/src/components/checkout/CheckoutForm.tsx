@@ -118,7 +118,7 @@ export default function CheckoutForm() {
         : "Please review the list below and confirm you have checked your device before continuing.",
     deviceConfirm:
       language === "vi"
-        ? "Tôi đã đọc và xác nhận thiết bị tương thích"
+        ? "Xác nhận thiết bị tương thích"
         : "I have read and confirmed device compatibility",
     close: language === "vi" ? "Đóng" : "Close",
     support: language === "vi" ? "Liên hệ CSKH" : "Contact support",

@@ -48,7 +48,7 @@ export default function CountrySearchBox({
 }: CountrySearchBoxProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const deferredKeyword = useDeferredValue(keyword);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -196,15 +196,15 @@ export default function CountrySearchBox({
                 className="w-full text-left flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-50 transition"
               >
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 shrink-0 overflow-hidden"
+                  className="flex h-6 w-9 items-center justify-center rounded-md bg-slate-100 shrink-0 overflow-hidden border border-slate-200"
                   aria-hidden
                 >
                   <img
                     src={`https://flagcdn.com/w40/${country.flagCode}.png`}
                     alt={language === "en" ? country.nameEn : country.name}
-                    width={32}
-                    height={32}
-                    className="h-full w-full rounded-full object-cover"
+                    width={36}
+                    height={24}
+                    className="h-full w-full object-cover"
                     loading="lazy"
                   />
                 </span>

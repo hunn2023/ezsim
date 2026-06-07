@@ -87,30 +87,31 @@ export default function AccountInfo() {
         <p className="text-white/60 text-xs mt-0.5 truncate max-w-[180px] text-center">
           {user.email}
         </p>
+
+        {(user.phone || user.address) && (
+          <div className="mt-3 w-full max-w-[220px] space-y-1.5">
+            {user.phone && (
+              <div className="flex items-center gap-2 rounded-lg bg-white/12 px-2.5 py-1.5">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/20">
+                  <Icon icon="phone" className="text-[10px] text-white" />
+                </span>
+                <span className="text-[12px] text-white/90 font-medium truncate">{user.phone}</span>
+              </div>
+            )}
+            {user.address && (
+              <div className="flex items-center gap-2 rounded-lg bg-white/12 px-2.5 py-1.5">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/20">
+                  <Icon icon="map-marker-alt" className="text-[10px] text-white" />
+                </span>
+                <span className="text-[11px] text-white/85 truncate">{user.address}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content below banner */}
       <div className="px-5 pt-5 pb-5">
-        {/* Info rows */}
-        <div className="space-y-2 mb-5">
-          {user.phone && (
-            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3.5 py-2.5">
-              <span className="w-7 h-7 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
-                <Icon icon="phone" className="text-primary text-xs" />
-              </span>
-              <span className="text-sm text-gray-700 font-medium">{user.phone}</span>
-            </div>
-          )}
-          {user.address && (
-            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3.5 py-2.5">
-              <span className="w-7 h-7 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
-                <Icon icon="map-marker-alt" className="text-primary text-xs" />
-              </span>
-              <span className="text-xs text-gray-600 truncate">{user.address}</span>
-            </div>
-          )}
-        </div>
-
         {/* Nav */}
         <nav className="space-y-1 mb-4" aria-label={text.accountNavigation}>
           {navLinks.map(({ href, label, icon }) => {

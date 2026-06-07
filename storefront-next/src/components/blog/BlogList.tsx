@@ -14,8 +14,6 @@ export default function BlogList({ posts, currentPage, totalPages, totalPosts, b
     postCount: language === "vi" ? "bài viết" : "posts",
     page: language === "vi" ? "Trang" : "Page",
     empty: language === "vi" ? "Chưa có bài viết nào trong chuyên mục này." : "No posts in this category yet.",
-    prev: language === "vi" ? "Trang trước" : "Previous",
-    next: language === "vi" ? "Trang sau" : "Next",
     paginationLabel: language === "vi" ? "Phân trang blog" : "Blog pagination",
   };
 
@@ -43,9 +41,13 @@ export default function BlogList({ posts, currentPage, totalPages, totalPosts, b
               <Link
                 href={createPageHref(Math.max(1, currentPage - 1))}
                 aria-disabled={currentPage <= 1}
-                className={`btn-outline btn-sm ${currentPage <= 1 ? "pointer-events-none opacity-40" : ""}`}
+                className={`flex h-10 min-w-10 items-center justify-center rounded-lg border px-3 text-sm font-medium transition ${
+                  currentPage <= 1
+                    ? "pointer-events-none opacity-40 border-gray-200 bg-white text-gray-400"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary"
+                }`}
               >
-                {text.prev}
+                &lt;
               </Link>
 
               {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
@@ -66,9 +68,13 @@ export default function BlogList({ posts, currentPage, totalPages, totalPosts, b
               <Link
                 href={createPageHref(Math.min(totalPages, currentPage + 1))}
                 aria-disabled={currentPage >= totalPages}
-                className={`btn-outline btn-sm ${currentPage >= totalPages ? "pointer-events-none opacity-40" : ""}`}
+                className={`flex h-10 min-w-10 items-center justify-center rounded-lg border px-3 text-sm font-medium transition ${
+                  currentPage >= totalPages
+                    ? "pointer-events-none opacity-40 border-gray-200 bg-white text-gray-400"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary"
+                }`}
               >
-                {text.next}
+                &gt;
               </Link>
             </nav>
           )}

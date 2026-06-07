@@ -37,6 +37,7 @@ interface SidebarProps {
 
 export default function Sidebar({ packages, appliedFilters, onApply, onReset }: SidebarProps) {
   const { language } = useLanguage();
+  const [panelOpen, setPanelOpen] = useState(false);
   const [days, setDays] = useState<number[]>(appliedFilters.days);
   const [dataRanges, setDataRanges] = useState<EsimDataRange[]>(appliedFilters.dataRanges);
   const [featureTags, setFeatureTags] = useState<PackageQuickTag[]>(appliedFilters.featureTags);
@@ -130,22 +131,39 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
       minPrice: minPrice ? Number(minPrice.replace(/\D/g, "")) : undefined,
       maxPrice: maxPrice ? Number(maxPrice.replace(/\D/g, "")) : undefined,
     });
+    setPanelOpen(false);
   };
 
-  return (
-    <aside className="relative z-20 bg-white rounded-2xl p-6 border border-gray-200 h-fit md:sticky md:top-[120px]">
-      <h3 className="text-lg font-bold mb-5 flex items-center gap-2">
-        <Icon icon="filter" /> {text.filterPackages}
-      </h3>
+  const hasActiveFilters =
+    days.length > 0 ||
+    dataRanges.length > 0 ||
+    featureTags.length > 0 ||
+    Boolean(minPrice.trim()) ||
+    Boolean(maxPrice.trim());
 
-      <div className="mb-6 pb-6 border-b border-gray-100">
+  return (
+    <aside className="relative z-20 bg-white rounded-2xl p-3.5 md:p-4 border border-gray-200 h-fit md:sticky md:top-[2px]">
+      <button
+        type="button"
+        onClick={() => setPanelOpen((current) => !current)}
+        className="w-full flex items-center justify-between gap-2 text-left"
+      >
+        <span className="inline-flex items-center gap-2 text-base font-bold">
+          <Icon icon="filter" /> {text.filterPackages}
+          {hasActiveFilters && <span className="text-xs text-primary font-semibold">•</span>}
+        </span>
+        <Icon icon={panelOpen ? "chevron-up" : "chevron-down"} className="text-xs text-gray-500" />
+      </button>
+
+      <div className={`${panelOpen ? "block" : "hidden"} mt-3 md:mt-4`}>
+      <div className="mb-4 pb-4 border-b border-gray-100">
         <div className="font-bold text-sm mb-3">{text.usageDays}</div>
         <div className="flex flex-wrap gap-2">
           {dayOptions.map((day) => (
             <button
               key={day}
               onClick={() => setDays((current) => toggleArrayValue(current, day))}
-              className={`px-3 py-1.5 border-[1.5px] rounded-full text-xs cursor-pointer font-medium transition ${
+              className={`px-2.5 py-1.5 border-[1.5px] rounded-full text-xs cursor-pointer font-medium transition ${
                 days.includes(day)
                   ? "bg-primary text-white border-primary"
                   : "bg-white text-gray-700 border-gray-200"
@@ -157,7 +175,7 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
         </div>
       </div>
 
-      <div className="mb-6 pb-6 border-b border-gray-100">
+      <div className="mb-4 pb-4 border-b border-gray-100">
         <div className="font-bold text-sm mb-3">{text.dataAmount}</div>
         <div className="flex flex-col gap-2.5">
           {dataOptions.map((opt) => (
@@ -175,16 +193,16 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
         </div>
       </div>
 
-      <div className="mb-6 pb-6 border-b border-gray-100">
+      <div className="mb-4 pb-4 border-b border-gray-100">
         <div className="font-bold text-sm mb-3">{text.priceRange}</div>
-        <div className="grid grid-cols-2 gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-2 mt-1.5">
           <input
             type="text"
             inputMode="numeric"
             placeholder={text.from}
             value={minPrice}
             onChange={(event) => setMinPrice(event.target.value)}
-            className="w-full min-w-0 py-2 px-2.5 border-[1.5px] border-gray-200 rounded-lg text-[13px] font-sans"
+            className="w-full min-w-0 py-1.5 px-2.5 border-[1.5px] border-gray-200 rounded-lg text-[13px] font-sans"
           />
           <input
             type="text"
@@ -192,12 +210,12 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
             placeholder={text.to}
             value={maxPrice}
             onChange={(event) => setMaxPrice(event.target.value)}
-            className="w-full min-w-0 py-2 px-2.5 border-[1.5px] border-gray-200 rounded-lg text-[13px] font-sans"
+            className="w-full min-w-0 py-1.5 px-2.5 border-[1.5px] border-gray-200 rounded-lg text-[13px] font-sans"
           />
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <div className="font-bold text-sm mb-3">{text.features}</div>
         <div className="flex flex-col gap-2.5">
           {featureOptions.map((opt) => (
@@ -219,17 +237,21 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
         <button
           type="button"
           onClick={handleApply}
-          className="w-full gradient-primary text-white py-3 rounded-[10px] font-bold text-sm flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full gradient-primary text-white py-2.5 rounded-[10px] font-bold text-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           <Icon icon="check-circle" /> {text.applyFilters}
         </button>
         <button
           type="button"
-          onClick={onReset}
-          className="w-full bg-gray-50 text-gray-700 py-3 rounded-[10px] font-bold text-sm border border-gray-200 cursor-pointer"
+          onClick={() => {
+            onReset();
+            setPanelOpen(false);
+          }}
+          className="w-full bg-gray-50 text-gray-700 py-2.5 rounded-[10px] font-bold text-sm border border-gray-200 cursor-pointer"
         >
           {text.clearFilters}
         </button>
+      </div>
       </div>
     </aside>
   );

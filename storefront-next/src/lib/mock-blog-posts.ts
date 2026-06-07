@@ -145,4 +145,75 @@ export const mockBlogPosts: BlogPost[] = [
       <p>Đối với nhóm du lịch, việc lên kế hoạch mua chung trước chuyến đi thường tiết kiệm hơn so với mua lẻ từng người.</p>
     `,
   },
+  {
+    id: 7,
+    title: "Đi Hàn Quốc 7 ngày nên chọn eSIM dung lượng bao nhiêu?",
+    slug: "di-han-quoc-7-ngay-nen-chon-esim-dung-luong-bao-nhieu",
+    excerpt:
+      "Gợi ý mức dung lượng theo nhu cầu: chỉ bản đồ, dùng mạng xã hội, hay cần họp video mỗi ngày.",
+    thumbnail: "https://picsum.photos/seed/blog-esim-7/1200/630",
+    metaTitle: "Đi Hàn Quốc 7 ngày nên chọn eSIM dung lượng bao nhiêu? | EZSIM",
+    metaDescription:
+      "Tư vấn dung lượng eSIM phù hợp cho chuyến đi Hàn Quốc 7 ngày theo từng thói quen sử dụng data.",
+    publishedAt: "2026-02-05T08:10:00.000Z",
+    author: "EZSIM Travel Desk",
+    content: `
+      <p>Với lịch trình 7 ngày tại Hàn Quốc, mức dung lượng hợp lý thường nằm trong khoảng 5GB đến 10GB tùy nhu cầu.</p>
+      <h2>Chọn theo thói quen sử dụng</h2>
+      <ul>
+        <li>Dùng nhẹ (map, chat): 5GB là đủ</li>
+        <li>Dùng trung bình (mạng xã hội, ảnh): 8-10GB</li>
+        <li>Dùng nặng (video call, livestream): ưu tiên gói lớn hoặc unlimited</li>
+      </ul>
+      <p>Hãy luôn bật chế độ tiết kiệm dữ liệu cho các app video để hạn chế phát sinh chi phí mua thêm.</p>
+    `,
+  },
+  {
+    id: 8,
+    title: "Checklist trước khi bay để dùng eSIM không bị gián đoạn",
+    slug: "checklist-truoc-khi-bay-de-dung-esim-khong-bi-gian-doan",
+    excerpt:
+      "Một danh sách kiểm tra nhanh giúp bạn tránh lỗi mất mạng khi vừa hạ cánh ở nước ngoài.",
+    thumbnail: "https://picsum.photos/seed/blog-esim-8/1200/630",
+    metaTitle: "Checklist trước khi bay để dùng eSIM không bị gián đoạn | EZSIM",
+    metaDescription:
+      "Danh sách kiểm tra nhanh trước giờ khởi hành để eSIM hoạt động ổn định ngay khi đến nơi.",
+    publishedAt: "2026-01-26T10:25:00.000Z",
+    author: "Phòng nội dung",
+    content: `
+      <p>Việc chuẩn bị đúng trước giờ khởi hành giúp bạn tránh gần như toàn bộ sự cố eSIM phổ biến.</p>
+      <h2>Checklist 5 bước</h2>
+      <ol>
+        <li>Kiểm tra máy hỗ trợ eSIM và không khóa mạng</li>
+        <li>Lưu ảnh QR và mã kích hoạt offline</li>
+        <li>Cập nhật iOS/Android lên bản ổn định gần nhất</li>
+        <li>Thiết lập eSIM làm đường truyền dữ liệu</li>
+        <li>Bật roaming dữ liệu cho eSIM khi đến nơi</li>
+      </ol>
+      <p>Đừng quên tắt tự động cập nhật ứng dụng bằng dữ liệu di động để tránh hao dung lượng bất ngờ.</p>
+    `,
+  },
+  {
+    id: 9,
+    title: "Có nên mua eSIM unlimited cho chuyến đi ngắn ngày?",
+    slug: "co-nen-mua-esim-unlimited-cho-chuyen-di-ngan-ngay",
+    excerpt:
+      "Không phải lúc nào gói unlimited cũng là lựa chọn tối ưu, đặc biệt với chuyến đi 3-5 ngày.",
+    thumbnail: "https://picsum.photos/seed/blog-esim-9/1200/630",
+    metaTitle: "Có nên mua eSIM unlimited cho chuyến đi ngắn ngày? | EZSIM",
+    metaDescription:
+      "Phân tích ưu và nhược điểm của gói eSIM unlimited trong các chuyến đi ngắn ngày.",
+    publishedAt: "2026-01-12T06:55:00.000Z",
+    author: "Ban biên tập EZSIM",
+    content: `
+      <p>Gói unlimited phù hợp khi bạn có nhu cầu dùng mạng nặng liên tục, nhưng chưa chắc kinh tế cho mọi chuyến đi ngắn.</p>
+      <h2>Khi nào nên chọn unlimited?</h2>
+      <ul>
+        <li>Bạn cần gọi video thường xuyên</li>
+        <li>Bạn làm việc từ xa và tải dữ liệu lớn</li>
+        <li>Bạn phát sóng hotspot cho nhiều thiết bị</li>
+      </ul>
+      <p>Nếu chỉ dùng bản đồ, chat và lướt web cơ bản, gói 5GB hoặc 10GB thường tiết kiệm hơn.</p>
+    `,
+  },
 ];

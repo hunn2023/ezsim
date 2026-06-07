@@ -3,6 +3,8 @@ import { Be_Vietnam_Pro } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import ToastProvider from "@/components/ui/ToastProvider";
+import BackToTopButton from "@/components/ui/BackToTopButton";
+import FloatingSupportButtons from "@/components/ui/FloatingSupportButtons";
 import AuthProvider from "@/providers/AuthProvider";
 import { SITE } from "@/lib/constants";
 import { SITE_URL } from "@/lib/seo";
@@ -51,6 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={language} className={beVietnamPro.variable}>
       <body className={`${beVietnamPro.className} min-h-screen flex flex-col`}>
         <AuthProvider>{children}</AuthProvider>
+        <FloatingSupportButtons />
+        <BackToTopButton />
         <ToastProvider />
       </body>
     </html>

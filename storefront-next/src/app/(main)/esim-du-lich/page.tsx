@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import CountrySearchBox from "@/components/common/CountrySearchBox";
 import { Breadcrumb } from "@/components/ui";
 import { getEsimCountries } from "@/lib/api/esimApi";
 import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
@@ -27,6 +28,8 @@ const REGION_FLAG_CODES: Partial<Record<EsimCountrySummary["region"], string>> =
 
 export const revalidate = 300;
 
+const DEFAULT_VISIBLE_COUNTRIES = 6;
+
 export const metadata: Metadata = {
   title: "eSIM Du lịch 200+ quốc gia | EZSIM",
   description: "Chọn quốc gia bạn đang đến để xem các gói eSIM phù hợp. Kích hoạt 30 giây.",
@@ -35,7 +38,7 @@ export const metadata: Metadata = {
 export default async function EsimDuLichPage({
   searchParams,
 }: {
-  searchParams?: { q?: string | string[]; region?: string | string[]; country?: string | string[] };
+  searchParams?: { q?: string | string[]; region?: string | string[] };
 }) {
   const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
   const destinations = await getEsimCountries();
@@ -45,7 +48,6 @@ export default async function EsimDuLichPage({
   const keywordRaw = readSingleParam(searchParams?.q)?.trim() ?? "";
   const keyword = keywordRaw.toLowerCase();
   const selectedRegion = readSingleParam(searchParams?.region)?.trim() ?? "";
-  const selectedCountry = readSingleParam(searchParams?.country)?.trim() ?? "";
 
   const keywordFilteredDestinations = keyword
     ? destinations.filter(
@@ -67,21 +69,19 @@ export default async function EsimDuLichPage({
     return acc;
   }, {});
 
-  const countriesForCountryFilter = selectedRegion
-    ? keywordFilteredDestinations.filter((destination) => destination.region === selectedRegion)
-    : keywordFilteredDestinations;
+  const filteredDestinations = keywordFilteredDestinations.filter(
+    (destination) => !selectedRegion || destination.region === selectedRegion
+  );
 
-  const filteredDestinations = keywordFilteredDestinations.filter((destination) => {
-    const byRegion = !selectedRegion || destination.region === selectedRegion;
-    const byCountry = !selectedCountry || destination.slug === selectedCountry;
-    return byRegion && byCountry;
-  });
+  const visibleDestinations =
+    !keywordRaw && !selectedRegion
+      ? filteredDestinations.slice(0, DEFAULT_VISIBLE_COUNTRIES)
+      : filteredDestinations;
 
-  const buildFilterHref = (next: { region?: string; country?: string }) => {
+  const buildFilterHref = (next: { region?: string }) => {
     const params = new URLSearchParams();
     if (keywordRaw) params.set("q", keywordRaw);
     if (next.region) params.set("region", next.region);
-    if (next.country) params.set("country", next.country);
     const queryString = params.toString();
     return queryString ? `/esim-du-lich?${queryString}` : "/esim-du-lich";
   };
@@ -125,8 +125,9 @@ export default async function EsimDuLichPage({
     filterTitle: language === "vi" ? "Lọc điểm đến" : "Filter destinations",
     filterRegion: language === "vi" ? "Khu vực" : "Region",
     filterAllRegions: language === "vi" ? "Tất cả khu vực" : "All regions",
-    filterCountry: language === "vi" ? "Quốc gia" : "Country",
-    filterAllCountries: language === "vi" ? "Tất cả quốc gia" : "All countries",
+    filterSearch: language === "vi" ? "Tìm điểm đến" : "Search destinations",
+    searchPlaceholder: language === "vi" ? "Tìm quốc gia eSIM..." : "Search eSIM countries...",
+    searchNotFound: language === "vi" ? "Không tìm thấy quốc gia phù hợp." : "No matching country found.",
     clearFilters: language === "vi" ? "Xóa bộ lọc" : "Clear filters",
     from: language === "vi" ? "Từ" : "From",
     packagesAvailable: language === "vi" ? "gói khả dụng" : "packages available",
@@ -138,7 +139,7 @@ export default async function EsimDuLichPage({
         : "Try another country keyword or return to the full destination list.",
   };
 
-  const byRegion = filteredDestinations.reduce<Record<string, EsimCountrySummary[]>>((acc, d) => {
+  const byRegion = visibleDestinations.reduce<Record<string, EsimCountrySummary[]>>((acc, d) => {
     (acc[d.region] ??= []).push(d);
     return acc;
   }, {});
@@ -185,10 +186,21 @@ export default async function EsimDuLichPage({
           <h3 className="text-lg font-bold mb-5">{text.filterTitle}</h3>
 
           <div className="mb-6 pb-6 border-b border-gray-100">
+            <div className="font-bold text-sm mb-3">{text.filterSearch}</div>
+            <CountrySearchBox
+              language={language}
+              placeholder={text.searchPlaceholder}
+              notFoundText={text.searchNotFound}
+              fromLabel={text.from}
+              variant="header"
+            />
+          </div>
+
+          <div className="mb-6 pb-6 border-b border-gray-100">
             <div className="font-bold text-sm mb-3">{text.filterRegion}</div>
             <div className="flex flex-col gap-2">
               <Link
-                href={buildFilterHref({ region: "", country: selectedCountry })}
+                href={buildFilterHref({ region: "" })}
                 className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
                   !selectedRegion ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
                 }`}
@@ -201,21 +213,21 @@ export default async function EsimDuLichPage({
                 .map((region) => (
                   <Link
                     key={region}
-                    href={buildFilterHref({ region, country: "" })}
+                    href={buildFilterHref({ region })}
                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition ${
                       selectedRegion === region ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     <span className="flex items-center gap-2">
                       {REGION_FLAG_CODES[region] ? (
-                        <span className="inline-flex h-5 w-5 items-center justify-center overflow-hidden rounded-full bg-slate-100" aria-hidden>
+                        <span className="inline-flex h-4.5 w-7 items-center justify-center overflow-hidden rounded-sm border border-slate-200 bg-slate-100" aria-hidden>
                           <img
                             src={`https://flagcdn.com/w40/${REGION_FLAG_CODES[region]}.png`}
                             alt={region}
-                            width={20}
-                            height={20}
+                            width={28}
+                            height={18}
                             loading="lazy"
-                            className="h-full w-full rounded-full object-cover"
+                            className="h-full w-full object-cover"
                           />
                         </span>
                       ) : (
@@ -231,56 +243,7 @@ export default async function EsimDuLichPage({
             </div>
           </div>
 
-          <div className="mb-6">
-            <div className="font-bold text-sm mb-3">{text.filterCountry}</div>
-            <div className="max-h-[360px] overflow-y-auto flex flex-col gap-2 pr-1">
-              <Link
-                href={buildFilterHref({ region: selectedRegion, country: "" })}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-                  !selectedCountry ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs" aria-hidden>
-                  🌐
-                </span>
-                <span>{text.filterAllCountries}</span>
-              </Link>
-              {countriesForCountryFilter.map((destination) => (
-                <Link
-                  key={destination.slug}
-                  href={buildFilterHref({ region: selectedRegion, country: destination.slug })}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-                    selectedCountry === destination.slug
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {getFlagCode(destination.slug) ? (
-                    <span
-                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100"
-                      aria-hidden
-                    >
-                      <img
-                        src={`https://flagcdn.com/w40/${getFlagCode(destination.slug)}.png`}
-                        alt={destination.name}
-                        width={20}
-                        height={20}
-                        loading="lazy"
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    </span>
-                  ) : (
-                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px]" aria-hidden>
-                      {destination.flag}
-                    </span>
-                  )}
-                  <span className="truncate">{displayCountryName(destination)}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {(selectedRegion || selectedCountry || keywordRaw) && (
+            {(selectedRegion || keywordRaw) && (
             <Link
               href="/esim-du-lich"
               className="w-full inline-flex items-center justify-center bg-gray-50 text-gray-700 py-3 rounded-[10px] font-bold text-sm border border-gray-200"
@@ -308,11 +271,11 @@ export default async function EsimDuLichPage({
                   >
                     {getFlagCode(d.slug) ? (
                       <div
-                        className="bg-gray-100 mx-auto flex items-center justify-center overflow-hidden"
+                        className="bg-gray-100 mx-auto flex items-center justify-center overflow-hidden border border-slate-200"
                         style={{
                           width: "56px",
-                          height: "56px",
-                          borderRadius: "50%",
+                          height: "38px",
+                          borderRadius: "8px",
                           marginBottom: "12px",
                         }}
                       >
@@ -320,9 +283,9 @@ export default async function EsimDuLichPage({
                           src={`https://flagcdn.com/w80/${getFlagCode(d.slug)}.png`}
                           alt={d.name}
                           width={56}
-                          height={56}
+                          height={38}
                           loading="lazy"
-                          className="h-full w-full rounded-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                       </div>
                     ) : (

@@ -33,28 +33,33 @@ export default function QuickPills({ packages, activeTag, onSelect }: QuickPills
   };
 
   return (
-    <div className="flex gap-2 mb-5 flex-wrap">
-      {pillConfig.map((pill) => {
-        const isActive = activeTag === pill.key;
-        const count = pill.key === "all" ? packages.length : counts[pill.key];
+    <div className="mb-5">
+      <div className="flex gap-2 flex-wrap">
+        {pillConfig.map((pill) => {
+          const isActive = activeTag === pill.key;
+          const count = pill.key === "all" ? packages.length : counts[pill.key];
 
-        return (
-        <button
-          key={pill.key}
-          onClick={() => onSelect(pill.key)}
-          className={`px-4 py-2 rounded-3xl text-[13px] font-semibold cursor-pointer flex items-center gap-1.5 border-[1.5px] transition ${
-            isActive
-              ? "bg-primary text-white border-primary"
-              : "bg-white text-inherit border-gray-200 hover:border-primary hover:text-primary"
-          }`}
-        >
-          {pill.icon} {labels[pill.key]}
-          <span className={`px-1.5 rounded text-[11px] ${isActive ? "bg-white/25" : "bg-gray-100 text-gray-700"}`}>
-            {count}
-          </span>
-        </button>
-        );
-      })}
+          return (
+            <button
+              key={pill.key}
+              type="button"
+              onClick={() => {
+                onSelect(pill.key);
+              }}
+              className={`px-4 py-2 rounded-3xl text-[13px] font-semibold cursor-pointer flex items-center gap-1.5 border-[1.5px] transition ${
+                isActive
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white text-inherit border-gray-200 hover:border-primary hover:text-primary"
+              }`}
+            >
+              {pill.icon} {labels[pill.key]}
+              <span className={`px-1.5 rounded text-[11px] ${isActive ? "bg-white/25" : "bg-gray-100 text-gray-700"}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

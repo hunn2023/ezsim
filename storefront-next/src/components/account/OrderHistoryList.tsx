@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import OrderHistoryItem from "@/components/account/OrderHistoryItem";
 import { useOrderHistory } from "@/hooks/useOrderHistory";
@@ -139,19 +140,65 @@ interface OrderHistoryListProps {
 
 export default function OrderHistoryList({ language = "vi" }: OrderHistoryListProps) {
   const { orders, isLoading, error, page, totalPages, setPage, refetch } = useOrderHistory(language);
+  const [keyword, setKeyword] = useState("");
+
+  const filteredOrders = useMemo(() => {
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    if (!normalizedKeyword) return orders;
+
+    return orders.filter((order) => {
+      const codeMatches = order.orderCode.toLowerCase().includes(normalizedKeyword);
+      const nameMatches = order.items.some((item) => item.name.toLowerCase().includes(normalizedKeyword));
+      return codeMatches || nameMatches;
+    });
+  }, [orders, keyword]);
+
+  const text = {
+    searchPlaceholder: language === "vi" ? "Nhập tên sản phẩm hoặc mã đơn..." : "Type product name or order code...",
+    noSearchResultTitle: language === "vi" ? "Không tìm thấy đơn hàng phù hợp" : "No matching orders found",
+    noSearchResultDescription:
+      language === "vi"
+        ? "Thử từ khóa khác hoặc xóa bộ lọc để xem toàn bộ danh sách."
+        : "Try another keyword or clear the filter to view all orders.",
+  };
 
   return (
     <div>
+      {!isLoading && !error && orders.length > 0 && (
+        <div className="mb-5">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+            {language === "vi" ? "Lọc đơn hàng" : "Filter orders"}
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <Icon icon="search" className="text-xs" />
+            </span>
+            <input
+              type="text"
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              placeholder={text.searchPlaceholder}
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-navy outline-none transition focus:border-primary"
+            />
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <OrderSkeleton />
       ) : error ? (
         <ErrorState message={error} onRetry={refetch} language={language} />
       ) : orders.length === 0 ? (
         <EmptyState language={language} />
+      ) : filteredOrders.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 px-6 py-12 text-center">
+          <h3 className="font-semibold text-navy mb-1">{text.noSearchResultTitle}</h3>
+          <p className="text-sm text-gray-400">{text.noSearchResultDescription}</p>
+        </div>
       ) : (
         <>
           <div className="space-y-4">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <OrderHistoryItem key={order.id} order={order} language={language} />
             ))}
           </div>

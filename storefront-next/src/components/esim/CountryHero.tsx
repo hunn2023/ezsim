@@ -3,6 +3,7 @@ import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
 export interface CountryHeroProps {
   flag: string;
+  flagCode?: string;
   name: string;
   nameEn: string;
   tags: string[];
@@ -16,6 +17,7 @@ export interface CountryHeroProps {
 
 export default function CountryHero({
   flag,
+  flagCode,
   name,
   nameEn,
   tags,
@@ -88,16 +90,26 @@ export default function CountryHero({
         {/* Country info */}
         <div className="flex gap-6 items-center">
           <div
-            className="bg-white flex items-center justify-center flex-shrink-0"
+            className="bg-white flex items-center justify-center flex-shrink-0 overflow-hidden"
             style={{
               width: "100px",
               height: "100px",
               borderRadius: "24px",
-              fontSize: "64px",
               boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
             }}
           >
-            {flag}
+            {flagCode ? (
+              <img
+                src={`https://flagcdn.com/w160/${flagCode}.png`}
+                alt={displayName}
+                width={96}
+                height={64}
+                loading="lazy"
+                className="h-16 w-24 rounded-lg object-cover"
+              />
+            ) : (
+              <span style={{ fontSize: "64px" }}>{flag}</span>
+            )}
           </div>
           <div>
             <h1
