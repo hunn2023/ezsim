@@ -6,11 +6,13 @@ import Breadcrumb from "@/components/ui/Breadcrumb";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import { useCartStore } from "@/lib/cartStore";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
   const { language } = useLanguage();
+  const { isAuthenticated, initialized } = useAuth();
 
   const text = {
     cart: language === "vi" ? "Giỏ hàng" : "Cart",
@@ -65,6 +67,12 @@ export default function CheckoutPage() {
   // Cart empty guard - redirect to eSIM du lich page
   if (items.length === 0) {
     router.push("/esim-du-lich");
+    return null;
+  }
+
+  // Auth guard — redirect to login then come back to checkout
+  if (initialized && !isAuthenticated) {
+    router.replace("/login?returnUrl=/checkout");
     return null;
   }
 
