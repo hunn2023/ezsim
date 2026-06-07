@@ -218,7 +218,7 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="sticky top-0 z-[100] bg-white">
+      <div className="sticky top-0 z-[260] bg-white">
         {/* HEADER */}
         <header className="bg-white border-b border-gray-200">
           <div className="max-w-container mx-auto px-6 py-4 flex items-center gap-4 lg:gap-6">
@@ -277,7 +277,7 @@ export default function Header() {
             </div>
 
             {/* Right nav */}
-            <nav className="flex gap-3 lg:gap-4 items-center">
+            <nav className="ml-auto md:ml-0 flex gap-3 lg:gap-4 items-center">
               <HeaderUserMenu />
               <CartIcon ref={cartIconRef} />
             </nav>

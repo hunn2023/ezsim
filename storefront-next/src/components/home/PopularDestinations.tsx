@@ -93,18 +93,11 @@ export default async function PopularDestinations() {
   return (
     <section style={{ padding: "0 0 64px" }}>
       <div className="max-w-container mx-auto px-6">
-        <div className="flex justify-between items-end mb-8">
+        <div className="mb-8">
           <div>
             <h2 className="section-title">{text.heading}</h2>
             <p className="section-subtitle">{text.subtitle}</p>
           </div>
-          <Link
-            href="/esim-du-lich"
-            className="text-primary font-semibold flex items-center gap-1.5 hover:opacity-80 transition"
-            style={{ fontSize: "14px" }}
-          >
-            {text.viewAll} <Icon icon="arrow-right" />
-          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
@@ -195,6 +188,15 @@ export default async function PopularDestinations() {
             </Link>
           );
           })}
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/esim-du-lich"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white gradient-primary shadow-sm hover:opacity-90 transition"
+          >
+            {text.viewAll} <Icon icon="arrow-right" />
+          </Link>
         </div>
       </div>
     </section>
