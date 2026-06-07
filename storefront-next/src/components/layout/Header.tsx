@@ -1,14 +1,18 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Logo from "./Logo";
 import CartIcon from "./CartIcon";
 import { useCartAnimation } from "@/components/ui/CartAnimation";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
+import { languageFlagCodes, languageNames, languageShortLabels, type Language } from "@/lib/i18n";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
+import CountrySearchBox from "@/components/common/CountrySearchBox";
 
 const MobileMenu = dynamic(() => import("./MobileMenu"), {
   ssr: false,
@@ -21,7 +25,7 @@ const HeaderUserMenu = dynamic(() => import("./HeaderUserMenu"), {
 });
 
 interface MainMenuItem {
-  label: string;
+  labels: Record<Language, string>;
   href: string;
   icon: IconName;
   /** Match this URL exactly (or as prefix for subpaths). */
@@ -33,49 +37,27 @@ interface MainMenuItem {
 }
 
 const MAIN_MENU: MainMenuItem[] = [
-  { label: "Trang chủ", icon: "home", href: "/", matchPath: "/" },
+  { labels: { vi: "Trang chủ", en: "Home" }, icon: "home", href: "/", matchPath: "/" },
   {
-    label: "eSIM Du lịch",
+    labels: { vi: "eSIM Du lịch", en: "Travel eSIM" },
     icon: "globe-asia",
     href: "/esim-du-lich",
     matchPath: "/esim-du-lich",
   },
   {
-    label: "Thẻ Viễn thông",
-    icon: "mobile-alt",
-    href: "/the-nap?tab=telecom",
-    matchPath: "/the-nap",
-    matchTab: "telecom",
-  },
-  {
-    label: "Thẻ Game",
-    icon: "gamepad",
-    href: "/the-nap?tab=game",
-    matchPath: "/the-nap",
-    matchTab: "game",
-  },
-  {
-    label: "Data 4G/5G",
-    icon: "wifi",
-    href: "/the-nap?tab=data",
-    matchPath: "/the-nap",
-    matchTab: "data",
-  },
-  {
-    label: "Khuyến mãi",
-    icon: "tag",
-    href: "/the-nap?tab=promo",
-    matchPath: "/the-nap",
-    matchTab: "promo",
-    highlight: true,
-  },
-  {
-    label: "Blog",
+    labels: { vi: "Blog", en: "Blog" },
     icon: "blog",
     href: "/blog",
     matchPath: "/blog",
   },
+  {
+    labels: { vi: "Hỗ trợ", en: "Support" },
+    icon: "headset",
+    href: "/support",
+    matchPath: "/support",
+  },
 ];
+
 
 function isMenuActive(
   item: MainMenuItem,
@@ -103,9 +85,57 @@ function isMenuActive(
 export default function Header() {
   const { cartIconRef } = useCartAnimation();
   const { initialized, isAuthenticated } = useAuth();
+  const { language, setLanguage } = useLanguage();
+  const router = useRouter();
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [, startTransition] = useTransition();
+  const languageContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const text = useMemo(
+    () => ({
+      appDownload: language === "vi" ? "Tải app EZSIM" : "Download EZSIM app",
+      login: language === "vi" ? "Đăng nhập" : "Login",
+      register: language === "vi" ? "Đăng ký" : "Register",
+      searchPlaceholder: language === "vi" ? "Tìm quốc gia eSIM..." : "Search eSIM countries...",
+      searchOpen: language === "vi" ? "Mở tìm kiếm eSIM" : "Open eSIM search",
+      searchClose: language === "vi" ? "Đóng tìm kiếm" : "Close search",
+      searchNotFound: language === "vi" ? "Không tìm thấy quốc gia phù hợp." : "No matching country found.",
+      from: language === "vi" ? "Từ" : "From",
+    }),
+    [language]
+  );
+
+  useEffect(() => {
+    if (!languageOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!languageContainerRef.current) return;
+      if (!languageContainerRef.current.contains(event.target as Node)) {
+        setLanguageOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [languageOpen]);
+
+
+  const handleLanguageChange = (nextLanguage: Language) => {
+    if (nextLanguage === language) {
+      setLanguageOpen(false);
+      return;
+    }
+
+    setLanguage(nextLanguage);
+    setLanguageOpen(false);
+    startTransition(() => {
+      router.refresh();
+    });
+  };
 
   return (
     <>
@@ -121,15 +151,54 @@ export default function Header() {
               className="hover:text-cyan transition hidden md:flex items-center gap-1.5"
             >
               <Icon icon="mobile-alt" />
-              Tải app EZSIM
+              {text.appDownload}
             </a>
-            <a
-              href="#"
-              className="hover:text-cyan transition hidden md:flex items-center gap-1.5"
-            >
-              <Icon icon="globe" />
-              Tiếng Việt
-            </a>
+            <div ref={languageContainerRef} className="relative hidden md:block">
+              <button
+                type="button"
+                onClick={() => setLanguageOpen((open) => !open)}
+                className="hover:text-cyan transition flex items-center gap-1.5"
+                aria-expanded={languageOpen}
+                aria-haspopup="menu"
+              >
+                <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
+                  <img
+                    src={`https://flagcdn.com/w20/${languageFlagCodes[language]}.png`}
+                    alt={languageNames[language]}
+                    width={16}
+                    height={16}
+                    className="h-full w-full object-cover"
+                  />
+                </span>
+                {languageShortLabels[language]}
+                <Icon icon="chevron-down" className="text-[10px]" />
+              </button>
+              {languageOpen && (
+                <div className="absolute right-0 top-[calc(100%+8px)] min-w-[160px] rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-xl z-[130]">
+                  {(["vi", "en"] as Language[]).map((itemLanguage) => (
+                    <button
+                      key={itemLanguage}
+                      type="button"
+                      onClick={() => handleLanguageChange(itemLanguage)}
+                      className={`w-full rounded-lg px-2.5 py-2 text-left text-sm flex items-center gap-2.5 transition ${
+                        language === itemLanguage ? "bg-white/15 text-white" : "text-slate-200 hover:bg-white/10"
+                      }`}
+                    >
+                      <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
+                        <img
+                          src={`https://flagcdn.com/w20/${languageFlagCodes[itemLanguage]}.png`}
+                          alt={languageNames[itemLanguage]}
+                          width={16}
+                          height={16}
+                          className="h-full w-full object-cover"
+                        />
+                      </span>
+                      {languageNames[itemLanguage]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {initialized && !isAuthenticated && (
               <div className="flex items-center gap-3">
                 <Link
@@ -137,11 +206,11 @@ export default function Header() {
                   className="hover:text-cyan transition flex items-center gap-1.5"
                 >
                   <Icon icon="user" />
-                  Đăng nhập
+                  {text.login}
                 </Link>
                 <span className="text-gray-500">/</span>
                 <Link href="/register" className="hover:text-cyan transition">
-                  Đăng ký
+                  {text.register}
                 </Link>
               </div>
             )}
@@ -149,74 +218,72 @@ export default function Header() {
         </div>
       </div>
 
-      {/* HEADER */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-[100]">
-        <div className="max-w-container mx-auto px-6 py-4 flex items-center gap-8">
-          <MobileMenu />
-          <Logo />
+      <div className="sticky top-0 z-[100] bg-white">
+        {/* HEADER */}
+        <header className="bg-white border-b border-gray-200">
+          <div className="max-w-container mx-auto px-6 py-4 flex items-center gap-4 lg:gap-6">
+            <MobileMenu />
+            <Logo />
 
-          {/* Search bar */}
-          <div className="hidden md:block flex-1 max-w-[480px] relative">
-            <Icon
-              icon="search"
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
-            />
-            <input
-              type="text"
-              placeholder="Tìm kiếm quốc gia, gói data, thẻ game..."
-              className="w-full py-3 pl-11 pr-4 border-[1.5px] border-gray-200 rounded-xl text-sm font-sans outline-none focus:border-primary transition"
-            />
+            {/* Main menu in single row */}
+            <nav className="hidden lg:flex items-center gap-6 xl:gap-8 ml-2">
+              {MAIN_MENU.map((item) => {
+                const active = isMenuActive(item, pathname, currentTab);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="font-medium text-sm flex items-center gap-1.5 transition"
+                    style={{
+                      color: active ? "#0066FF" : "#334155",
+                    }}
+                  >
+                    <Icon icon={item.icon} className="text-sm" />
+                    {item.labels[language]}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Expandable search */}
+            <div className="hidden md:flex items-center ml-auto">
+              <div
+                className={`relative origin-left transition-[width,transform,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  searchOpen ? "w-[315px] lg:w-[360px] scale-100" : "w-11 scale-[0.98]"
+                }`}
+              >
+                {!searchOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen(true)}
+                    className="w-11 h-11 rounded-xl border border-gray-200 text-gray-600 hover:text-primary hover:border-primary transition flex items-center justify-center"
+                    aria-label={text.searchOpen}
+                  >
+                    <Icon icon="search" />
+                  </button>
+                ) : (
+                  <CountrySearchBox
+                    language={language}
+                    placeholder={text.searchPlaceholder}
+                    notFoundText={text.searchNotFound}
+                    fromLabel={text.from}
+                    variant="header"
+                    autoFocus
+                    showCloseButton
+                    onClose={() => setSearchOpen(false)}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Right nav */}
+            <nav className="flex gap-3 lg:gap-4 items-center">
+              <HeaderUserMenu />
+              <CartIcon ref={cartIconRef} />
+            </nav>
           </div>
 
-          {/* Right nav */}
-          <nav className="flex gap-6 items-center ml-auto">
-            <HeaderUserMenu />
-            <CartIcon ref={cartIconRef} />
-          </nav>
-        </div>
-
-        {/* Mobile search */}
-        <div className="md:hidden px-4 pb-3">
-          <div className="relative">
-            <Icon
-              icon="search"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Tìm kiếm..."
-              className="w-full py-2.5 pl-9 pr-4 border border-gray-200 rounded-lg text-sm outline-none focus:border-primary transition"
-            />
-          </div>
-        </div>
-      </header>
-
-      {/* MAIN MENU */}
-      <div className="bg-white border-b border-gray-200 hidden md:block">
-        <div className="max-w-container mx-auto px-6">
-          <nav className="flex gap-8">
-            {MAIN_MENU.map((item) => {
-              const active = isMenuActive(item, pathname, currentTab);
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="font-medium text-sm flex items-center gap-1.5 transition"
-                  style={{
-                    padding: "14px 0",
-                    color: active ? "#0066FF" : "#334155",
-                    borderBottom: active
-                      ? "2px solid #0066FF"
-                      : "2px solid transparent",
-                  }}
-                >
-                  <Icon icon={item.icon} className="text-sm" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        </header>
       </div>
     </>
   );

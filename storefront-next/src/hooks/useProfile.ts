@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { updateProfile } from "@/lib/accountApi";
 import { AuthApiError } from "@/lib/authApi";
 import type { ProfileFormData } from "@/lib/schemas/profileSchema";
@@ -10,6 +11,7 @@ import type { ProfileFormData } from "@/lib/schemas/profileSchema";
 export function useProfile() {
   const [isSaving, setIsSaving] = useState(false);
   const { setUser } = useAuth();
+  const { language } = useLanguage();
 
   const saveProfile = async (data: ProfileFormData) => {
     if (isSaving) return;
@@ -21,12 +23,12 @@ export function useProfile() {
         address: data.address,
       });
       setUser(updatedUser);
-      toast.success("Cập nhật thông tin thành công!");
+      toast.success(language === "vi" ? "Cập nhật thông tin thành công!" : "Profile updated successfully!");
     } catch (error) {
       if (error instanceof AuthApiError) {
         toast.error(error.message);
       } else {
-        toast.error("Đã xảy ra lỗi. Vui lòng thử lại.");
+        toast.error(language === "vi" ? "Đã xảy ra lỗi. Vui lòng thử lại." : "An error occurred. Please try again.");
       }
     } finally {
       setIsSaving(false);

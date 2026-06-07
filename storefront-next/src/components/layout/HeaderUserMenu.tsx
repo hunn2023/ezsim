@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function HeaderUserMenu() {
   const { user, isAuthenticated, initialized } = useAuth();
+  const { language } = useLanguage();
 
   if (!initialized) {
     return null;
@@ -28,7 +30,7 @@ export default function HeaderUserMenu() {
       href="/account"
       className="flex items-center gap-2 hover:text-primary transition"
       title={user.name}
-      aria-label="Tài khoản của bạn"
+      aria-label={language === "vi" ? "Tài khoản của bạn" : "Your account"}
     >
       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
         {initials}

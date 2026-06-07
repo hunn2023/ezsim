@@ -1,17 +1,49 @@
-import Icon from "@/components/ui/Icon";
+"use client";
 
-const bestsellers = [
-  "Nhật 7 ngày 5GB",
-  "Hàn 10 ngày 10GB",
-  "Thái Lan 15GB",
-  "Châu Âu 30 nước",
-  "Mỹ 30 ngày Unl.",
-  "Toàn cầu 100+",
-];
+import { useMemo } from "react";
+import Icon from "@/components/ui/Icon";
+import { useLanguage } from "@/hooks/useLanguage";
+import CountrySearchBox from "@/components/common/CountrySearchBox";
+
+const COUNTRY_FLAG_CODES: Record<string, string> = {
+  "nhat-ban": "jp",
+  "han-quoc": "kr",
+  "thai-lan": "th",
+  "chau-au": "eu",
+  "my": "us",
+};
 
 export default function HeroBanner() {
+  const { language } = useLanguage();
+
+  const bestsellers =
+    language === "en"
+      ? ["Japan 7 days 5GB", "Korea 10 days 10GB", "Thailand 15GB", "Europe 30 countries", "US 30 days Unl.", "Global 100+"]
+      : ["Nhật 7 ngày 5GB", "Hàn 10 ngày 10GB", "Thái Lan 15GB", "Châu Âu 30 nước", "Mỹ 30 ngày Unl.", "Toàn cầu 100+"];
+
+  const text = {
+    titleTop: language === "en" ? "Stay connected" : "Kết nối",
+    titleHighlight: language === "en" ? "in a flash" : "dễ như chớp mắt",
+    titleBottom: language === "en" ? "for every journey" : "cho mọi chuyến đi",
+    subtitle:
+      language === "en"
+        ? "Travel eSIM for 200+ countries with high speed, activated in 30 seconds, ready as soon as you land."
+        : "eSIM du lịch 200+ quốc gia với tốc độ cao, kích hoạt trong 30 giây, dùng ngay khi hạ cánh.",
+    statCountry: language === "en" ? "Countries covered" : "Quốc gia phủ sóng",
+    statCustomers: language === "en" ? "Trusted customers" : "Khách hàng tin dùng",
+    statRating: language === "en" ? "Average rating" : "Đánh giá trung bình",
+    searchPlaceholder:
+      language === "en"
+        ? "Where are you going? Japan, Korea, USA..."
+        : "Bạn đang đi đâu? Nhật Bản, Hàn Quốc, Mỹ...",
+    searchButton: language === "en" ? "Find my plan" : "Tìm gói cho tôi",
+    searchNotFound: language === "en" ? "No matching destination found." : "Không tìm thấy điểm đến phù hợp.",
+    from: language === "en" ? "From" : "Từ",
+    bestSellerTitle: language === "en" ? "Best sellers this week" : "Bán chạy nhất tuần này",
+  };
+
   return (
-    <section className="gradient-primary text-white relative overflow-hidden" style={{ padding: "64px 0" }}>
+    <section className="gradient-primary text-white relative overflow-visible" style={{ padding: "64px 0" }}>
       {/* Decorative radial circle - mockup exact */}
       <div
         className="absolute pointer-events-none"
@@ -30,60 +62,41 @@ export default function HeroBanner() {
           {/* Left: content */}
           <div>
             <h1 className="text-white mb-5">
-              Kết nối <span style={{ color: "#FFE66D" }}>dễ như chớp mắt</span>
+              {text.titleTop} <span style={{ color: "#FFE66D" }}>{text.titleHighlight}</span>
               <br />
-              cho mọi chuyến đi
+              {text.titleBottom}
             </h1>
             <p className="text-white/90 mb-8 max-w-[520px]" style={{ fontSize: "18px" }}>
-              eSIM du lịch 200+ quốc gia, thẻ viễn thông trong nước, thẻ game, gói Data 4G/5G — tất cả trong 1 nơi. Kích hoạt trong 30 giây.
+              {text.subtitle}
             </p>
 
             {/* Stats */}
             <div className="flex gap-8 mb-8">
               <div>
                 <div className="text-white font-extrabold leading-none" style={{ fontSize: "32px" }}>200+</div>
-                <div className="text-white/85" style={{ fontSize: "13px" }}>Quốc gia phủ sóng</div>
+                <div className="text-white/85" style={{ fontSize: "13px" }}>{text.statCountry}</div>
               </div>
               <div>
                 <div className="text-white font-extrabold leading-none" style={{ fontSize: "32px" }}>100K+</div>
-                <div className="text-white/85" style={{ fontSize: "13px" }}>Khách hàng tin dùng</div>
+                <div className="text-white/85" style={{ fontSize: "13px" }}>{text.statCustomers}</div>
               </div>
               <div>
                 <div className="text-white font-extrabold leading-none" style={{ fontSize: "32px" }}>4.9★</div>
-                <div className="text-white/85" style={{ fontSize: "13px" }}>Đánh giá trung bình</div>
+                <div className="text-white/85" style={{ fontSize: "13px" }}>{text.statRating}</div>
               </div>
             </div>
 
             {/* Hero search */}
-            <form
-              action="/esim-du-lich"
-              method="GET"
-              className="bg-white flex flex-col sm:flex-row gap-2 max-w-[600px]"
-              style={{
-                borderRadius: "16px",
-                padding: "6px",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-              }}
-            >
-              <input
-                type="text"
-                name="q"
-                placeholder="Bạn đang đi đâu? Nhật Bản, Hàn Quốc, Mỹ..."
-                className="flex-1 border-none outline-none text-navy font-sans"
-                style={{ padding: "13px 16px", fontSize: "14px" }}
+            <div className="relative max-w-[600px] z-[120]" style={{ overflow: "visible" }}>
+              <CountrySearchBox
+                language={language}
+                placeholder={text.searchPlaceholder}
+                notFoundText={text.searchNotFound}
+                fromLabel={text.from}
+                submitLabel={text.searchButton}
+                variant="hero"
               />
-              <button
-                type="submit"
-                className="bg-navy text-white font-semibold hover:opacity-90 transition flex items-center justify-center gap-2 w-full sm:w-auto"
-                style={{
-                  padding: "11px 16px",
-                  borderRadius: "10px",
-                  fontSize: "14px",
-                }}
-              >
-                <Icon icon="search" /> Tìm gói cho tôi
-              </button>
-            </form>
+            </div>
           </div>
 
           {/* Right: bestseller card - mockup exact */}
@@ -98,7 +111,7 @@ export default function HeroBanner() {
             }}
           >
             <h3 className="font-bold mb-4 flex items-center gap-2" style={{ fontSize: "18px" }}>
-              <Icon icon="fire" /> Bán chạy nhất tuần này
+              <Icon icon="fire" /> {text.bestSellerTitle}
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {bestsellers.map((item) => (

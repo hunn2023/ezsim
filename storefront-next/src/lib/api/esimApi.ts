@@ -182,7 +182,7 @@ const countries: EsimCountryDetail[] = [
     flag: "🇪🇺",
     name: "eSIM Châu Âu",
     nameEn: "Europe eSIM • 30+ quốc gia EU",
-    region: "Khu vực",
+    region: "Châu Âu",
     gradient: "linear-gradient(135deg, #DBEAFE 0%, #DDD6FE 100%)",
     textColor: "#312E81",
     tagBg: "rgba(255,255,255,0.78)",

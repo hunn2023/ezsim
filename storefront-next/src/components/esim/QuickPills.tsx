@@ -2,14 +2,15 @@
 
 import type { EsimPackage, PackageQuickTag } from "@/types/esim";
 import { getPackageCountByQuickTag } from "@/lib/api/esimApi";
+import { useLanguage } from "@/hooks/useLanguage";
 
-const pillConfig: Array<{ key: PackageQuickTag | "all"; label: string }> = [
-  { key: "all", label: "⚡ Tất cả" },
-  { key: "bestseller", label: "🔥 Bán chạy" },
-  { key: "cheap", label: "💰 Giá rẻ" },
-  { key: "5g", label: "🚀 5G" },
-  { key: "unlimited", label: "♾️ Không giới hạn" },
-  { key: "phone", label: "📞 Có SĐT gọi" },
+const pillConfig: Array<{ key: PackageQuickTag | "all"; icon: string }> = [
+  { key: "all", icon: "⚡" },
+  { key: "bestseller", icon: "🔥" },
+  { key: "cheap", icon: "💰" },
+  { key: "5g", icon: "🚀" },
+  { key: "unlimited", icon: "♾️" },
+  { key: "phone", icon: "📞" },
 ];
 
 interface QuickPillsProps {
@@ -19,7 +20,17 @@ interface QuickPillsProps {
 }
 
 export default function QuickPills({ packages, activeTag, onSelect }: QuickPillsProps) {
+  const { language } = useLanguage();
   const counts = getPackageCountByQuickTag(packages);
+
+  const labels: Record<PackageQuickTag | "all", string> = {
+    all: language === "vi" ? "Tất cả" : "All",
+    bestseller: language === "vi" ? "Bán chạy" : "Best seller",
+    cheap: language === "vi" ? "Giá rẻ" : "Budget",
+    "5g": "5G",
+    unlimited: language === "vi" ? "Không giới hạn" : "Unlimited",
+    phone: language === "vi" ? "Có SĐT gọi" : "With phone number",
+  };
 
   return (
     <div className="flex gap-2 mb-5 flex-wrap">
@@ -37,7 +48,7 @@ export default function QuickPills({ packages, activeTag, onSelect }: QuickPills
               : "bg-white text-inherit border-gray-200 hover:border-primary hover:text-primary"
           }`}
         >
-          {pill.label}
+          {pill.icon} {labels[pill.key]}
           <span className={`px-1.5 rounded text-[11px] ${isActive ? "bg-white/25" : "bg-gray-100 text-gray-700"}`}>
             {count}
           </span>

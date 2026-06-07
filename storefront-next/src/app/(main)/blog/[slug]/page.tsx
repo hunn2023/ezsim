@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { cache } from "react";
 import { Breadcrumb } from "@/components/ui";
 import { BlogDetail } from "@/components/blog";
 import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/api/blogApi";
+import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 import { buildMetadata } from "@/lib/seo";
 
 export const revalidate = 300;
-
-const getCachedBlogPostBySlug = cache(async (slug: string) => getBlogPostBySlug(slug));
 
 interface BlogDetailPageProps {
   params: { slug: string };
@@ -17,12 +16,16 @@ interface BlogDetailPageProps {
 export async function generateMetadata({
   params,
 }: BlogDetailPageProps): Promise<Metadata> {
-  const post = await getCachedBlogPostBySlug(params.slug);
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const post = await getBlogPostBySlug(params.slug, language);
 
   if (!post) {
     return buildMetadata({
       title: "Bài viết không tồn tại",
-      description: "Bài viết bạn tìm không tồn tại hoặc đã được gỡ bỏ.",
+      description:
+        language === "vi"
+          ? "Bài viết bạn tìm không tồn tại hoặc đã được gỡ bỏ."
+          : "The article you requested does not exist or has been removed.",
       canonicalPath: `/blog/${params.slug}`,
       noIndex: true,
     });
@@ -38,19 +41,22 @@ export async function generateMetadata({
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
-  const post = await getCachedBlogPostBySlug(params.slug);
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const post = await getBlogPostBySlug(params.slug, language);
 
   if (!post) {
     notFound();
   }
 
-  const relatedPosts = await getRelatedBlogPosts(post.slug, 3);
+  const relatedPosts = await getRelatedBlogPosts(post.slug, 3, language);
+
+  const breadcrumbLabel = language === "vi" ? "Blog tin tức" : "Blog";
 
   return (
     <>
       <Breadcrumb
         items={[
-          { label: "Blog tin tức", href: "/blog" },
+          { label: breadcrumbLabel, href: "/blog" },
           { label: post.title },
         ]}
       />
@@ -63,6 +69,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         author={post.author}
         content={post.content}
         relatedPosts={relatedPosts}
+        language={language}
       />
     </>
   );

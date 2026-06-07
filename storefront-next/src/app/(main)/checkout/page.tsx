@@ -5,10 +5,17 @@ import { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import { useCartStore } from "@/lib/cartStore";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
+  const { language } = useLanguage();
+
+  const text = {
+    cart: language === "vi" ? "Giỏ hàng" : "Cart",
+    checkout: language === "vi" ? "Thanh toán" : "Checkout",
+  };
 
   const [hydrated, setHydrated] = useState(false);
 
@@ -35,8 +42,8 @@ export default function CheckoutPage() {
       <>
         <Breadcrumb
           items={[
-            { label: "Giỏ hàng", href: "/cart" },
-            { label: "Thanh toán" },
+            { label: text.cart, href: "/cart" },
+            { label: text.checkout },
           ]}
         />
         <section className="max-w-container mx-auto px-4 md:px-6 py-8">
@@ -64,12 +71,12 @@ export default function CheckoutPage() {
   return (
     <>
       <Breadcrumb
-        items={[{ label: "Giỏ hàng", href: "/cart" }, { label: "Thanh toán" }]}
+        items={[{ label: text.cart, href: "/cart" }, { label: text.checkout }]}
       />
 
       <section className="max-w-container mx-auto px-4 md:px-6 py-6 md:py-10">
         <h1 className="text-xl md:text-2xl font-bold text-navy mb-6">
-          Thanh toán
+          {text.checkout}
         </h1>
         <CheckoutForm />
       </section>

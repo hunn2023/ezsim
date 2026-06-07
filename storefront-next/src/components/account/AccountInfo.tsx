@@ -6,11 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import Icon from "@/components/ui/Icon";
 import { useAuth } from "@/hooks/useAuth";
-
-const NAV_LINKS = [
-  { href: "/account", label: "Thông tin tài khoản", icon: "user" },
-  { href: "/account/orders", label: "Đơn hàng của tôi", icon: "list" },
-] as const;
+import { useLanguage } from "@/hooks/useLanguage";
 
 function getInitials(name: string): string {
   return name
@@ -25,14 +21,38 @@ function getInitials(name: string): string {
 
 export default function AccountInfo() {
   const { user, logout } = useAuth();
+  const { language } = useLanguage();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
+  const navLinks = [
+    {
+      href: "/account",
+      label: language === "vi" ? "Thông tin tài khoản" : "Account information",
+      icon: "user",
+    },
+    {
+      href: "/account/orders",
+      label: language === "vi" ? "Đơn hàng của tôi" : "My orders",
+      icon: "list",
+    },
+  ] as const;
+
+  const text = {
+    member: language === "vi" ? "Thành viên" : "Member",
+    accountNavigation: language === "vi" ? "Điều hướng tài khoản" : "Account navigation",
+    logoutAria:
+      language === "vi" ? "Đăng xuất khỏi tài khoản" : "Sign out of account",
+    loggingOut: language === "vi" ? "Đang đăng xuất..." : "Signing out...",
+    logout: language === "vi" ? "Đăng xuất" : "Sign out",
+    logoutSuccess: language === "vi" ? "Đã đăng xuất thành công." : "Signed out successfully.",
+  };
+
   const handleLogout = () => {
     setIsLoggingOut(true);
     logout();
-    toast.success("Đã đăng xuất thành công.");
+    toast.success(text.logoutSuccess);
     router.push("/");
   };
 
@@ -51,7 +71,7 @@ export default function AccountInfo() {
         <div className="self-start flex items-center gap-1.5 mb-5">
           <div className="w-1.5 h-1.5 rounded-full bg-white/70" />
           <span className="text-white/80 text-[11px] font-semibold uppercase tracking-widest">
-            Thành viên
+            {text.member}
           </span>
         </div>
 
@@ -92,8 +112,8 @@ export default function AccountInfo() {
         </div>
 
         {/* Nav */}
-        <nav className="space-y-1 mb-4" aria-label="Account navigation">
-          {NAV_LINKS.map(({ href, label, icon }) => {
+        <nav className="space-y-1 mb-4" aria-label={text.accountNavigation}>
+          {navLinks.map(({ href, label, icon }) => {
             const isActive = pathname === href;
             return (
               <Link
@@ -122,10 +142,10 @@ export default function AccountInfo() {
           onClick={handleLogout}
           disabled={isLoggingOut}
           className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-danger py-2.5 rounded-xl border border-danger/20 hover:bg-danger hover:text-white hover:border-danger transition disabled:opacity-60 disabled:cursor-not-allowed"
-          aria-label="Đăng xuất khỏi tài khoản"
+          aria-label={text.logoutAria}
         >
           <Icon icon="sign-out-alt" />
-          {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+          {isLoggingOut ? text.loggingOut : text.logout}
         </button>
       </div>
     </div>

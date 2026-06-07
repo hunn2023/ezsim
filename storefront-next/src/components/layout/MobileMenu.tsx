@@ -6,9 +6,11 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
+import type { Language } from "@/lib/i18n";
 
 interface MobileMenuItem {
-  label: string;
+  labels: Record<Language, string>;
   icon: IconName;
   href: string;
   matchPath: string;
@@ -16,13 +18,10 @@ interface MobileMenuItem {
 }
 
 const menuItems: MobileMenuItem[] = [
-  { label: "Trang chủ", icon: "home", href: "/", matchPath: "/" },
-  { label: "eSIM Du lịch", icon: "globe-asia", href: "/esim-du-lich", matchPath: "/esim-du-lich" },
-  { label: "Thẻ Viễn thông", icon: "mobile-alt", href: "/the-nap?tab=telecom", matchPath: "/the-nap", matchTab: "telecom" },
-  { label: "Thẻ Game", icon: "gamepad", href: "/the-nap?tab=game", matchPath: "/the-nap", matchTab: "game" },
-  { label: "Data 4G/5G", icon: "wifi", href: "/the-nap?tab=data", matchPath: "/the-nap", matchTab: "data" },
-  { label: "Khuyến mãi", icon: "tag", href: "/the-nap?tab=promo", matchPath: "/the-nap", matchTab: "promo" },
-  { label: "Blog", icon: "blog", href: "/blog", matchPath: "/blog" },
+  { labels: { vi: "Trang chủ", en: "Home" }, icon: "home", href: "/", matchPath: "/" },
+  { labels: { vi: "eSIM Du lịch", en: "Travel eSIM" }, icon: "globe-asia", href: "/esim-du-lich", matchPath: "/esim-du-lich" },
+  { labels: { vi: "Blog", en: "Blog" }, icon: "blog", href: "/blog", matchPath: "/blog" },
+  { labels: { vi: "Hỗ trợ", en: "Support" }, icon: "headset", href: "/support", matchPath: "/support" },
 ];
 
 function isMenuActive(item: MobileMenuItem, pathname: string, currentTab: string | null): boolean {
@@ -41,17 +40,27 @@ function isMenuActive(item: MobileMenuItem, pathname: string, currentTab: string
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const { language } = useLanguage();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
   const { user, isAuthenticated, initialized, logout } = useAuth();
+
+  const text = {
+    menu: language === "vi" ? "Menu" : "Menu",
+    openMenu: language === "vi" ? "Mở menu" : "Open menu",
+    closeMenu: language === "vi" ? "Đóng menu" : "Close menu",
+    logout: language === "vi" ? "Đăng xuất" : "Logout",
+    login: language === "vi" ? "Đăng nhập" : "Login",
+    register: language === "vi" ? "Đăng ký" : "Register",
+  };
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
         className="lg:hidden w-10 h-10 flex items-center justify-center text-navy"
-        aria-label="Mở menu"
+        aria-label={text.openMenu}
       >
         <Icon icon="bars" className="text-xl" />
       </button>
@@ -68,8 +77,8 @@ export default function MobileMenu() {
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <span className="text-lg font-bold text-navy">Menu</span>
-          <button onClick={() => setOpen(false)} aria-label="Đóng menu">
+          <span className="text-lg font-bold text-navy">{text.menu}</span>
+          <button onClick={() => setOpen(false)} aria-label={text.closeMenu}>
             <Icon icon="times" className="text-xl text-gray-600" />
           </button>
         </div>
@@ -79,7 +88,7 @@ export default function MobileMenu() {
             const isActive = isMenuActive(item, pathname ?? "", currentTab);
             return (
               <Link
-                key={item.label}
+                key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition ${
@@ -89,7 +98,7 @@ export default function MobileMenu() {
                 }`}
               >
                 <Icon icon={item.icon} className="w-4" />
-                {item.label}
+                {item.labels[language]}
               </Link>
             );
           })}
@@ -117,7 +126,7 @@ export default function MobileMenu() {
                 className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition"
               >
                 <Icon icon="sign-out-alt" className="w-4" />
-                Đăng xuất
+                {text.logout}
               </button>
             </>
           ) : (
@@ -128,14 +137,14 @@ export default function MobileMenu() {
                 className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 border border-gray-200 transition"
               >
                 <Icon icon="user" className="w-4" />
-                Đăng nhập
+                {text.login}
               </Link>
               <Link
                 href="/register"
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-center px-3 py-3 rounded-lg text-sm font-medium text-white gradient-primary transition"
               >
-                Đăng ký
+                {text.register}
               </Link>
             </div>
           )}

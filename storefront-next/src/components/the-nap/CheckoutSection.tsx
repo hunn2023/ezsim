@@ -4,6 +4,7 @@ import { useState } from "react";
 import Icon from "@/components/ui/Icon";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
 import type { CardPaymentMethod } from "@/types/cardMarketplace";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const paymentMethods: { icon: IconName; label: CardPaymentMethod }[] = [
   { icon: "mobile-alt",  label: "Momo"          },
@@ -42,10 +43,38 @@ export default function CheckoutSection({
   itemUnit = "thẻ",
   onCheckout,
 }: CheckoutSectionProps) {
+  const { language } = useLanguage();
   const [qty, setQty] = useState(2);
   const [payment, setPayment] = useState<CardPaymentMethod>("Momo");
   const [email, setEmail] = useState("khachhang@gmail.com");
   const [phone, setPhone] = useState("");
+
+  const text = {
+    itemUnit: language === "vi" ? itemUnit : "cards",
+    quantityLabel: language === "vi" ? "Số lượng sản phẩm" : "Product quantity",
+    quantityLimit:
+      language === "vi" ? "(tối đa 50 sản phẩm/đơn)" : "(max 50 items/order)",
+    emailLabel: language === "vi" ? "Email nhận đơn hàng" : "Order email",
+    phoneLabel:
+      language === "vi" ? "Số điện thoại (hỗ trợ dự phòng)" : "Phone number (backup support)",
+    paymentMethod: language === "vi" ? "Phương thức thanh toán" : "Payment method",
+    summaryTitle: language === "vi" ? "📋 Tóm tắt đơn hàng" : "📋 Order summary",
+    estimatedDelivery:
+      language === "vi" ? "Giao mã dự kiến" : "Estimated code delivery",
+    product: language === "vi" ? "Sản phẩm" : "Product",
+    selectedPackage: language === "vi" ? "Gói đã chọn" : "Selected package",
+    quantity: language === "vi" ? "Số lượng" : "Quantity",
+    subtotal: language === "vi" ? "Tạm tính" : "Subtotal",
+    discount: language === "vi" ? "Chiết khấu" : "Discount",
+    fee: language === "vi" ? "Phí giao dịch" : "Transaction fee",
+    free: language === "vi" ? "Miễn phí" : "Free",
+    total: language === "vi" ? "Tổng cộng" : "Total",
+    payNow: language === "vi" ? "Thanh toán & nhận mã ngay" : "Pay now & receive code instantly",
+    safeNotice:
+      language === "vi"
+        ? "🔒 Giao dịch an toàn - Thông tin đơn hàng gửi ngay sau khi thanh toán"
+        : "🔒 Secure transaction - Order details are sent right after payment",
+  };
 
   const originalSubtotal = faceValue * qty;
   const discount = originalSubtotal - payValue * qty;
@@ -66,7 +95,7 @@ export default function CheckoutSection({
       <div className="flex flex-col gap-4">
         <div>
           <label className="font-semibold mb-1.5 block" style={{ fontSize: "13px" }}>
-            Số lượng sản phẩm
+            {text.quantityLabel}
           </label>
           <div className="flex items-center gap-3">
             <button
@@ -109,14 +138,14 @@ export default function CheckoutSection({
               +
             </button>
             <span className="text-gray-500" style={{ fontSize: "13px" }}>
-              (tối đa 50 sản phẩm/đơn)
+              {text.quantityLimit}
             </span>
           </div>
         </div>
 
         <div>
           <label className="font-semibold mb-1.5 block" style={{ fontSize: "13px" }}>
-            Email nhận đơn hàng <span style={{ color: "#DC2626" }}>*</span>
+            {text.emailLabel} <span style={{ color: "#DC2626" }}>*</span>
           </label>
           <input
             type="email"
@@ -135,7 +164,7 @@ export default function CheckoutSection({
 
         <div>
           <label className="font-semibold mb-1.5 block" style={{ fontSize: "13px" }}>
-            Số điện thoại (hỗ trợ dự phòng)
+            {text.phoneLabel}
           </label>
           <input
             type="tel"
@@ -154,7 +183,7 @@ export default function CheckoutSection({
 
         <div>
           <label className="font-semibold mb-1.5 block" style={{ fontSize: "13px" }}>
-            Phương thức thanh toán
+            {text.paymentMethod}
           </label>
           <div className="grid grid-cols-3 gap-2">
             {paymentMethods.map((pm) => {
@@ -190,7 +219,7 @@ export default function CheckoutSection({
         }}
       >
         <h3 className="font-bold" style={{ fontSize: "16px", marginBottom: "16px" }}>
-          📋 Tóm tắt đơn hàng
+          {text.summaryTitle}
         </h3>
 
         {(providerDescription || deliveryTime) && (
@@ -205,16 +234,16 @@ export default function CheckoutSection({
             )}
             {deliveryTime && (
               <p className="text-primary font-semibold" style={{ fontSize: "12px", marginTop: providerDescription ? "8px" : 0 }}>
-                Giao mã dự kiến: {deliveryTime}
+                {text.estimatedDelivery}: {deliveryTime}
               </p>
             )}
           </div>
         )}
 
         <div style={{ fontSize: "14px" }}>
-          <SummaryRow label="Sản phẩm"  value={providerName} />
-          <SummaryRow label="Gói đã chọn"  value={optionLabel} />
-          <SummaryRow label="Số lượng"  value={`${qty} ${itemUnit}`} />
+          <SummaryRow label={text.product} value={providerName} />
+          <SummaryRow label={text.selectedPackage} value={optionLabel} />
+          <SummaryRow label={text.quantity} value={`${qty} ${text.itemUnit}`} />
 
           <div
             className="flex justify-between"
@@ -224,16 +253,16 @@ export default function CheckoutSection({
               borderTop: "1px dashed #E2E8F0",
             }}
           >
-            <span className="text-gray-700">Tạm tính</span>
+            <span className="text-gray-700">{text.subtotal}</span>
             <span className="font-semibold">{originalSubtotal.toLocaleString("vi-VN")}đ</span>
           </div>
 
           <SummaryRow
-            label={`Chiết khấu (${discountPercent}%)`}
+            label={`${text.discount} (${discountPercent}%)`}
             value={`−${discount.toLocaleString("vi-VN")}đ`}
             valueColor="#DC2626"
           />
-          <SummaryRow label="Phí giao dịch" value="Miễn phí" valueColor="#16A34A" />
+          <SummaryRow label={text.fee} value={text.free} valueColor="#16A34A" />
 
           <div
             className="flex justify-between items-center font-extrabold"
@@ -244,7 +273,7 @@ export default function CheckoutSection({
               fontSize: "18px",
             }}
           >
-            <span>Tổng cộng</span>
+            <span>{text.total}</span>
             <span className="text-primary" style={{ fontSize: "24px" }}>
               {total.toLocaleString("vi-VN")}đ
             </span>
@@ -262,11 +291,11 @@ export default function CheckoutSection({
             marginTop: "16px",
           }}
         >
-          <Icon icon="bolt" /> Thanh toán & nhận mã ngay
+          <Icon icon="bolt" /> {text.payNow}
         </button>
 
         <p className="text-center text-gray-500" style={{ fontSize: "12px", marginTop: "12px" }}>
-          🔒 Giao dịch an toàn - Thông tin đơn hàng gửi ngay sau khi thanh toán
+          {text.safeNotice}
         </p>
       </div>
     </div>

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import ToastProvider from "@/components/ui/ToastProvider";
 import AuthProvider from "@/providers/AuthProvider";
 import { SITE } from "@/lib/constants";
 import { SITE_URL } from "@/lib/seo";
+import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -43,8 +45,10 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+
   return (
-    <html lang="vi" className={beVietnamPro.variable}>
+    <html lang={language} className={beVietnamPro.variable}>
       <body className={`${beVietnamPro.className} min-h-screen flex flex-col`}>
         <AuthProvider>{children}</AuthProvider>
         <ToastProvider />

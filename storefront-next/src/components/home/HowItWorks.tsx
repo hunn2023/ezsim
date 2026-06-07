@@ -1,28 +1,54 @@
-const steps = [
-  {
-    num: 1,
-    title: "Chọn sản phẩm",
-    desc: "Chọn quốc gia + gói data hoặc loại thẻ. Lọc theo ngân sách & số ngày.",
-  },
-  {
-    num: 2,
-    title: "Thanh toán nhanh",
-    desc: "Momo, ZaloPay, VNPay, thẻ ngân hàng, QR Banking — chọn cách bạn thích.",
-  },
-  {
-    num: 3,
-    title: "Nhận & dùng ngay",
-    desc: "Mã QR / mã thẻ gửi qua email + SMS. Quét là chạy, không cần đợi.",
-  },
-];
+import { cookies } from "next/headers";
+import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
 export default function HowItWorks() {
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const steps =
+    language === "en"
+      ? [
+          {
+            num: 1,
+            title: "Choose your plan",
+            desc: "Pick destination and data package. Filter by budget and trip duration.",
+          },
+          {
+            num: 2,
+            title: "Fast checkout",
+            desc: "Use your preferred payment method and complete checkout in seconds.",
+          },
+          {
+            num: 3,
+            title: "Receive and use instantly",
+            desc: "QR code arrives by email/SMS. Scan and connect right away.",
+          },
+        ]
+      : [
+          {
+            num: 1,
+            title: "Chọn sản phẩm",
+            desc: "Chọn quốc gia + gói data hoặc loại thẻ. Lọc theo ngân sách & số ngày.",
+          },
+          {
+            num: 2,
+            title: "Thanh toán nhanh",
+            desc: "Momo, ZaloPay, VNPay, thẻ ngân hàng, QR Banking — chọn cách bạn thích.",
+          },
+          {
+            num: 3,
+            title: "Nhận & dùng ngay",
+            desc: "Mã QR / mã thẻ gửi qua email + SMS. Quét là chạy, không cần đợi.",
+          },
+        ];
+
+  const heading = language === "en" ? "Buy and activate in just 3 steps" : "Mua và sử dụng cực dễ — chỉ 3 bước";
+  const subtitle = language === "en" ? "Total time: under 60 seconds after payment" : "Tổng thời gian: dưới 60 giây kể từ lúc thanh toán";
+
   return (
     <section className="bg-gray-50" style={{ padding: "64px 0" }}>
       <div className="max-w-container mx-auto px-6">
         <div className="flex flex-col items-center text-center mb-12">
-          <h2 className="section-title">Mua và sử dụng cực dễ — chỉ 3 bước</h2>
-          <p className="section-subtitle">Tổng thời gian: dưới 60 giây kể từ lúc thanh toán</p>
+          <h2 className="section-title">{heading}</h2>
+          <p className="section-subtitle">{subtitle}</p>
         </div>
 
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8">

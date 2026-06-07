@@ -3,6 +3,7 @@
 import Icon from "@/components/ui/Icon";
 import OrderHistoryItem from "@/components/account/OrderHistoryItem";
 import { useOrderHistory } from "@/hooks/useOrderHistory";
+import type { Language } from "@/lib/i18n";
 
 // ── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -36,15 +37,21 @@ function OrderSkeleton() {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function EmptyState({ language }: { language: Language }) {
+  const title = language === "vi" ? "Chưa có đơn hàng nào" : "No orders yet";
+  const description =
+    language === "vi"
+      ? "Khi bạn đặt hàng, đơn hàng sẽ hiển thị tại đây."
+      : "When you place an order, it will appear here.";
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 px-6 py-16 text-center">
       <div className="w-16 h-16 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4">
         <Icon icon="shopping-cart" className="text-gray-300 text-2xl" />
       </div>
-      <h3 className="font-semibold text-navy mb-1">Chưa có đơn hàng nào</h3>
+      <h3 className="font-semibold text-navy mb-1">{title}</h3>
       <p className="text-sm text-gray-400">
-        Khi bạn đặt hàng, đơn hàng sẽ hiển thị tại đây.
+        {description}
       </p>
     </div>
   );
@@ -52,7 +59,9 @@ function EmptyState() {
 
 // ── Error state ───────────────────────────────────────────────────────────────
 
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+function ErrorState({ message, onRetry, language }: { message: string; onRetry: () => void; language: Language }) {
+  const retryLabel = language === "vi" ? "Thử lại" : "Try again";
+
   return (
     <div className="bg-white rounded-2xl border border-red-100 px-6 py-12 text-center">
       <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
@@ -63,7 +72,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
         onClick={onRetry}
         className="btn btn-outline btn-sm"
       >
-        Thử lại
+        {retryLabel}
       </button>
     </div>
   );
@@ -75,17 +84,21 @@ interface PaginationProps {
   page: number;
   totalPages: number;
   onPageChange: (p: number) => void;
+  language: Language;
 }
 
-function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+function Pagination({ page, totalPages, onPageChange, language }: PaginationProps) {
   if (totalPages <= 1) return null;
+
+  const prevLabel = language === "vi" ? "Trang trước" : "Previous page";
+  const nextLabel = language === "vi" ? "Trang sau" : "Next page";
 
   return (
     <div className="flex items-center justify-center gap-2 mt-6">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
-        aria-label="Trang trước"
+        aria-label={prevLabel}
         className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-primary hover:text-primary transition disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <Icon icon="chevron-left" className="text-xs" />
@@ -109,7 +122,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page === totalPages}
-        aria-label="Trang sau"
+        aria-label={nextLabel}
         className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-primary hover:text-primary transition disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <Icon icon="chevron-right" className="text-xs" />
@@ -120,25 +133,29 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function OrderHistoryList() {
-  const { orders, isLoading, error, page, totalPages, setPage, refetch } = useOrderHistory();
+interface OrderHistoryListProps {
+  language?: Language;
+}
+
+export default function OrderHistoryList({ language = "vi" }: OrderHistoryListProps) {
+  const { orders, isLoading, error, page, totalPages, setPage, refetch } = useOrderHistory(language);
 
   return (
     <div>
       {isLoading ? (
         <OrderSkeleton />
       ) : error ? (
-        <ErrorState message={error} onRetry={refetch} />
+        <ErrorState message={error} onRetry={refetch} language={language} />
       ) : orders.length === 0 ? (
-        <EmptyState />
+        <EmptyState language={language} />
       ) : (
         <>
           <div className="space-y-4">
             {orders.map((order) => (
-              <OrderHistoryItem key={order.id} order={order} />
+              <OrderHistoryItem key={order.id} order={order} language={language} />
             ))}
           </div>
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} language={language} />
         </>
       )}
     </div>

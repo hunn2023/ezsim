@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 import Icon from "@/components/ui/Icon";
 import { useCartStore } from "@/lib/cartStore";
-import { filterEsimPackages, getPackageCountByQuickTag } from "@/lib/api/esimApi";
+import { useCartAnimation } from "@/components/ui/CartAnimation";
+import { useLanguage } from "@/hooks/useLanguage";
+import { filterEsimPackages } from "@/lib/api/esimApi";
 import type { EsimCountryDetail, EsimPackageFilters, PackageQuickTag } from "@/types/esim";
 import Sidebar from "./Sidebar";
 import QuickPills from "./QuickPills";
@@ -23,6 +24,8 @@ type ViewMode = "grid" | "list";
 
 export default function EsimCountryBrowser({ country }: { country: EsimCountryDetail }) {
   const addToCart = useCartStore((state) => state.addToCart);
+  const { triggerFlyToCart } = useCartAnimation();
+  const { language } = useLanguage();
   const [filters, setFilters] = useState<EsimPackageFilters>(INITIAL_FILTERS);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [visibleCount, setVisibleCount] = useState(6);
@@ -33,7 +36,6 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
   );
 
   const visiblePackages = filteredPackages.slice(0, visibleCount);
-  const quickTagCounts = useMemo(() => getPackageCountByQuickTag(country.packages), [country.packages]);
 
   const handleQuickTagChange = (quickTag: PackageQuickTag | "all") => {
     setFilters((current) => ({ ...current, quickTag }));
@@ -56,7 +58,7 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
     setFilters((current) => ({ ...current, sort }));
   };
 
-  const handleBuy = (pkg: EsimCountryDetail["packages"][number]) => {
+  const handleBuy = (pkg: EsimCountryDetail["packages"][number], quantity: number, triggerElement: HTMLElement | null) => {
     addToCart({
       id: pkg.id,
       name: `${country.name} ${pkg.data} ${pkg.dataUnit} - ${pkg.days} ngày`,
@@ -64,11 +66,33 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
       href: `/esim-du-lich/${country.slug}`,
       image: pkg.image,
       price: pkg.price,
-      quantity: 1,
+      quantity,
       stock: pkg.stock,
     });
 
-    toast.success(`Đã thêm gói ${pkg.data} ${pkg.dataUnit} vào giỏ hàng`);
+    triggerFlyToCart(pkg.image, triggerElement);
+  };
+
+  const text = {
+    showing: language === "vi" ? "Hiển thị" : "Showing",
+    inTotal: language === "vi" ? "trong tổng số" : "out of",
+    packages: language === "vi" ? "gói" : "packages",
+    sortBy: language === "vi" ? "Sắp xếp:" : "Sort by:",
+    sortRecommended: language === "vi" ? "Phù hợp nhất" : "Recommended",
+    sortPriceAsc: language === "vi" ? "Giá thấp đến cao" : "Price low to high",
+    sortPriceDesc: language === "vi" ? "Giá cao đến thấp" : "Price high to low",
+    sortBestSeller: language === "vi" ? "Bán chạy nhất" : "Best seller",
+    sortRating: language === "vi" ? "Đánh giá cao nhất" : "Top rated",
+    gridView: language === "vi" ? "Hiển thị dạng lưới" : "Grid view",
+    listView: language === "vi" ? "Hiển thị dạng danh sách" : "List view",
+    noPackageTitle: language === "vi" ? "Không tìm thấy gói phù hợp" : "No matching package found",
+    noPackageDescription:
+      language === "vi"
+        ? "Thử nới bộ lọc hoặc chọn nhanh một nhóm gói khác."
+        : "Try relaxing filters or picking another quick package group.",
+    clearFilters: language === "vi" ? "Xóa bộ lọc" : "Clear filters",
+    showMore: language === "vi" ? "Xem thêm" : "Show more",
+    packageSuffix: language === "vi" ? "gói" : "packages",
   };
 
   return (
@@ -103,12 +127,12 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
           }}
         >
           <div className="text-gray-700" style={{ fontSize: "14px" }}>
-            Hiển thị <b className="text-navy">{visiblePackages.length === 0 ? 0 : 1}-{visiblePackages.length}</b> trong tổng số{" "}
-            <b className="text-navy">{filteredPackages.length}</b> gói {country.name}
+            {text.showing} <b className="text-navy">{visiblePackages.length === 0 ? 0 : 1}-{visiblePackages.length}</b> {text.inTotal}{" "}
+            <b className="text-navy">{filteredPackages.length}</b> {text.packages} {country.name}
           </div>
 
           <div className="flex flex-wrap items-center gap-3" style={{ fontSize: "14px" }}>
-            <span>Sắp xếp:</span>
+            <span>{text.sortBy}</span>
             <select
               value={filters.sort}
               onChange={(event) => handleSortChange(event.target.value as EsimPackageFilters["sort"])}
@@ -120,11 +144,11 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
                 fontSize: "14px",
               }}
             >
-              <option value="recommended">Phù hợp nhất</option>
-              <option value="price_asc">Giá thấp đến cao</option>
-              <option value="price_desc">Giá cao đến thấp</option>
-              <option value="bestseller">Bán chạy nhất</option>
-              <option value="rating">Đánh giá cao nhất</option>
+              <option value="recommended">{text.sortRecommended}</option>
+              <option value="price_asc">{text.sortPriceAsc}</option>
+              <option value="price_desc">{text.sortPriceDesc}</option>
+              <option value="bestseller">{text.sortBestSeller}</option>
+              <option value="rating">{text.sortRating}</option>
             </select>
             <div className="flex gap-1">
               <button
@@ -139,7 +163,7 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
                   border: viewMode === "grid" ? "1.5px solid #0066FF" : "1.5px solid #E2E8F0",
                   borderRadius: "8px",
                 }}
-                aria-label="Hiển thị dạng lưới"
+                aria-label={text.gridView}
               >
                 <Icon icon="th-large" />
               </button>
@@ -155,7 +179,7 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
                   border: viewMode === "list" ? "1.5px solid #0066FF" : "1.5px solid #E2E8F0",
                   borderRadius: "8px",
                 }}
-                aria-label="Hiển thị dạng danh sách"
+                aria-label={text.listView}
               >
                 <Icon icon="list" />
               </button>
@@ -175,14 +199,14 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
             style={{ borderRadius: "16px", border: "1px solid #E2E8F0", padding: "48px 24px" }}
           >
             <div className="text-4xl mb-3">🧭</div>
-            <h3 className="text-navy font-bold mb-2">Không tìm thấy gói phù hợp</h3>
-            <p className="text-gray-500 mb-4">Thử nới bộ lọc hoặc chọn nhanh một nhóm gói khác.</p>
+            <h3 className="text-navy font-bold mb-2">{text.noPackageTitle}</h3>
+            <p className="text-gray-500 mb-4">{text.noPackageDescription}</p>
             <button
               type="button"
               onClick={handleReset}
               className="btn-outline"
             >
-              Xóa bộ lọc
+              {text.clearFilters}
             </button>
           </div>
         )}
@@ -199,7 +223,7 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
                 fontSize: "14px",
               }}
             >
-              <Icon icon="plus" /> Xem thêm {Math.min(6, filteredPackages.length - visiblePackages.length)} gói
+              <Icon icon="plus" /> {text.showMore} {Math.min(6, filteredPackages.length - visiblePackages.length)} {text.packageSuffix}
             </button>
           </div>
         )}

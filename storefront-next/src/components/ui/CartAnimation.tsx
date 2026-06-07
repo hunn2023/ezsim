@@ -14,6 +14,8 @@ interface CartAnimationContextType {
   flyAnimations: FlyAnimation[];
   removeAnimation: (id: string) => void;
   cartIconRef: React.RefObject<HTMLAnchorElement>;
+  cartImpactCount: number;
+  markCartImpact: () => void;
 }
 
 const CartAnimationContext = createContext<CartAnimationContextType | null>(null);
@@ -28,13 +30,13 @@ export function useCartAnimation() {
 
 export function CartAnimationProvider({ children }: { children: ReactNode }) {
   const [flyAnimations, setFlyAnimations] = useState<FlyAnimation[]>([]);
+  const [cartImpactCount, setCartImpactCount] = useState(0);
   const cartIconRef = useRef<HTMLAnchorElement>(null);
 
   const triggerFlyToCart = useCallback((image: string, startElement: HTMLElement | null) => {
     if (!startElement || !cartIconRef.current) return;
 
     const startRect = startElement.getBoundingClientRect();
-    const cartRect = cartIconRef.current.getBoundingClientRect();
 
     const startX = startRect.left + startRect.width / 2;
     const startY = startRect.top + startRect.height / 2;
@@ -48,9 +50,13 @@ export function CartAnimationProvider({ children }: { children: ReactNode }) {
     setFlyAnimations((prev) => prev.filter((a) => a.id !== id));
   }, []);
 
+  const markCartImpact = useCallback(() => {
+    setCartImpactCount((count) => count + 1);
+  }, []);
+
   return (
     <CartAnimationContext.Provider
-      value={{ triggerFlyToCart, flyAnimations, removeAnimation, cartIconRef }}
+      value={{ triggerFlyToCart, flyAnimations, removeAnimation, cartIconRef, cartImpactCount, markCartImpact }}
     >
       {children}
     </CartAnimationContext.Provider>
@@ -59,7 +65,15 @@ export function CartAnimationProvider({ children }: { children: ReactNode }) {
 
 // Component to render flying items
 export function CartFlyAnimations() {
-  const { flyAnimations, removeAnimation, cartIconRef } = useCartAnimation();
+  const { flyAnimations, removeAnimation, cartIconRef, markCartImpact } = useCartAnimation();
+
+  const handleComplete = useCallback(
+    (id: string) => {
+      removeAnimation(id);
+      markCartImpact();
+    },
+    [removeAnimation, markCartImpact]
+  );
 
   return (
     <>
@@ -68,7 +82,7 @@ export function CartFlyAnimations() {
           key={animation.id}
           animation={animation}
           cartIconRef={cartIconRef}
-          onComplete={() => removeAnimation(animation.id)}
+          onComplete={() => handleComplete(animation.id)}
         />
       ))}
     </>

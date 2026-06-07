@@ -1,13 +1,24 @@
+import { cookies } from "next/headers";
 import Icon from "@/components/ui/Icon";
-
-const items = [
-  { icon: "bolt" as const,        title: "Kích hoạt 30 giây", desc: "Quét QR là dùng ngay" },
-  { icon: "shield-alt" as const,  title: "Hoàn tiền 100%",     desc: "Cam kết nếu không dùng được" },
-  { icon: "headset" as const,     title: "Hỗ trợ 24/7",        desc: "Tổng đài tiếng Việt" },
-  { icon: "tags" as const,        title: "Giá rẻ nhất",        desc: "Tiết kiệm tới 96% chuyển vùng" },
-];
+import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
 export default function TrustBar() {
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const items =
+    language === "en"
+      ? [
+          { icon: "bolt" as const, title: "Activate in 30 seconds", desc: "Scan QR and go online instantly" },
+          { icon: "shield-alt" as const, title: "100% refund", desc: "Guaranteed if service does not work" },
+          { icon: "headset" as const, title: "24/7 support", desc: "Fast live support" },
+          { icon: "tags" as const, title: "Best pricing", desc: "Save up to 96% vs roaming" },
+        ]
+      : [
+          { icon: "bolt" as const, title: "Kích hoạt 30 giây", desc: "Quét QR là dùng ngay" },
+          { icon: "shield-alt" as const, title: "Hoàn tiền 100%", desc: "Cam kết nếu không dùng được" },
+          { icon: "headset" as const, title: "Hỗ trợ 24/7", desc: "Tổng đài tiếng Việt" },
+          { icon: "tags" as const, title: "Giá rẻ nhất", desc: "Tiết kiệm tới 96% chuyển vùng" },
+        ];
+
   return (
     <section className="bg-white border-b border-gray-200" style={{ padding: "32px 0" }}>
       <div className="max-w-container mx-auto px-6">

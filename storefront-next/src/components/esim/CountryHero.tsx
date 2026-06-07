@@ -1,3 +1,6 @@
+import { cookies } from "next/headers";
+import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
+
 export interface CountryHeroProps {
   flag: string;
   name: string;
@@ -21,6 +24,61 @@ export default function CountryHero({
   textColor = "#7F1D1D",
   tagBg = "rgba(255,255,255,0.7)",
 }: CountryHeroProps) {
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+
+  const translateText = (value: string) => {
+    if (language === "vi") return value;
+
+    const map: Record<string, string> = {
+      "🔥 #1 Bán chạy": "🔥 #1 Best seller",
+      "⚡ Kích hoạt 30s": "⚡ Activate in 30s",
+      "📶 NTT Docomo & SoftBank": "📶 NTT Docomo & SoftBank",
+      "🎌 12 gói data": "🎌 12 data packages",
+      "🔥 Phổ biến": "🔥 Popular",
+      "📶 SK Telecom": "📶 SK Telecom",
+      "⚡ Kích hoạt tức thì": "⚡ Instant activation",
+      "🛜 5G toàn quốc": "🛜 Nationwide 5G",
+      "💰 Giá tốt": "💰 Great value",
+      "🏖️ Phù hợp nghỉ dưỡng": "🏖️ Great for vacations",
+      "📶 AIS / DTAC": "📶 AIS / DTAC",
+      "⚡ QR tức thì": "⚡ Instant QR",
+      "🌍 30+ quốc gia": "🌍 30+ countries",
+      "🚄 Di chuyển liên quốc gia": "🚄 Cross-border ready",
+      "📶 Orange / Vodafone": "📶 Orange / Vodafone",
+      "🔥 Best seller EU": "🔥 EU best seller",
+      "🇺🇸 T-Mobile / AT&T": "🇺🇸 T-Mobile / AT&T",
+      "📞 Có gói có số": "📞 Plans with phone number",
+      "⚡ Kích hoạt trong 1 phút": "⚡ Activate in 1 minute",
+      "🛣️ Roadtrip friendly": "🛣️ Roadtrip friendly",
+      "Nhà mạng": "Carrier",
+      "Tốc độ": "Speed",
+      "Phủ sóng": "Coverage",
+      "Hotspot": "Hotspot",
+      "Đã bán": "Sold",
+      "5G / 4G LTE": "5G / 4G LTE",
+      "5G / LTE": "5G / LTE",
+      "✅ Hỗ trợ chia sẻ": "✅ Hotspot supported",
+      "✅ Có hỗ trợ": "✅ Supported",
+      "Toàn nước Mỹ": "Across the U.S.",
+      "Seoul, Busan, Jeju": "Seoul, Busan, Jeju",
+      "Bangkok, Phuket": "Bangkok, Phuket",
+      "30+ quốc gia": "30+ countries",
+      "Hà Nội, Việt Nam": "Hanoi, Vietnam",
+    };
+
+    return map[value] ?? value;
+  };
+
+  const displayName =
+    language === "en"
+      ? name
+          .replace("Nhật Bản", "Japan")
+          .replace("Hàn Quốc", "South Korea")
+          .replace("Thái Lan", "Thailand")
+          .replace("Mỹ", "United States")
+          .replace("Châu Âu", "Europe")
+      : name;
+
   return (
     <section
       className="relative overflow-hidden"
@@ -51,7 +109,7 @@ export default function CountryHero({
                 letterSpacing: "-1px",
               }}
             >
-              {name}
+              {displayName}
             </h1>
             <p
               className="font-medium"
@@ -72,7 +130,7 @@ export default function CountryHero({
                     fontSize: "12px",
                   }}
                 >
-                  {tag}
+                  {translateText(tag)}
                 </span>
               ))}
             </div>
@@ -98,8 +156,8 @@ export default function CountryHero({
                 borderTop: i > 0 ? "1px solid #F1F5F9" : "none",
               }}
             >
-              <span className="text-gray-500">{s.label}</span>
-              <span className="font-bold text-navy">{s.value}</span>
+              <span className="text-gray-500">{translateText(s.label)}</span>
+              <span className="font-bold text-navy">{translateText(s.value)}</span>
             </div>
           ))}
         </div>

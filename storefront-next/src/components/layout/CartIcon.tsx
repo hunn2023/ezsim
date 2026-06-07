@@ -5,10 +5,13 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
 import { useCartStore } from "@/lib/cartStore";
+import { useCartAnimation } from "@/components/ui/CartAnimation";
 
 const CartIcon = forwardRef<HTMLAnchorElement, object>(function CartIcon(_props, ref) {
   const items = useCartStore((s) => s.items);
+  const { cartImpactCount } = useCartAnimation();
   const [hydrated, setHydrated] = useState(false);
+  const [isImpacting, setIsImpacting] = useState(false);
 
   useEffect(() => {
     const persistApi = useCartStore.persist;
@@ -30,11 +33,24 @@ const CartIcon = forwardRef<HTMLAnchorElement, object>(function CartIcon(_props,
   // Compute count from items - this will re-render when items change
   const count = hydrated ? items.reduce((sum, i) => sum + i.quantity, 0) : 0;
 
+  useEffect(() => {
+    if (!cartImpactCount) return;
+
+    setIsImpacting(true);
+    const timeoutId = window.setTimeout(() => {
+      setIsImpacting(false);
+    }, 520);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [cartImpactCount]);
+
   return (
     <Link
       ref={ref}
       href="/cart"
-      className="relative w-10 h-10 rounded-[10px] bg-gray-100 flex items-center justify-center text-navy hover:bg-primary/10 transition"
+      className={`relative w-10 h-10 rounded-[10px] bg-gray-100 flex items-center justify-center text-navy hover:bg-primary/10 transition ${
+        isImpacting ? "cart-impact" : ""
+      }`}
       aria-label={`Giỏ hàng (${count} sản phẩm)`}
     >
       <Icon icon="shopping-cart" />

@@ -1,14 +1,23 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import RegisterForm from "@/components/auth/RegisterForm";
 import { SITE } from "@/lib/constants";
+import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: `Tạo tài khoản | ${SITE.name}`,
-  description: "Tạo tài khoản để mua sắm, theo dõi đơn hàng và nhận ưu đãi thành viên.",
-};
+export function generateMetadata(): Metadata {
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+
+  return {
+    title: language === "vi" ? `Tạo tài khoản | ${SITE.name}` : `Create account | ${SITE.name}`,
+    description:
+      language === "vi"
+        ? "Tạo tài khoản để mua sắm, theo dõi đơn hàng và nhận ưu đãi thành viên."
+        : "Create an account to shop, track orders, and receive member benefits.",
+  };
+}
 
 function RegisterSkeleton() {
   return (
@@ -43,6 +52,16 @@ function RegisterSkeleton() {
 }
 
 export default function RegisterPage() {
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const text = {
+    heading: language === "vi" ? "Tạo tài khoản mới ✨" : "Create a new account ✨",
+    subheading:
+      language === "vi"
+        ? "Điền thông tin bên dưới để bắt đầu mua sắm"
+        : "Fill in the details below to start shopping",
+    backHome: language === "vi" ? "Quay lại trang chủ" : "Back to homepage",
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden px-4 py-12 md:py-16">
       {/* Auth background image with subtle blur so form stays prominent */}
@@ -74,9 +93,9 @@ export default function RegisterPage() {
 
             {/* Heading */}
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-navy mb-1">Tạo tài khoản mới ✨</h1>
+              <h1 className="text-2xl font-bold text-navy mb-1">{text.heading}</h1>
               <p className="text-sm text-gray-500">
-                Điền thông tin bên dưới để bắt đầu mua sắm
+                {text.subheading}
               </p>
             </div>
 
@@ -89,7 +108,7 @@ export default function RegisterPage() {
             <p className="mt-6 text-center text-xs text-gray-400">
               <Link href="/" className="inline-flex items-center gap-1 hover:text-primary transition">
                 <Icon icon="chevron-left" className="text-[10px]" />
-                Quay lại trang chủ
+                {text.backHome}
               </Link>
             </p>
           </div>

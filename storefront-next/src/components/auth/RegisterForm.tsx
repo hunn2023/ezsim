@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
-import { registerSchema, type RegisterFormData } from "@/lib/schemas/registerSchema";
+import { getRegisterSchema, type RegisterFormData } from "@/lib/schemas/registerSchema";
 import { useRegister } from "@/hooks/useRegister";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface FieldProps {
   id: string;
@@ -37,6 +38,37 @@ export default function RegisterForm() {
   const [otpCode, setOtpCode] = useState("");
   const [remainingMs, setRemainingMs] = useState(0);
   const { requestOtp, verifyOtpAndRegister, resendOtp, cancelOtp, otpSession, isLoading } = useRegister();
+  const { language } = useLanguage();
+  const registerSchema = useMemo(() => getRegisterSchema(language), [language]);
+
+  const text = {
+    otpVerifyTitle:
+      language === "vi" ? "Xác thực email để hoàn tất đăng ký" : "Verify email to complete registration",
+    otpSentTo:
+      language === "vi"
+        ? "Mã OTP gồm 6 số đã được gửi tới"
+        : "A 6-digit OTP has been sent to",
+    otpValidUntil: language === "vi" ? "Mã còn hiệu lực:" : "Code valid for:",
+    otpExpired: language === "vi" ? "Đã hết hạn" : "Expired",
+    otpLabel: language === "vi" ? "Mã OTP" : "OTP code",
+    otpPlaceholder: language === "vi" ? "Nhập 6 số OTP" : "Enter 6-digit OTP",
+    verifying: language === "vi" ? "Đang xác thực..." : "Verifying...",
+    verifyAndCreate:
+      language === "vi" ? "Xác thực OTP và tạo tài khoản" : "Verify OTP and create account",
+    resendOtp: language === "vi" ? "Gửi lại mã OTP" : "Resend OTP",
+    editInfo: language === "vi" ? "Chỉnh sửa thông tin" : "Edit information",
+    fullName: language === "vi" ? "Họ và tên" : "Full name",
+    fullNamePlaceholder: language === "vi" ? "Nguyễn Văn A" : "John Doe",
+    phone: language === "vi" ? "Số điện thoại" : "Phone number",
+    password: language === "vi" ? "Mật khẩu" : "Password",
+    confirmPassword: language === "vi" ? "Xác nhận mật khẩu" : "Confirm password",
+    hidePassword: language === "vi" ? "Ẩn mật khẩu" : "Hide password",
+    showPassword: language === "vi" ? "Hiện mật khẩu" : "Show password",
+    sendingOtp: language === "vi" ? "Đang gửi OTP..." : "Sending OTP...",
+    continueOtp: language === "vi" ? "Tiếp tục nhận OTP" : "Continue to OTP",
+    haveAccount: language === "vi" ? "đã có tài khoản?" : "already have an account?",
+    login: language === "vi" ? "Đăng nhập" : "Sign in",
+  };
 
   const {
     register,
@@ -75,18 +107,18 @@ export default function RegisterForm() {
     return (
       <form onSubmit={handleOtpSubmit} noValidate className="space-y-5">
         <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-sm font-semibold text-navy">Xác thực email để hoàn tất đăng ký</p>
+          <p className="text-sm font-semibold text-navy">{text.otpVerifyTitle}</p>
           <p className="mt-1 text-sm text-slate-600">
-            Mã OTP gồm 6 số đã được gửi tới <span className="font-semibold text-navy">{otpSession.maskedEmail}</span>.
+            {text.otpSentTo} <span className="font-semibold text-navy">{otpSession.maskedEmail}</span>.
           </p>
           <p className="mt-2 text-xs text-slate-500">
-            Mã còn hiệu lực: <span className={`font-semibold ${otpExpired ? "text-danger" : "text-primary"}`}>{otpExpired ? "Đã hết hạn" : otpCountdownText}</span>
+            {text.otpValidUntil} <span className={`font-semibold ${otpExpired ? "text-danger" : "text-primary"}`}>{otpExpired ? text.otpExpired : otpCountdownText}</span>
           </p>
         </div>
 
         <div>
           <label htmlFor="register-otp" className="block text-sm font-medium text-navy mb-1.5">
-            Mã OTP
+            {text.otpLabel}
           </label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -104,7 +136,7 @@ export default function RegisterForm() {
               inputMode="numeric"
               pattern="[0-9]*"
               maxLength={6}
-              placeholder="Nhập 6 số OTP"
+              placeholder={text.otpPlaceholder}
               disabled={isLoading}
               className="input pl-10 tracking-[0.35em]"
             />
@@ -117,7 +149,7 @@ export default function RegisterForm() {
           aria-busy={isLoading}
           className="btn btn-primary w-full py-3.5 text-base disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isLoading ? "Đang xác thực..." : "Xác thực OTP và tạo tài khoản"}
+          {isLoading ? text.verifying : text.verifyAndCreate}
         </button>
 
         <div className="flex items-center justify-between gap-3 text-sm">
@@ -127,7 +159,7 @@ export default function RegisterForm() {
             disabled={isLoading}
             className="font-semibold text-primary hover:text-primary-dark transition disabled:opacity-60"
           >
-            Gửi lại mã OTP
+            {text.resendOtp}
           </button>
           <button
             type="button"
@@ -135,7 +167,7 @@ export default function RegisterForm() {
             disabled={isLoading}
             className="font-semibold text-gray-500 hover:text-navy transition disabled:opacity-60"
           >
-            Chỉnh sửa thông tin
+            {text.editInfo}
           </button>
         </div>
       </form>
@@ -147,7 +179,7 @@ export default function RegisterForm() {
 
       {/* Name + Phone — 2 columns on sm+ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field id="reg-name" label="Họ và tên" error={errors.name?.message}>
+        <Field id="reg-name" label={text.fullName} error={errors.name?.message}>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
               <Icon icon="user" className="text-sm" />
@@ -156,7 +188,7 @@ export default function RegisterForm() {
               id="reg-name"
               type="text"
               autoComplete="name"
-              placeholder="Nguyễn Văn A"
+              placeholder={text.fullNamePlaceholder}
               disabled={isLoading}
               {...register("name")}
               className={`input pl-10 ${errors.name ? "input-error" : ""} disabled:bg-gray-50 disabled:cursor-not-allowed`}
@@ -164,7 +196,7 @@ export default function RegisterForm() {
           </div>
         </Field>
 
-        <Field id="reg-phone" label="Số điện thoại" error={errors.phone?.message}>
+        <Field id="reg-phone" label={text.phone} error={errors.phone?.message}>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
               <Icon icon="phone" className="text-sm" />
@@ -202,7 +234,7 @@ export default function RegisterForm() {
 
       {/* Password + Confirm — 2 columns on sm+ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field id="reg-password" label="Mật khẩu" error={errors.password?.message}>
+        <Field id="reg-password" label={text.password} error={errors.password?.message}>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
               <Icon icon="lock" className="text-sm" />
@@ -220,14 +252,14 @@ export default function RegisterForm() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy transition"
-              aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+              aria-label={showPassword ? text.hidePassword : text.showPassword}
             >
               <Icon icon={showPassword ? "eye-slash" : "eye"} className="text-sm" />
             </button>
           </div>
         </Field>
 
-        <Field id="reg-confirm" label="Xác nhận mật khẩu" error={errors.confirmPassword?.message}>
+        <Field id="reg-confirm" label={text.confirmPassword} error={errors.confirmPassword?.message}>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
               <Icon icon="lock" className="text-sm" />
@@ -245,7 +277,7 @@ export default function RegisterForm() {
               type="button"
               onClick={() => setShowConfirm((v) => !v)}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy transition"
-              aria-label={showConfirm ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+              aria-label={showConfirm ? text.hidePassword : text.showPassword}
             >
               <Icon icon={showConfirm ? "eye-slash" : "eye"} className="text-sm" />
             </button>
@@ -276,11 +308,11 @@ export default function RegisterForm() {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Đang gửi OTP...
+            {text.sendingOtp}
           </>
         ) : (
           <>
-            Tiếp tục nhận OTP
+            {text.continueOtp}
             <Icon icon="arrow-right" className="text-sm" />
           </>
         )}
@@ -289,7 +321,7 @@ export default function RegisterForm() {
       {/* Divider */}
       <div className="relative flex items-center gap-3 py-1">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400 whitespace-nowrap">đã có tài khoản?</span>
+        <span className="text-xs text-gray-400 whitespace-nowrap">{text.haveAccount}</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
@@ -298,7 +330,7 @@ export default function RegisterForm() {
         href="/login"
         className="btn btn-outline w-full py-3 text-sm hover:shadow-btn transition"
       >
-        Đăng nhập
+        {text.login}
       </Link>
     </form>
   );

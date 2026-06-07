@@ -1,20 +1,35 @@
 import { z } from "zod";
+import type { Language } from "@/lib/i18n";
 
-export const profileSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Họ tên phải có ít nhất 2 ký tự")
-    .max(100, "Họ tên không được vượt quá 100 ký tự"),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^(0|\+84)\d{9,10}$/, "Số điện thoại không hợp lệ (VD: 0987654321)"),
-  address: z
-    .string()
-    .trim()
-    .max(200, "Địa chỉ không được vượt quá 200 ký tự")
-    .optional(),
-});
+export function getProfileSchema(language: Language = "vi") {
+  const t = {
+    nameMin: language === "vi" ? "Họ tên phải có ít nhất 2 ký tự" : "Full name must be at least 2 characters",
+    nameMax: language === "vi" ? "Họ tên không được vượt quá 100 ký tự" : "Full name must be at most 100 characters",
+    phoneInvalid:
+      language === "vi"
+        ? "Số điện thoại không hợp lệ (VD: 0987654321)"
+        : "Invalid phone number (e.g. 0987654321)",
+    addressMax: language === "vi" ? "Địa chỉ không được vượt quá 200 ký tự" : "Address must be at most 200 characters",
+  };
+
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(2, t.nameMin)
+      .max(100, t.nameMax),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^(0|\+84)\d{9,10}$/, t.phoneInvalid),
+    address: z
+      .string()
+      .trim()
+      .max(200, t.addressMax)
+      .optional(),
+  });
+}
+
+export const profileSchema = getProfileSchema("vi");
 
 export type ProfileFormData = z.infer<typeof profileSchema>;

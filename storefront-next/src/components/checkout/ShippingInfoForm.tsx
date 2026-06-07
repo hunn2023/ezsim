@@ -2,6 +2,7 @@
 
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import { CheckoutFormData } from "@/lib/schemas/checkoutSchema";
+import type { Language } from "@/lib/i18n";
 
 const PROVINCES = [
   { id: "01", name: "Hà Nội" },
@@ -149,11 +150,37 @@ interface Props {
   errors: FieldErrors<CheckoutFormData>;
   setValue: UseFormSetValue<CheckoutFormData>;
   watch: UseFormWatch<CheckoutFormData>;
+  language?: Language;
 }
 
-export default function ShippingInfoForm({ register, errors, setValue, watch }: Props) {
+export default function ShippingInfoForm({ register, errors, setValue, watch, language = "vi" }: Props) {
   const province = watch("province");
   const district = watch("district");
+
+  const text = {
+    title: language === "vi" ? "Thông tin giao hàng" : "Shipping information",
+    fullName: language === "vi" ? "Họ và tên *" : "Full name *",
+    fullNamePlaceholder: language === "vi" ? "Nhập họ và tên" : "Enter full name",
+    phone: language === "vi" ? "Số điện thoại *" : "Phone number *",
+    phonePlaceholder: language === "vi" ? "0xxxxxxxxx hoặc +84xxxxxxxxx" : "0xxxxxxxxx or +84xxxxxxxxx",
+    email: language === "vi" ? "Email (tùy chọn)" : "Email (optional)",
+    province: language === "vi" ? "Tỉnh/Thành phố *" : "Province/City *",
+    provincePlaceholder: language === "vi" ? "-- Chọn tỉnh/thành phố --" : "-- Select province/city --",
+    district: language === "vi" ? "Quận/Huyện *" : "District *",
+    districtPlaceholder: language === "vi" ? "-- Chọn quận/huyện --" : "-- Select district --",
+    ward: language === "vi" ? "Phường/Xã *" : "Ward *",
+    wardPlaceholder: language === "vi" ? "-- Chọn phường/xã --" : "-- Select ward --",
+    addressDetail: language === "vi" ? "Địa chỉ cụ thể *" : "Address detail *",
+    addressPlaceholder:
+      language === "vi"
+        ? "Số nhà, tên đường, tòa nhà..."
+        : "House number, street name, building...",
+    orderNote: language === "vi" ? "Ghi chú đơn hàng (tùy chọn)" : "Order note (optional)",
+    orderNotePlaceholder:
+      language === "vi"
+        ? "Ghi chú cho đơn hàng (ví dụ: giao giờ hành chính)"
+        : "Notes for your order (e.g. deliver during office hours)",
+  };
 
   const districts = DISTRICTS_BY_PROVINCE[province] || [];
   const wards = WARDS_BY_DISTRICT[district] || [];
@@ -171,15 +198,15 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-navy">Thông tin giao hàng</h3>
+      <h3 className="text-lg font-semibold text-navy">{text.title}</h3>
 
       {/* Full name */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Họ và tên *</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.fullName}</label>
         <input
           {...register("fullName")}
           className={`input ${errors.fullName ? "border-danger" : ""}`}
-          placeholder="Nhập họ và tên"
+          placeholder={text.fullNamePlaceholder}
         />
         {errors.fullName && (
           <p className="text-danger text-xs mt-1">{errors.fullName.message}</p>
@@ -188,11 +215,11 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
       {/* Phone */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Số điện thoại *</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.phone}</label>
         <input
           {...register("phone")}
           className={`input ${errors.phone ? "border-danger" : ""}`}
-          placeholder="0xxxxxxxxx hoặc +84xxxxxxxxx"
+          placeholder={text.phonePlaceholder}
         />
         {errors.phone && (
           <p className="text-danger text-xs mt-1">{errors.phone.message}</p>
@@ -201,7 +228,7 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
       {/* Email */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Email (tùy chọn)</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.email}</label>
         <input
           {...register("email")}
           type="email"
@@ -215,13 +242,13 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
       {/* Province */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Tỉnh/Thành phố *</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.province}</label>
         <select
           {...register("province")}
           onChange={handleProvinceChange}
           className={`input ${errors.province ? "border-danger" : ""}`}
         >
-          <option value="">-- Chọn tỉnh/thành phố --</option>
+          <option value="">{text.provincePlaceholder}</option>
           {PROVINCES.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -235,14 +262,14 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
       {/* District */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Quận/Huyện *</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.district}</label>
         <select
           {...register("district")}
           onChange={handleDistrictChange}
           disabled={!province}
           className={`input ${errors.district ? "border-danger" : ""} ${!province ? "bg-gray-100" : ""}`}
         >
-          <option value="">-- Chọn quận/huyện --</option>
+          <option value="">{text.districtPlaceholder}</option>
           {districts.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name}
@@ -256,13 +283,13 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
       {/* Ward */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Phường/Xã *</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.ward}</label>
         <select
           {...register("ward")}
           disabled={!district}
           className={`input ${errors.ward ? "border-danger" : ""} ${!district ? "bg-gray-100" : ""}`}
         >
-          <option value="">-- Chọn phường/xã --</option>
+          <option value="">{text.wardPlaceholder}</option>
           {wards.map((w) => (
             <option key={w.id} value={w.id}>
               {w.name}
@@ -276,11 +303,11 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
       {/* Address detail */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Địa chỉ cụ thể *</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.addressDetail}</label>
         <input
           {...register("addressDetail")}
           className={`input ${errors.addressDetail ? "border-danger" : ""}`}
-          placeholder="Số nhà, tên đường, tòa nhà..."
+          placeholder={text.addressPlaceholder}
         />
         {errors.addressDetail && (
           <p className="text-danger text-xs mt-1">{errors.addressDetail.message}</p>
@@ -289,12 +316,12 @@ export default function ShippingInfoForm({ register, errors, setValue, watch }: 
 
       {/* Order note */}
       <div>
-        <label className="block text-sm font-medium text-navy mb-1">Ghi chú đơn hàng (tùy chọn)</label>
+        <label className="block text-sm font-medium text-navy mb-1">{text.orderNote}</label>
         <textarea
           {...register("orderNote")}
           rows={3}
           className={`input resize-none ${errors.orderNote ? "border-danger" : ""}`}
-          placeholder="Ghi chú cho đơn hàng (ví dụ: giao giờ hành chính)"
+          placeholder={text.orderNotePlaceholder}
         />
         {errors.orderNote && (
           <p className="text-danger text-xs mt-1">{errors.orderNote.message}</p>

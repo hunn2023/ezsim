@@ -7,10 +7,24 @@ import { useCartStore } from "@/lib/cartStore";
 import CartItem from "@/components/cart/CartItem";
 import CartSummary from "@/components/cart/CartSummary";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function CartPage() {
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
+  const { language } = useLanguage();
+
+  const text = {
+    cart: language === "vi" ? "Giỏ hàng" : "Cart",
+    emptyTitle: language === "vi" ? "Giỏ hàng trống" : "Your cart is empty",
+    emptyDescription:
+      language === "vi"
+        ? "Bạn chưa có sản phẩm nào trong giỏ hàng."
+        : "You have no products in your cart yet.",
+    continueShopping: language === "vi" ? "Tiếp tục mua hàng" : "Continue shopping",
+    productCount: language === "vi" ? "sản phẩm" : "items",
+    clearAll: language === "vi" ? "Xóa tất cả" : "Clear all",
+  };
 
   // Hydration guard: chờ client mount xong mới render cart content
   const [mounted, setMounted] = useState(false);
@@ -19,7 +33,7 @@ export default function CartPage() {
   if (!mounted) {
     return (
       <>
-        <Breadcrumb items={[{ label: "Giỏ hàng" }]} />
+        <Breadcrumb items={[{ label: text.cart }]} />
         <section className="max-w-container mx-auto px-4 md:px-6 py-8">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-gray-200 rounded w-48" />
@@ -34,15 +48,15 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <>
-        <Breadcrumb items={[{ label: "Giỏ hàng" }]} />
+        <Breadcrumb items={[{ label: text.cart }]} />
         <section className="max-w-container mx-auto px-4 md:px-6 py-16 text-center">
           <Icon icon="shopping-cart" className="text-6xl text-gray-300 mb-6" />
-          <h1 className="text-2xl font-bold text-navy mb-3">Giỏ hàng trống</h1>
+          <h1 className="text-2xl font-bold text-navy mb-3">{text.emptyTitle}</h1>
           <p className="text-gray-500 mb-8">
-            Bạn chưa có sản phẩm nào trong giỏ hàng.
+            {text.emptyDescription}
           </p>
           <Link href="/esim-du-lich" className="btn-primary">
-            Tiếp tục mua hàng
+            {text.continueShopping}
           </Link>
         </section>
       </>
@@ -51,19 +65,19 @@ export default function CartPage() {
 
   return (
     <>
-      <Breadcrumb items={[{ label: "Giỏ hàng" }]} />
+      <Breadcrumb items={[{ label: text.cart }]} />
 
       <section className="max-w-container mx-auto px-4 md:px-6 py-6 md:py-10">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl md:text-2xl font-bold text-navy">
-            Giỏ hàng ({items.length} sản phẩm)
+            {text.cart} ({items.length} {text.productCount})
           </h1>
           <button
             type="button"
             onClick={clearCart}
             className="text-sm text-gray-400 hover:text-danger transition"
           >
-            Xóa tất cả
+            {text.clearAll}
           </button>
         </div>
 
@@ -71,13 +85,13 @@ export default function CartPage() {
           {/* Cart items */}
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 md:p-6">
             {items.map((item) => (
-              <CartItem key={item.id} item={item} />
+              <CartItem key={item.id} item={item} language={language} />
             ))}
           </div>
 
           {/* Summary */}
           <div className="lg:col-span-1">
-            <CartSummary />
+            <CartSummary language={language} />
           </div>
         </div>
       </section>

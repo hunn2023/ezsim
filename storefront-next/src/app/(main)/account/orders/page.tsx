@@ -5,13 +5,28 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import AccountSkeleton from "@/components/account/AccountSkeleton";
 import AccountInfo from "@/components/account/AccountInfo";
 import OrderHistoryList from "@/components/account/OrderHistoryList";
 
 export default function OrdersPage() {
   const { initialized, isAuthenticated } = useAuth();
+  const { language } = useLanguage();
   const router = useRouter();
+
+  const text = {
+    account: language === "vi" ? "Tài khoản" : "Account",
+    memberPortal: language === "vi" ? "Cổng thành viên" : "Member portal",
+    title: language === "vi" ? "Lịch sử đơn hàng" : "Order history",
+    description:
+      language === "vi"
+        ? "Xem và theo dõi tất cả các đơn hàng của bạn"
+        : "View and track all your orders",
+    myOrders: language === "vi" ? "Đơn hàng của tôi" : "My orders",
+    myOrdersDescription:
+      language === "vi" ? "Danh sách các đơn hàng đã đặt" : "List of orders you have placed",
+  };
 
   useEffect(() => {
     if (initialized && !isAuthenticated) {
@@ -44,17 +59,17 @@ export default function OrdersPage() {
               className="text-xs text-gray-400 hover:text-primary transition flex items-center gap-1"
             >
               <Icon icon="chevron-left" className="text-[10px]" />
-              Tài khoản
+              {text.account}
             </Link>
           </div>
           <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1">
-            Cổng thành viên
+            {text.memberPortal}
           </p>
           <h1 className="text-2xl md:text-3xl font-bold text-navy leading-tight">
-            Lịch sử đơn hàng
+            {text.title}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Xem và theo dõi tất cả các đơn hàng của bạn
+            {text.description}
           </p>
         </div>
 
@@ -75,15 +90,15 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <h2 className="font-bold text-navy text-base leading-tight">
-                    Đơn hàng của tôi
+                    {text.myOrders}
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Danh sách các đơn hàng đã đặt
+                    {text.myOrdersDescription}
                   </p>
                 </div>
               </div>
 
-              <OrderHistoryList />
+              <OrderHistoryList language={language} />
             </div>
           </div>
         </div>

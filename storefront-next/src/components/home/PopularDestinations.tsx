@@ -1,103 +1,200 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import Icon from "@/components/ui/Icon";
+import { getEsimCountries } from "@/lib/api/esimApi";
+import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
-interface Destination {
-  flag: string;
-  flagCode: string;
-  name: string;
-  price: string;
-  bestseller?: boolean;
-  slug: string;
+interface DestinationVisual {
+  image: string;
+  hint: string;
+  accent: string;
 }
 
-const destinations: Destination[] = [
-  { flag: "🇯🇵", flagCode: "jp", name: "Nhật Bản", price: "Từ 99.000đ", bestseller: true, slug: "nhat-ban" },
-  { flag: "🇰🇷", flagCode: "kr", name: "Hàn Quốc", price: "Từ 89.000đ", bestseller: true, slug: "han-quoc" },
-  { flag: "🇹🇭", flagCode: "th", name: "Thái Lan", price: "Từ 69.000đ", slug: "thai-lan" },
-  { flag: "🇨🇳", flagCode: "cn", name: "Trung Quốc", price: "Từ 99.000đ", slug: "trung-quoc" },
-  { flag: "🇸🇬", flagCode: "sg", name: "Singapore", price: "Từ 79.000đ", slug: "singapore" },
-  { flag: "🇺🇸", flagCode: "us", name: "Mỹ", price: "Từ 199.000đ", slug: "my" },
-  { flag: "🇫🇷", flagCode: "fr", name: "Pháp", price: "Từ 159.000đ", slug: "phap" },
-  { flag: "🇬🇧", flagCode: "gb", name: "Anh Quốc", price: "Từ 169.000đ", slug: "anh-quoc" },
-  { flag: "🇩🇪", flagCode: "de", name: "Đức", price: "Từ 149.000đ", slug: "duc" },
-  { flag: "🇦🇺", flagCode: "au", name: "Úc", price: "Từ 189.000đ", slug: "uc" },
-  { flag: "🇲🇾", flagCode: "my", name: "Malaysia", price: "Từ 69.000đ", slug: "malaysia" },
-  { flag: "🇪🇺", flagCode: "eu", name: "Châu Âu", price: "Từ 249.000đ", slug: "chau-au" },
-];
+const DESTINATION_FLAG_CODES: Record<string, string> = {
+  "nhat-ban": "jp",
+  "han-quoc": "kr",
+  "thai-lan": "th",
+  "chau-au": "eu",
+  "my": "us",
+};
 
-export default function PopularDestinations() {
+const DESTINATION_VISUALS: Record<string, DestinationVisual> = {
+  "nhat-ban": {
+    image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80",
+    hint: "Tokyo, Osaka, Kyoto",
+    accent: "linear-gradient(135deg, #E11D48 0%, #F43F5E 100%)",
+  },
+  "han-quoc": {
+    image: "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1200&q=80",
+    hint: "Seoul, Busan, Jeju",
+    accent: "linear-gradient(135deg, #2563EB 0%, #06B6D4 100%)",
+  },
+  "thai-lan": {
+    image: "https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=1200&q=80",
+    hint: "Bangkok, Pattaya, Phuket",
+    accent: "linear-gradient(135deg, #F59E0B 0%, #F97316 100%)",
+  },
+  "chau-au": {
+    image: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1200&q=80",
+    hint: "30+ quốc gia Châu Âu",
+    accent: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
+  },
+  "my": {
+    image: "https://images.unsplash.com/photo-1485738422979-f5c462d49f74?auto=format&fit=crop&w=1200&q=80",
+    hint: "New York, California, Texas",
+    accent: "linear-gradient(135deg, #0F172A 0%, #334155 100%)",
+  },
+};
+
+export default async function PopularDestinations() {
+  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const destinations = await getEsimCountries();
+
+  const featuredDestinations = destinations
+    .filter((destination) => DESTINATION_VISUALS[destination.slug])
+    .slice(0, 5);
+
+  const text = {
+    heading: language === "vi" ? "Điểm đến phổ biến" : "Popular destinations",
+    subtitle:
+      language === "vi"
+        ? "Top quốc gia mua nhiều nhất kèm hình ảnh đặc trưng và giá tốt nhất hôm nay"
+        : "Top booked destinations with signature visuals and best prices today",
+    viewAll: language === "vi" ? "Xem tất cả 200+ quốc gia" : "View all 200+ countries",
+    esimPrefix: language === "vi" ? "eSIM" : "eSIM",
+    priceFrom: language === "vi" ? "Giá từ" : "From",
+    hot: language === "vi" ? "HOT" : "HOT",
+  };
+
+  const countryName = (slug: string, fallback: string) => {
+    if (language === "vi") return fallback;
+    const map: Record<string, string> = {
+      "nhat-ban": "Japan",
+      "han-quoc": "South Korea",
+      "thai-lan": "Thailand",
+      "chau-au": "Europe",
+      "my": "United States",
+    };
+    return map[slug] ?? fallback;
+  };
+
+  const hintText = (slug: string, fallback: string) => {
+    if (language === "vi") return fallback;
+    const map: Record<string, string> = {
+      "nhat-ban": "Tokyo, Osaka, Kyoto",
+      "han-quoc": "Seoul, Busan, Jeju",
+      "thai-lan": "Bangkok, Pattaya, Phuket",
+      "chau-au": "30+ European countries",
+      "my": "New York, California, Texas",
+    };
+    return map[slug] ?? fallback;
+  };
+
   return (
     <section style={{ padding: "0 0 64px" }}>
       <div className="max-w-container mx-auto px-6">
         <div className="flex justify-between items-end mb-8">
           <div>
-            <h2 className="section-title">Điểm đến phổ biến</h2>
-            <p className="section-subtitle">Top quốc gia khách Việt Nam mua nhiều nhất</p>
+            <h2 className="section-title">{text.heading}</h2>
+            <p className="section-subtitle">{text.subtitle}</p>
           </div>
           <Link
             href="/esim-du-lich"
             className="text-primary font-semibold flex items-center gap-1.5 hover:opacity-80 transition"
             style={{ fontSize: "14px" }}
           >
-            Xem tất cả 200+ quốc gia <Icon icon="arrow-right" />
+            {text.viewAll} <Icon icon="arrow-right" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {destinations.map((d) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          {featuredDestinations.map((d) => {
+            const visual = DESTINATION_VISUALS[d.slug];
+            const flagCode = DESTINATION_FLAG_CODES[d.slug];
+            return (
             <Link
               key={d.slug}
               href={`/esim-du-lich/${d.slug}`}
-              className="bg-white text-center text-navy no-underline transition-all duration-200 hover:-translate-y-0.5 hover:border-primary"
+              className="bg-white text-navy no-underline transition-all duration-300 group hover:-translate-y-1"
               style={{
-                border: "1px solid #E2E8F0",
-                borderRadius: "16px",
-                padding: "20px",
+                border: "1.5px solid #E2E8F0",
+                borderRadius: "18px",
+                overflow: "hidden",
               }}
             >
-              <div
-                className="bg-gray-100 mx-auto flex items-center justify-center"
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  marginBottom: "12px",
-                  border: "1px solid #E2E8F0",
-                  overflow: "hidden",
-                }}
-                aria-label={`Cờ ${d.name}`}
-              >
+              <div className="relative" style={{ height: "150px" }}>
                 <img
-                  src={`https://flagcdn.com/w80/${d.flagCode}.png`}
-                  alt={d.flag}
-                  width={56}
-                  height={56}
+                  src={visual.image}
+                  alt={d.name}
+                  width={480}
+                  height={300}
                   loading="lazy"
-                  style={{ width: "56px", height: "56px", objectFit: "cover" }}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-              </div>
-              <div className="font-bold mb-1" style={{ fontSize: "15px" }}>
-                {d.name}
-              </div>
-              <div className="text-primary font-semibold" style={{ fontSize: "13px" }}>
-                {d.price}
-              </div>
-              {d.bestseller && (
-                <span
-                  className="inline-block font-bold mt-1.5"
+                <div
+                  className="absolute inset-x-0 bottom-0"
                   style={{
-                    background: "#FEF3C7",
-                    color: "#92400E",
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    fontSize: "10px",
+                    height: "64px",
+                    background: "linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.72) 100%)",
                   }}
+                />
+                <span
+                  className="absolute top-3 left-3 inline-flex items-center justify-center rounded-full bg-white/95 border border-white/80 shadow-sm overflow-hidden"
+                  style={{ width: "34px", height: "34px" }}
+                  aria-label={`Cờ ${d.name}`}
                 >
-                  🔥 BÁN CHẠY
+                  <img
+                    src={`https://flagcdn.com/w40/${flagCode}.png`}
+                    alt={d.name}
+                    width={34}
+                    height={34}
+                    loading="lazy"
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 </span>
-              )}
+                {d.bestseller && (
+                  <span
+                    className="absolute top-3 right-3 text-white font-bold"
+                    style={{
+                      background: visual.accent,
+                      padding: "4px 10px",
+                      borderRadius: "999px",
+                      fontSize: "10px",
+                      letterSpacing: "0.2px",
+                    }}
+                  >
+                    {text.hot}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ padding: "14px 14px 16px" }}>
+                <p className="text-gray-500 mb-1" style={{ fontSize: "12px" }}>
+                  {hintText(d.slug, visual.hint)}
+                </p>
+                <div className="font-extrabold text-navy" style={{ fontSize: "18px", letterSpacing: "-0.2px" }}>
+                  {text.esimPrefix} {countryName(d.slug, d.name)}
+                </div>
+                <div className="flex items-center justify-between mt-2.5">
+                  <div>
+                    <p className="text-gray-500" style={{ fontSize: "11px" }}>
+                      {text.priceFrom}
+                    </p>
+                    <p className="text-primary font-extrabold" style={{ fontSize: "18px", letterSpacing: "-0.2px" }}>
+                      {d.startingPrice.toLocaleString("vi-VN")}đ
+                    </p>
+                  </div>
+                  <span
+                    className="inline-flex items-center justify-center rounded-full text-primary"
+                    style={{ width: "34px", height: "34px", background: "#EFF6FF" }}
+                  >
+                    <Icon icon="arrow-right" className="text-sm" />
+                  </span>
+                </div>
+              </div>
             </Link>
-          ))}
+          );
+          })}
         </div>
       </div>
     </section>

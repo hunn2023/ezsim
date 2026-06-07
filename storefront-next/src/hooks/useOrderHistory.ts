@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getMyOrders } from "@/lib/orderApi";
 import type { OrderHistoryItem } from "@/lib/orderApi";
+import type { Language } from "@/lib/i18n";
 
 interface UseOrderHistoryReturn {
   orders: OrderHistoryItem[];
@@ -14,7 +15,7 @@ interface UseOrderHistoryReturn {
   refetch: () => void;
 }
 
-export function useOrderHistory(): UseOrderHistoryReturn {
+export function useOrderHistory(language: Language = "vi"): UseOrderHistoryReturn {
   const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,11 +30,15 @@ export function useOrderHistory(): UseOrderHistoryReturn {
       setOrders(result.orders);
       setTotalPages(Math.ceil(result.total / result.pageSize));
     } catch {
-      setError("Không thể tải danh sách đơn hàng. Vui lòng thử lại.");
+      setError(
+        language === "vi"
+          ? "Không thể tải danh sách đơn hàng. Vui lòng thử lại."
+          : "Unable to load order history. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     fetchOrders(page);

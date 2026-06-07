@@ -6,10 +6,21 @@ import { useAuth } from "@/hooks/useAuth";
 import AccountSkeleton from "@/components/account/AccountSkeleton";
 import AccountInfo from "@/components/account/AccountInfo";
 import UpdateProfileForm from "@/components/account/UpdateProfileForm";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function AccountPage() {
   const { initialized, isAuthenticated } = useAuth();
   const router = useRouter();
+  const { language } = useLanguage();
+
+  const text = {
+    memberPortal: language === "vi" ? "Cổng thành viên" : "Member portal",
+    title: language === "vi" ? "Tài khoản của tôi" : "My account",
+    description:
+      language === "vi"
+        ? "Quản lý thông tin cá nhân và cài đặt tài khoản"
+        : "Manage your personal information and account settings",
+  };
 
   useEffect(() => {
     if (initialized && !isAuthenticated) {
@@ -37,13 +48,13 @@ export default function AccountPage() {
         {/* Page heading */}
         <div className="mb-8">
           <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-1">
-            Cổng thành viên
+            {text.memberPortal}
           </p>
           <h1 className="text-2xl md:text-3xl font-bold text-navy leading-tight">
-            Tài khoản của tôi
+            {text.title}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Quản lý thông tin cá nhân và cài đặt tài khoản
+            {text.description}
           </p>
         </div>
 

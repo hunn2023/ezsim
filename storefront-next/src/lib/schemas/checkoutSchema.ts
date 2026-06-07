@@ -1,46 +1,95 @@
 import { z } from "zod";
+import type { Language } from "@/lib/i18n";
 
-export const checkoutSchema = z.object({
-  fullName: z
-    .string()
-    .min(2, "Tên phải có ít nhất 2 ký tự")
-    .max(100, "Tên không được vượt quá 100 ký tự"),
+export function getCheckoutSchema(language: Language = "vi") {
+  const t = {
+    fullNameMin: language === "vi" ? "Tên phải có ít nhất 2 ký tự" : "Name must be at least 2 characters",
+    fullNameMax: language === "vi" ? "Tên không được vượt quá 100 ký tự" : "Name must be at most 100 characters",
+    phoneInvalid:
+      language === "vi"
+        ? "Số điện thoại không hợp lệ (phải là số Việt Nam)"
+        : "Invalid phone number (must be a Vietnam number format)",
+    emailInvalid: language === "vi" ? "Email không hợp lệ" : "Invalid email address",
+    provinceRequired: language === "vi" ? "Vui lòng chọn tỉnh/thành phố" : "Please select a province/city",
+    districtRequired: language === "vi" ? "Vui lòng chọn quận/huyện" : "Please select a district",
+    wardRequired: language === "vi" ? "Vui lòng chọn phường/xã" : "Please select a ward",
+    addressMin:
+      language === "vi"
+        ? "Địa chỉ cụ thể phải có ít nhất 5 ký tự"
+        : "Address detail must be at least 5 characters",
+    addressMax:
+      language === "vi"
+        ? "Địa chỉ không được vượt quá 200 ký tự"
+        : "Address must be at most 200 characters",
+    orderNoteMax:
+      language === "vi"
+        ? "Ghi chú không được vượt quá 500 ký tự"
+        : "Order note must be at most 500 characters",
+    paymentRequired:
+      language === "vi"
+        ? "Vui lòng chọn phương thức thanh toán"
+        : "Please select a payment method",
+    termsRequired:
+      language === "vi"
+        ? "Bạn cần đồng ý Điều khoản dịch vụ để tiếp tục"
+        : "You must agree to the Terms of Service to continue",
+    esimDeviceRequired:
+      language === "vi"
+        ? "Bạn cần xác nhận thiết bị hỗ trợ eSIM và đã mở khóa mạng"
+        : "You must confirm your device supports eSIM and is network-unlocked",
+  };
 
-  phone: z
-    .string()
-    .regex(/^(0|\+84)\d{9,10}$/, "Số điện thoại không hợp lệ (phải là số Việt Nam)"),
+  return z.object({
+    fullName: z
+      .string()
+      .min(2, t.fullNameMin)
+      .max(100, t.fullNameMax),
 
-  email: z
-    .string()
-    .email("Email không hợp lệ")
-    .optional()
-    .or(z.literal("")),
-  province: z
-    .string()
-    .min(1, "Vui lòng chọn tỉnh/thành phố"),
+    phone: z
+      .string()
+      .regex(/^(0|\+84)\d{9,10}$/, t.phoneInvalid),
 
-  district: z
-    .string()
-    .min(1, "Vui lòng chọn quận/huyện"),
+    email: z
+      .string()
+      .email(t.emailInvalid)
+      .optional()
+      .or(z.literal("")),
+    province: z
+      .string()
+      .min(1, t.provinceRequired),
 
-  ward: z
-    .string()
-    .min(1, "Vui lòng chọn phường/xã"),
+    district: z
+      .string()
+      .min(1, t.districtRequired),
 
-  addressDetail: z
-    .string()
-    .min(5, "Địa chỉ cụ thể phải có ít nhất 5 ký tự")
-    .max(200, "Địa chỉ không được vượt quá 200 ký tự"),
+    ward: z
+      .string()
+      .min(1, t.wardRequired),
 
-  orderNote: z
-    .string()
-    .max(500, "Ghi chú không được vượt quá 500 ký tự")
-    .optional()
-    .or(z.literal("")),
-  paymentMethod: z.enum(["cod", "banking"], {
-    message: "Vui lòng chọn phương thức thanh toán",
-  }),
-});
+    addressDetail: z
+      .string()
+      .min(5, t.addressMin)
+      .max(200, t.addressMax),
+
+    orderNote: z
+      .string()
+      .max(500, t.orderNoteMax)
+      .optional()
+      .or(z.literal("")),
+    paymentMethod: z.enum(["banking"], {
+      message: t.paymentRequired,
+    }),
+    requestInvoice: z.boolean(),
+    agreeTerms: z.boolean().refine((value) => value === true, {
+      message: t.termsRequired,
+    }),
+    confirmDeviceSupport: z.boolean().refine((value) => value === true, {
+      message: t.esimDeviceRequired,
+    }),
+  });
+}
+
+export const checkoutSchema = getCheckoutSchema("vi");
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
 

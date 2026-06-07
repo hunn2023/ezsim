@@ -3,19 +3,35 @@
 import Image from "next/image";
 import { formatPrice } from "@/lib/product";
 import { CartItem } from "@/types/cart";
+import type { Language } from "@/lib/i18n";
 
 interface OrderReviewProps {
   items: CartItem[];
   shippingFee?: number;
+  language?: Language;
 }
 
-export default function OrderReview({ items, shippingFee = 0 }: OrderReviewProps) {
+export default function OrderReview({ items, shippingFee = 0, language = "vi" }: OrderReviewProps) {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + shippingFee;
 
+  const text = {
+    title: language === "vi" ? "Kiểm tra đơn hàng" : "Order review",
+    subtotal: language === "vi" ? "Tạm tính" : "Subtotal",
+    productCount: language === "vi" ? "sản phẩm" : "items",
+    shipping: language === "vi" ? "Phí vận chuyển" : "Shipping fee",
+    free: language === "vi" ? "Miễn phí" : "Free",
+    total: language === "vi" ? "Tổng thanh toán" : "Total payment",
+    commitmentTitle: language === "vi" ? "Cam kết:" : "Commitment:",
+    commitmentBody:
+      language === "vi"
+        ? "Thông tin đơn hàng chính xác, hỗ trợ xử lý nhanh sau thanh toán, hoàn tiền nếu sản phẩm không đúng mô tả."
+        : "Accurate order information, fast support after payment, and refund if products do not match the description.",
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-navy mb-4">Kiểm tra đơn hàng</h3>
+      <h3 className="text-lg font-semibold text-navy mb-4">{text.title}</h3>
 
       {/* Items List */}
       <div className="space-y-3">
@@ -70,20 +86,20 @@ export default function OrderReview({ items, shippingFee = 0 }: OrderReviewProps
       <div className="border-t pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">
-            Tạm tính ({items.reduce((sum, i) => sum + i.quantity, 0)} sản phẩm)
+            {text.subtotal} ({items.reduce((sum, i) => sum + i.quantity, 0)} {text.productCount})
           </span>
           <span className="font-medium text-navy">{formatPrice(subtotal)}</span>
         </div>
 
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Phí vận chuyển</span>
+          <span className="text-gray-500">{text.shipping}</span>
           <span className={shippingFee === 0 ? "text-success font-medium" : "font-medium text-navy"}>
-            {shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}
+            {shippingFee === 0 ? text.free : formatPrice(shippingFee)}
           </span>
         </div>
 
         <div className="flex justify-between pt-2 border-t">
-          <span className="font-semibold text-navy">Tổng thanh toán</span>
+          <span className="font-semibold text-navy">{text.total}</span>
           <span className="text-xl font-bold text-primary">{formatPrice(total)}</span>
         </div>
       </div>
@@ -91,8 +107,7 @@ export default function OrderReview({ items, shippingFee = 0 }: OrderReviewProps
       {/* Notice */}
       <div className="p-3 rounded-lg bg-success-light border border-success text-sm text-success">
         <p>
-          <strong>Cam kết:</strong> Giao hàng đúng địa chỉ, kiểm tra hàng trước khi thanh toán
-          (COD), hoàn tiền nếu sản phẩm không đúng mô tả.
+          <strong>{text.commitmentTitle}</strong> {text.commitmentBody}
         </p>
       </div>
     </div>

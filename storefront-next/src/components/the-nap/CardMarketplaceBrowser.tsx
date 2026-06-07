@@ -47,7 +47,7 @@ export default function CardMarketplaceBrowser({ content }: { content: CardMarke
     }
   };
 
-  const handleCheckout = ({ quantity, paymentMethod }: { quantity: number; paymentMethod: string; email: string; phone: string }) => {
+  const handleCheckout = ({ quantity }: { quantity: number; paymentMethod: string; email: string; phone: string }) => {
     if (!selectedProvider || !selectedDenomination) {
       toast.error("Chưa chọn nhà cung cấp hoặc mệnh giá phù hợp.");
       return;
@@ -63,8 +63,6 @@ export default function CardMarketplaceBrowser({ content }: { content: CardMarke
       quantity,
       stock: 999,
     });
-
-    toast.success(`Đã thêm ${selectedProvider.name} ${selectedOptionLabel} vào giỏ hàng bằng ${paymentMethod}`);
   };
 
   if (!selectedProvider || !selectedDenomination) {
