@@ -30,6 +30,7 @@ export default function QuickPills({ packages, activeTag, onSelect }: QuickPills
     "5g": "5G",
     unlimited: language === "vi" ? "Không giới hạn" : "Unlimited",
     phone: language === "vi" ? "Có SĐT gọi" : "With phone number",
+    hotspot: language === "vi" ? "Chia sẻ mạng" : "Hotspot",
   };
 
   return (
