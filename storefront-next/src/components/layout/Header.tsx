@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Icon from "@/components/ui/Icon";
@@ -29,11 +29,8 @@ interface MainMenuItem {
   labels: Record<Language, string>;
   href: string;
   icon: IconName;
-  /** Match this URL exactly (or as prefix for subpaths). */
   matchPath: string;
-  /** Optionally require ?tab=value to match. */
   matchTab?: string;
-  /** Custom class for special promo highlight. */
   highlight?: boolean;
 }
 
@@ -59,27 +56,17 @@ const MAIN_MENU: MainMenuItem[] = [
   },
 ];
 
-
-function isMenuActive(
-  item: MainMenuItem,
-  pathname: string,
-  currentTab: string | null
-): boolean {
+function isMenuActive(item: MainMenuItem, pathname: string, currentTab: string | null): boolean {
   if (item.matchPath === "/") return pathname === "/";
 
-  const pathMatches =
-    pathname === item.matchPath || pathname.startsWith(item.matchPath + "/");
+  const pathMatches = pathname === item.matchPath || pathname.startsWith(item.matchPath + "/");
   if (!pathMatches) return false;
 
   if (item.matchTab) {
-    // Treat no-query as "telecom" default for /the-nap
-    const effectiveTab =
-      currentTab ?? (item.matchPath === "/the-nap" ? "telecom" : null);
+    const effectiveTab = currentTab ?? (item.matchPath === "/the-nap" ? "telecom" : null);
     return effectiveTab === item.matchTab;
   }
 
-  // No tab requirement — pathname match is enough, but ensure not over-matching
-  // (eg /esim-du-lich without tab on a /the-nap entry handled above)
   return true;
 }
 
@@ -93,8 +80,10 @@ export default function Header() {
   const currentTab = searchParams.get("tab");
   const [searchOpen, setSearchOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const [, startTransition] = useTransition();
   const languageContainerRef = useRef<HTMLDivElement | null>(null);
+  const headerRootRef = useRef<HTMLDivElement | null>(null);
 
   const text = useMemo(
     () => ({
@@ -124,6 +113,25 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [languageOpen]);
 
+  useEffect(() => {
+    if (!headerRootRef.current) return;
+
+    const updateHeight = () => {
+      if (!headerRootRef.current) return;
+      setHeaderHeight(headerRootRef.current.getBoundingClientRect().height);
+    };
+
+    updateHeight();
+
+    const observer = new ResizeObserver(() => updateHeight());
+    observer.observe(headerRootRef.current);
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
 
   const handleLanguageChange = (nextLanguage: Language) => {
     if (nextLanguage === language) {
@@ -140,97 +148,87 @@ export default function Header() {
 
   return (
     <>
-      {/* TOP BAR */}
-      <div
-        className="bg-navy relative z-[300]"
-        style={{ color: "#94A3B8", fontSize: "13px", padding: "8px 0" }}
-      >
-        <div className="max-w-container mx-auto px-6 flex justify-end items-center">
-          <div className="flex items-center gap-5">
-            <a
-              href="#"
-              className="hover:text-cyan transition hidden md:flex items-center gap-1.5"
-            >
-              <Icon icon="mobile-alt" />
-              {text.appDownload}
-            </a>
-            <div ref={languageContainerRef} className="relative hidden md:block">
-              <button
-                type="button"
-                onClick={() => setLanguageOpen((open) => !open)}
-                className="hover:text-cyan transition flex items-center gap-1.5"
-                aria-expanded={languageOpen}
-                aria-haspopup="menu"
-              >
-                <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
-                  <Image
-                    src={`https://flagcdn.com/w80/${languageFlagCodes[language]}.png`}
-                    alt={languageNames[language]}
-                    width={16}
-                    height={16}
-                    quality={100}
-                    unoptimized
-                    className="h-full w-full object-cover"
-                  />
-                </span>
-                {languageShortLabels[language]}
-                <Icon icon="chevron-down" className="text-[10px]" />
-              </button>
-              {languageOpen && (
-                <div className="absolute right-0 top-[calc(100%+8px)] min-w-[160px] rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-xl z-[320]">
-                  {(["vi", "en"] as Language[]).map((itemLanguage) => (
-                    <button
-                      key={itemLanguage}
-                      type="button"
-                      onClick={() => handleLanguageChange(itemLanguage)}
-                      className={`w-full rounded-lg px-2.5 py-2 text-left text-sm flex items-center gap-2.5 transition ${
-                        language === itemLanguage ? "bg-white/15 text-white" : "text-slate-200 hover:bg-white/10"
-                      }`}
-                    >
-                      <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
-                        <Image
-                          src={`https://flagcdn.com/w80/${languageFlagCodes[itemLanguage]}.png`}
-                          alt={languageNames[itemLanguage]}
-                          width={16}
-                          height={16}
-                          quality={100}
-                          unoptimized
-                          className="h-full w-full object-cover"
-                        />
-                      </span>
-                      {languageNames[itemLanguage]}
-                    </button>
-                  ))}
+      <div style={{ height: headerHeight }} aria-hidden />
+
+      <div ref={headerRootRef} className="fixed top-0 left-0 right-0 z-[300] bg-white">
+        <div className="bg-navy" style={{ color: "#94A3B8", fontSize: "13px", padding: "8px 0" }}>
+          <div className="max-w-container mx-auto px-6 flex justify-end items-center">
+            <div className="flex items-center gap-5">
+              <a href="#" className="hover:text-cyan transition hidden md:flex items-center gap-1.5">
+                <Icon icon="mobile-alt" />
+                {text.appDownload}
+              </a>
+              <div ref={languageContainerRef} className="relative hidden md:block">
+                <button
+                  type="button"
+                  onClick={() => setLanguageOpen((open) => !open)}
+                  className="hover:text-cyan transition flex items-center gap-1.5"
+                  aria-expanded={languageOpen}
+                  aria-haspopup="menu"
+                >
+                  <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
+                    <Image
+                      src={`https://flagcdn.com/w80/${languageFlagCodes[language]}.png`}
+                      alt={languageNames[language]}
+                      width={16}
+                      height={16}
+                      quality={100}
+                      unoptimized
+                      className="h-full w-full object-cover"
+                    />
+                  </span>
+                  {languageShortLabels[language]}
+                  <Icon icon="chevron-down" className="text-[10px]" />
+                </button>
+                {languageOpen && (
+                  <div className="absolute right-0 top-[calc(100%+8px)] min-w-[160px] rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-xl z-[320]">
+                    {(["vi", "en"] as Language[]).map((itemLanguage) => (
+                      <button
+                        key={itemLanguage}
+                        type="button"
+                        onClick={() => handleLanguageChange(itemLanguage)}
+                        className={`w-full rounded-lg px-2.5 py-2 text-left text-sm flex items-center gap-2.5 transition ${
+                          language === itemLanguage ? "bg-white/15 text-white" : "text-slate-200 hover:bg-white/10"
+                        }`}
+                      >
+                        <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
+                          <Image
+                            src={`https://flagcdn.com/w80/${languageFlagCodes[itemLanguage]}.png`}
+                            alt={languageNames[itemLanguage]}
+                            width={16}
+                            height={16}
+                            quality={100}
+                            unoptimized
+                            className="h-full w-full object-cover"
+                          />
+                        </span>
+                        {languageNames[itemLanguage]}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {initialized && !isAuthenticated && (
+                <div className="flex items-center gap-3">
+                  <Link href="/login" className="hover:text-cyan transition flex items-center gap-1.5">
+                    <Icon icon="user" />
+                    {text.login}
+                  </Link>
+                  <span className="text-gray-500">/</span>
+                  <Link href="/register" className="hover:text-cyan transition">
+                    {text.register}
+                  </Link>
                 </div>
               )}
             </div>
-            {initialized && !isAuthenticated && (
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="hover:text-cyan transition flex items-center gap-1.5"
-                >
-                  <Icon icon="user" />
-                  {text.login}
-                </Link>
-                <span className="text-gray-500">/</span>
-                <Link href="/register" className="hover:text-cyan transition">
-                  {text.register}
-                </Link>
-              </div>
-            )}
           </div>
         </div>
-      </div>
 
-      <div className="sticky top-0 z-[260] bg-white">
-        {/* HEADER */}
         <header className="bg-white border-b border-gray-200">
           <div className="max-w-container mx-auto px-6 py-4 flex items-center gap-4 lg:gap-6">
             <MobileMenu />
             <Logo />
 
-            {/* Main menu in single row */}
             <nav className="hidden lg:flex items-center gap-6 xl:gap-8 ml-2">
               {MAIN_MENU.map((item) => {
                 const active = isMenuActive(item, pathname, currentTab);
@@ -239,9 +237,7 @@ export default function Header() {
                     key={item.href}
                     href={item.href}
                     className="font-semibold text-[15px] flex items-center gap-2 transition"
-                    style={{
-                      color: active ? "#0066FF" : "#334155",
-                    }}
+                    style={{ color: active ? "#0066FF" : "#334155" }}
                   >
                     <Icon icon={item.icon} className="text-[15px]" />
                     {item.labels[language]}
@@ -250,7 +246,6 @@ export default function Header() {
               })}
             </nav>
 
-            {/* Expandable search */}
             <div className="hidden md:flex items-center ml-auto">
               <div
                 className={`relative origin-left transition-[width,transform,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -281,13 +276,11 @@ export default function Header() {
               </div>
             </div>
 
-            {/* Right nav */}
             <nav className="ml-auto md:ml-0 flex gap-3 lg:gap-4 items-center">
               <HeaderUserMenu />
               <CartIcon ref={cartIconRef} />
             </nav>
           </div>
-
         </header>
       </div>
     </>
