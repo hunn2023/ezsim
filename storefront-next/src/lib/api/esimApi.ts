@@ -16,6 +16,140 @@ const buildPackage = (countrySlug: string, pkg: Omit<EsimPackage, "id" | "slug" 
   stock: pkg.stock ?? 999,
 });
 
+const EXTRA_PACKAGE_BASE_PRICE: Record<string, number> = {
+  "nhat-ban": 85000,
+  "han-quoc": 90000,
+  "thai-lan": 70000,
+  "chau-au": 220000,
+  "my": 180000,
+};
+
+const EXTRA_PACKAGE_BLUEPRINTS: Array<{
+  idSuffix: string;
+  data: string;
+  dataUnit: EsimPackage["dataUnit"];
+  days: number;
+  dataGB: number | null;
+  deltaPrice: number;
+  tag: string;
+  subtitle: string;
+  quickTags: EsimPackage["quickTags"];
+  tagType?: EsimPackage["tagType"];
+}> = [
+  { idSuffix: "mock-2gb-4d", data: "2", dataUnit: "GB", days: 4, dataGB: 2, deltaPrice: 0, tag: "4 NGAY", subtitle: "Goi linh hoat", quickTags: ["cheap"] },
+  { idSuffix: "mock-4gb-5d", data: "4", dataUnit: "GB", days: 5, dataGB: 4, deltaPrice: 20000, tag: "5 NGAY", subtitle: "Du dung du lich ngan", quickTags: ["cheap", "hotspot"] },
+  { idSuffix: "mock-6gb-7d", data: "6", dataUnit: "GB", days: 7, dataGB: 6, deltaPrice: 45000, tag: "7 NGAY", subtitle: "Pho bien nhat", quickTags: ["bestseller", "5g", "hotspot"] },
+  { idSuffix: "mock-8gb-8d", data: "8", dataUnit: "GB", days: 8, dataGB: 8, deltaPrice: 65000, tag: "8 NGAY", subtitle: "Lich trinh tu tuc", quickTags: ["5g", "hotspot"] },
+  { idSuffix: "mock-12gb-10d", data: "12", dataUnit: "GB", days: 10, dataGB: 12, deltaPrice: 90000, tag: "10 NGAY", subtitle: "Cong tac, du lich dai hon", quickTags: ["5g", "hotspot"] },
+  { idSuffix: "mock-15gb-12d", data: "15", dataUnit: "GB", days: 12, dataGB: 15, deltaPrice: 120000, tag: "12 NGAY", subtitle: "Data cao cho nguoi dung nhieu", quickTags: ["5g", "hotspot"] },
+  { idSuffix: "mock-20gb-14d", data: "20", dataUnit: "GB", days: 14, dataGB: 20, deltaPrice: 155000, tag: "14 NGAY", subtitle: "Du lich 2 tuan", quickTags: ["5g", "hotspot", "bestseller"] },
+  { idSuffix: "mock-25gb-20d", data: "25", dataUnit: "GB", days: 20, dataGB: 25, deltaPrice: 205000, tag: "20 NGAY", subtitle: "Luu tru dai ngay", quickTags: ["5g", "hotspot"] },
+  { idSuffix: "mock-30gb-30d", data: "30", dataUnit: "GB", days: 30, dataGB: 30, deltaPrice: 265000, tag: "30 NGAY", subtitle: "Su dung thoai mai 1 thang", quickTags: ["5g", "hotspot", "phone"], tagType: "popular" },
+  { idSuffix: "mock-unlimited-15d", data: "∞", dataUnit: "Khong gioi han", days: 15, dataGB: null, deltaPrice: 320000, tag: "UNLIMITED", subtitle: "Toc do cao moi ngay", quickTags: ["unlimited", "hotspot", "5g"], tagType: "unlimited" },
+  { idSuffix: "mock-3gb-6d", data: "3", dataUnit: "GB", days: 6, dataGB: 3, deltaPrice: 12000, tag: "6 NGAY", subtitle: "Nhe va tiet kiem", quickTags: ["cheap"] },
+  { idSuffix: "mock-7gb-9d", data: "7", dataUnit: "GB", days: 9, dataGB: 7, deltaPrice: 58000, tag: "9 NGAY", subtitle: "Can bang toc do va chi phi", quickTags: ["hotspot", "5g"] },
+  { idSuffix: "mock-18gb-18d", data: "18", dataUnit: "GB", days: 18, dataGB: 18, deltaPrice: 165000, tag: "18 NGAY", subtitle: "Phu hop lich trinh dai", quickTags: ["hotspot", "5g", "bestseller"] },
+  { idSuffix: "mock-35gb-30d", data: "35", dataUnit: "GB", days: 30, dataGB: 35, deltaPrice: 305000, tag: "30 NGAY", subtitle: "Luong data cao cho 1 thang", quickTags: ["5g", "hotspot", "phone"], tagType: "popular" },
+  { idSuffix: "mock-40gb-45d", data: "40", dataUnit: "GB", days: 45, dataGB: 40, deltaPrice: 365000, tag: "45 NGAY", subtitle: "Cong tac va du lich ket hop", quickTags: ["5g", "hotspot"] },
+  { idSuffix: "mock-unlimited-30d", data: "∞", dataUnit: "Khong gioi han", days: 30, dataGB: null, deltaPrice: 460000, tag: "UNLIMITED 30", subtitle: "Khong lo het data ca thang", quickTags: ["unlimited", "hotspot", "5g"], tagType: "unlimited" },
+];
+
+function createExtraMockPackages(countrySlug: string): EsimPackage[] {
+  const basePrice = EXTRA_PACKAGE_BASE_PRICE[countrySlug] ?? 100000;
+
+  return EXTRA_PACKAGE_BLUEPRINTS.map((blueprint, index) => {
+    const price = basePrice + blueprint.deltaPrice;
+    const oldPrice = Math.round(price * 1.15);
+
+    return buildPackage(countrySlug, {
+      idSuffix: blueprint.idSuffix,
+      data: blueprint.data,
+      dataUnit: blueprint.dataUnit,
+      subtitle: blueprint.subtitle,
+      tag: blueprint.tag,
+      tagType: blueprint.tagType,
+      features: [
+        "Kich hoat nhanh bang QR",
+        "Ho tro hotspot",
+        "Mang on dinh tai diem du lich",
+        "Ho tro 24/7",
+      ],
+      price,
+      oldPrice,
+      discount: "-13%",
+      days: blueprint.days,
+      dataGB: blueprint.dataGB,
+      quickTags: blueprint.quickTags,
+      rating: 4.6 + (index % 4) * 0.1,
+      salesCount: 900 + index * 210,
+      featured: index === 2 || index === 6,
+      featuredLabel: index === 2 ? "GOI DE XUAT" : index === 6 ? "DUNG LUONG CAO" : undefined,
+    });
+  });
+}
+
+const ONE_GB_DAY_STEPS = [1, 2, 3, 5, 7, 10, 15, 20, 30, 45, 60, 90, 120, 180, 365];
+
+function createOneGbTimelinePackages(countrySlug: string): EsimPackage[] {
+  const basePrice = Math.max(39000, Math.round((EXTRA_PACKAGE_BASE_PRICE[countrySlug] ?? 100000) * 0.45));
+
+  const oneGbPackages = ONE_GB_DAY_STEPS.map((days, index) => {
+    const price = basePrice + days * 3500 + index * 1500;
+    const oldPrice = Math.round(price * 1.12);
+
+    return buildPackage(countrySlug, {
+      idSuffix: `mock-1gb-${days}d`,
+      data: "1",
+      dataUnit: "GB",
+      subtitle: `Goi 1GB trong ${days} ngay`,
+      tag: `${days} NGAY`,
+      features: [
+        "1GB toc do cao",
+        "Kich hoat QR nhanh",
+        "Du dung map, chat, web",
+        "Ho tro 24/7",
+      ],
+      price,
+      oldPrice,
+      discount: "-10%",
+      days,
+      dataGB: 1,
+      quickTags: days <= 7 ? ["cheap"] : ["cheap", "hotspot"],
+      rating: 4.5 + (index % 5) * 0.08,
+      salesCount: 1200 + index * 170,
+      featured: days === 30,
+      featuredLabel: days === 30 ? "GOI 1GB PHO BIEN" : undefined,
+    });
+  });
+
+  const unlimitedDurationOneGb = buildPackage(countrySlug, {
+    idSuffix: "mock-1gb-unlimited-duration",
+    data: "1",
+    dataUnit: "GB",
+    subtitle: "1GB moi ngay, thoi han vo han",
+    tag: "VO HAN",
+    tagType: "unlimited",
+    features: [
+      "Moi ngay 1GB toc do cao",
+      "Het 1GB van tiep tuc dung duoc",
+      "Phu hop su dung lau dai",
+      "Ho tro hotspot",
+    ],
+    price: basePrice + 699000,
+    oldPrice: basePrice + 769000,
+    discount: "-9%",
+    days: 9999,
+    dataGB: 1,
+    quickTags: ["unlimited", "hotspot"],
+    rating: 4.9,
+    salesCount: 980,
+    featured: true,
+    featuredLabel: "1GB VO HAN",
+  });
+
+  return [...oneGbPackages, unlimitedDurationOneGb];
+}
+
 const countries: EsimCountryDetail[] = [
   {
     slug: "nhat-ban",
@@ -331,8 +465,17 @@ const countries: EsimCountryDetail[] = [
   },
 ];
 
+const countriesWithExtraPackages: EsimCountryDetail[] = countries.map((country) => ({
+  ...country,
+  packages: [
+    ...country.packages,
+    ...createExtraMockPackages(country.slug),
+    ...createOneGbTimelinePackages(country.slug),
+  ],
+}));
+
 export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
-  return countries.map((country) => ({
+  return countriesWithExtraPackages.map((country) => ({
     slug: country.slug,
     flag: country.flag,
     name: country.name.replace(/^eSIM\s+/, ""),
@@ -344,7 +487,7 @@ export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
 }
 
 export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail | null> {
-  return countries.find((country) => country.slug === slug) ?? null;
+  return countriesWithExtraPackages.find((country) => country.slug === slug) ?? null;
 }
 
 export function getDataRangeForPackage(dataGB: number | null): EsimDataRange {
