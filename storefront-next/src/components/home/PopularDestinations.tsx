@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cookies } from "next/headers";
 import Icon from "@/components/ui/Icon";
 import { getEsimCountries } from "@/lib/api/esimApi";
@@ -116,12 +117,11 @@ export default async function PopularDestinations() {
               }}
             >
               <div className="relative" style={{ height: "150px" }}>
-                <img
+                <Image
                   src={visual.image}
                   alt={d.name}
-                  width={480}
-                  height={300}
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 20vw"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div
@@ -136,12 +136,11 @@ export default async function PopularDestinations() {
                   style={{ width: "38px", height: "26px" }}
                   aria-label={`Cờ ${d.name}`}
                 >
-                  <img
+                  <Image
                     src={`https://flagcdn.com/w40/${flagCode}.png`}
                     alt={d.name}
                     width={38}
                     height={26}
-                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </span>

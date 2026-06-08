@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
 import type { Language } from "@/lib/i18n";
@@ -199,13 +200,12 @@ export default function CountrySearchBox({
                   className="flex h-6 w-9 items-center justify-center rounded-md bg-slate-100 shrink-0 overflow-hidden border border-slate-200"
                   aria-hidden
                 >
-                  <img
+                  <Image
                     src={`https://flagcdn.com/w40/${country.flagCode}.png`}
                     alt={language === "en" ? country.nameEn : country.name}
                     width={36}
                     height={24}
                     className="h-full w-full object-cover"
-                    loading="lazy"
                   />
                 </span>
                 <span className="flex-1 min-w-0">

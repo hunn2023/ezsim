@@ -25,7 +25,7 @@ export default function PaymentMethod({ register, selectedMethod, language = "vi
 
   const text = {
     title: language === "vi" ? "Phương thức thanh toán" : "Payment method",
-    paymentPageTitle: language === "vi" ? "Payment" : "Payment",
+    paymentPageTitle: language === "vi" ? "Thanh toán" : "Payment",
     bankTitle: language === "vi" ? "Chuyển khoản ngân hàng (Quét mã QR)" : "Bank transfer (QR code)",
     bankDesc:
       language === "vi"

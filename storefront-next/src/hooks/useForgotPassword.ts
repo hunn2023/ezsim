@@ -35,7 +35,7 @@ export function useForgotPassword() {
   const remainingMs = useMemo(() => {
     if (!expiresAt) return 0;
     return Math.max(0, expiresAt - Date.now());
-  }, [expiresAt, step]);
+  }, [expiresAt]);
 
   const requestOtp = async (nextEmail: string) => {
     if (isLoading) return;

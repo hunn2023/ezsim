@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Logo from "./Logo";
@@ -162,11 +163,13 @@ export default function Header() {
                 aria-haspopup="menu"
               >
                 <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
-                  <img
-                    src={`https://flagcdn.com/w20/${languageFlagCodes[language]}.png`}
+                  <Image
+                    src={`https://flagcdn.com/w80/${languageFlagCodes[language]}.png`}
                     alt={languageNames[language]}
                     width={16}
                     height={16}
+                    quality={100}
+                    unoptimized
                     className="h-full w-full object-cover"
                   />
                 </span>
@@ -185,11 +188,13 @@ export default function Header() {
                       }`}
                     >
                       <span className="inline-flex h-4 w-4 overflow-hidden rounded-full" aria-hidden>
-                        <img
-                          src={`https://flagcdn.com/w20/${languageFlagCodes[itemLanguage]}.png`}
+                        <Image
+                          src={`https://flagcdn.com/w80/${languageFlagCodes[itemLanguage]}.png`}
                           alt={languageNames[itemLanguage]}
                           width={16}
                           height={16}
+                          quality={100}
+                          unoptimized
                           className="h-full w-full object-cover"
                         />
                       </span>

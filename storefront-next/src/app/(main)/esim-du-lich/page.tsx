@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import Image from "next/image";
 import Link from "next/link";
 import CountrySearchBox from "@/components/common/CountrySearchBox";
 import { Breadcrumb } from "@/components/ui";
@@ -221,12 +222,11 @@ export default async function EsimDuLichPage({
                     <span className="flex items-center gap-2">
                       {REGION_FLAG_CODES[region] ? (
                         <span className="inline-flex h-4.5 w-7 items-center justify-center overflow-hidden rounded-sm border border-slate-200 bg-slate-100" aria-hidden>
-                          <img
+                          <Image
                             src={`https://flagcdn.com/w40/${REGION_FLAG_CODES[region]}.png`}
                             alt={region}
                             width={28}
                             height={18}
-                            loading="lazy"
                             className="h-full w-full object-cover"
                           />
                         </span>
@@ -271,7 +271,7 @@ export default async function EsimDuLichPage({
                   >
                     {getFlagCode(d.slug) ? (
                       <div
-                        className="bg-gray-100 mx-auto flex items-center justify-center overflow-hidden border border-slate-200"
+                        className="relative bg-gray-100 mx-auto flex items-center justify-center overflow-hidden border border-slate-200"
                         style={{
                           width: "56px",
                           height: "38px",
@@ -279,12 +279,11 @@ export default async function EsimDuLichPage({
                           marginBottom: "12px",
                         }}
                       >
-                        <img
+                        <Image
                           src={`https://flagcdn.com/w80/${getFlagCode(d.slug)}.png`}
                           alt={d.name}
                           width={56}
                           height={38}
-                          loading="lazy"
                           className="h-full w-full object-cover"
                         />
                       </div>

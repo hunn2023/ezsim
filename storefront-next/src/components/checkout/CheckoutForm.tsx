@@ -27,7 +27,7 @@ export default function CheckoutForm() {
   const getTotalAmount = useCartStore((s) => s.getTotalAmount);
   const prefilledRef = useRef(false);
 
-  const text = {
+  const text = useMemo(() => ({
     cartEmpty:
       language === "vi"
         ? "Giỏ hàng trống. Vui lòng thêm sản phẩm trước."
@@ -49,7 +49,7 @@ export default function CheckoutForm() {
     processing: language === "vi" ? "Đang xử lý..." : "Processing...",
     placeOrder: language === "vi" ? "Đặt hàng" : "Place order",
     bankTransfer: language === "vi" ? "(QR Banking)" : "(QR Banking)",
-    continueToPayment: language === "vi" ? "Tiếp tục sang Payment" : "Continue to Payment",
+    continueToPayment: language === "vi" ? "Tiếp tục sang Thanh toán" : "Continue to Payment",
     backToShipping: language === "vi" ? "← Quay lại Shipping information" : "← Back to Shipping information",
     backToCart: language === "vi" ? "← Quay lại giỏ hàng" : "← Back to cart",
     accountPrefillTitle:
@@ -122,7 +122,7 @@ export default function CheckoutForm() {
         : "I have read and confirmed device compatibility",
     close: language === "vi" ? "Đóng" : "Close",
     support: language === "vi" ? "Liên hệ CSKH" : "Contact support",
-  };
+  }), [language]);
 
   const checkoutSchema = useMemo(() => getCheckoutSchema(language), [language]);
 

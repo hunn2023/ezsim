@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import Icon from "@/components/ui/Icon";
 
@@ -68,7 +69,13 @@ export default function ProductGrid({ products, totalPages, loading }: Props) {
         {products.map((p) => (
           <Link key={p.id} href={`/esim-du-lich/${p.slug}`} className="product-card">
             <div className="relative">
-              <img src={p.image} alt={p.name} className="product-card-img bg-gray-100" />
+              <Image
+                src={p.image}
+                alt={p.name}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="product-card-img bg-gray-100"
+              />
               {p.badge && (
                 <span className="absolute top-2 left-2 bg-danger text-white text-xs font-bold px-2 py-0.5 rounded">
                   {p.badge}

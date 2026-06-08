@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Image from "next/image";
 import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
 export interface CountryHeroProps {
@@ -31,6 +32,15 @@ export default function CountryHero({
   const translateText = (value: string) => {
     if (language === "vi") return value;
 
+    // Generic numeric patterns used in stats values.
+    if (/^\d+(?:[.,]\d+)?%\s+diện tích$/i.test(value)) {
+      return value.replace(/diện tích/i, "coverage");
+    }
+
+    if (/^\d[\d.]*\s+gói$/i.test(value)) {
+      return value.replace(/gói/i, "packages");
+    }
+
     const map: Record<string, string> = {
       "🔥 #1 Bán chạy": "🔥 #1 Best seller",
       "⚡ Kích hoạt 30s": "⚡ Activate in 30s",
@@ -57,6 +67,7 @@ export default function CountryHero({
       "Phủ sóng": "Coverage",
       "Hotspot": "Hotspot",
       "Đã bán": "Sold",
+      "99% diện tích": "99% coverage",
       "5G / 4G LTE": "5G / 4G LTE",
       "5G / LTE": "5G / LTE",
       "✅ Hỗ trợ chia sẻ": "✅ Hotspot supported",
@@ -99,12 +110,11 @@ export default function CountryHero({
             }}
           >
             {flagCode ? (
-              <img
+              <Image
                 src={`https://flagcdn.com/w160/${flagCode}.png`}
                 alt={displayName}
                 width={96}
                 height={64}
-                loading="lazy"
                 className="h-16 w-24 rounded-lg object-cover"
               />
             ) : (

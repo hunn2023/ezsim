@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useRef, ReactNode, useEffect } from "react";
+import Image from "next/image";
 
 interface FlyAnimation {
   id: string;
@@ -157,9 +158,11 @@ function CartFlyingItem({ animation, cartIconRef, onComplete }: CartFlyingItemPr
       }}
     >
       <div className="w-[60px] h-[60px] rounded-lg overflow-hidden shadow-lg border-2 border-primary">
-        <img
+        <Image
           src={animation.image}
           alt="flying item"
+          width={60}
+          height={60}
           className="w-full h-full object-cover"
         />
       </div>

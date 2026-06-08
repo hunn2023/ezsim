@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { IconName } from "@fortawesome/fontawesome-svg-core";
 import { useAuth } from "@/hooks/useAuth";
@@ -141,11 +142,13 @@ export default function MobileMenu() {
                     }`}
                   >
                     <span className="inline-flex h-3.5 w-3.5 overflow-hidden rounded-full" aria-hidden>
-                      <img
-                        src={`https://flagcdn.com/w20/${languageFlagCodes.vi}.png`}
+                      <Image
+                        src={`https://flagcdn.com/w80/${languageFlagCodes.vi}.png`}
                         alt={languageNames.vi}
                         width={14}
                         height={14}
+                        quality={100}
+                        unoptimized
                         className="h-full w-full object-cover"
                       />
                     </span>
@@ -161,11 +164,13 @@ export default function MobileMenu() {
                     }`}
                   >
                     <span className="inline-flex h-3.5 w-3.5 overflow-hidden rounded-full" aria-hidden>
-                      <img
-                        src={`https://flagcdn.com/w20/${languageFlagCodes.en}.png`}
+                      <Image
+                        src={`https://flagcdn.com/w80/${languageFlagCodes.en}.png`}
                         alt={languageNames.en}
                         width={14}
                         height={14}
+                        quality={100}
+                        unoptimized
                         className="h-full w-full object-cover"
                       />
                     </span>
@@ -201,11 +206,13 @@ export default function MobileMenu() {
                     }`}
                   >
                     <span className="inline-flex h-3.5 w-3.5 overflow-hidden rounded-full" aria-hidden>
-                      <img
-                        src={`https://flagcdn.com/w20/${languageFlagCodes.vi}.png`}
+                      <Image
+                        src={`https://flagcdn.com/w80/${languageFlagCodes.vi}.png`}
                         alt={languageNames.vi}
                         width={14}
                         height={14}
+                        quality={100}
+                        unoptimized
                         className="h-full w-full object-cover"
                       />
                     </span>
@@ -221,11 +228,13 @@ export default function MobileMenu() {
                     }`}
                   >
                     <span className="inline-flex h-3.5 w-3.5 overflow-hidden rounded-full" aria-hidden>
-                      <img
-                        src={`https://flagcdn.com/w20/${languageFlagCodes.en}.png`}
+                      <Image
+                        src={`https://flagcdn.com/w80/${languageFlagCodes.en}.png`}
                         alt={languageNames.en}
                         width={14}
                         height={14}
+                        quality={100}
+                        unoptimized
                         className="h-full w-full object-cover"
                       />
                     </span>
