@@ -1,23 +1,14 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import LoginForm from "@/components/auth/LoginForm";
 import { SITE } from "@/lib/constants";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
-export function generateMetadata(): Metadata {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
-
-  return {
-    title: language === "vi" ? `Đăng nhập | ${SITE.name}` : `Login | ${SITE.name}`,
-    description:
-      language === "vi"
-        ? "Đăng nhập để quản lý đơn hàng và trải nghiệm mua sắm tốt hơn."
-        : "Sign in to manage your orders and enjoy a better shopping experience.",
-  };
-}
+export const metadata: Metadata = {
+  title: `Đăng nhập | ${SITE.name}`,
+  description: "Đăng nhập để quản lý đơn hàng và trải nghiệm mua sắm tốt hơn.",
+};
 
 function LoginSkeleton() {
   return (
@@ -36,14 +27,10 @@ function LoginSkeleton() {
 }
 
 export default function LoginPage() {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
   const text = {
-    heading: language === "vi" ? "Chào mừng trở lại 👋" : "Welcome back 👋",
-    subheading:
-      language === "vi"
-        ? "Đăng nhập để tiếp tục mua sắm và quản lý đơn hàng"
-        : "Sign in to continue shopping and manage your orders",
-    backHome: language === "vi" ? "Quay lại trang chủ" : "Back to homepage",
+    heading: "Chào mừng trở lại 👋",
+    subheading: "Đăng nhập để tiếp tục mua sắm và quản lý đơn hàng",
+    backHome: "Quay lại trang chủ",
   };
 
   return (

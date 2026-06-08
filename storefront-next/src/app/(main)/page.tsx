@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { SITE } from "@/lib/constants";
 import { buildMetadata } from "@/lib/seo";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 import HeroBanner from "@/components/home/HeroBanner";
 import TrustBar from "@/components/home/TrustBar";
 import PopularDestinations from "@/components/home/PopularDestinations";
@@ -15,17 +13,6 @@ import { Suspense } from "react";
 export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
-
-  if (language === "en") {
-    return buildMetadata({
-      absoluteTitle: `${SITE.name} - ${SITE.tagline} | Travel eSIM for 200+ countries`,
-      description:
-        "Buy travel eSIM for 200+ countries, instant activation, best pricing. Secure checkout with 24/7 support.",
-      canonicalPath: "/",
-    });
-  }
-
   return buildMetadata({
     absoluteTitle: `${SITE.name} - ${SITE.tagline} | eSIM du lịch 200+ quốc gia`,
     description:

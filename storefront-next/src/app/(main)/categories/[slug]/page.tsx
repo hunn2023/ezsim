@@ -5,18 +5,23 @@ import { buildMetadata } from "@/lib/seo";
 import { SITE } from "@/lib/constants";
 import { Suspense } from "react";
 import { getCategoryBySlug, getProductsByCategory } from "@/lib/api/categoriesApi";
-import { ProductQueryParams } from "@/types/product";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import CategoryProducts from "./CategoryProducts";
 
 interface PageProps {
   params: { slug: string };
-  searchParams: ProductQueryParams;
 }
 
-export const revalidate = 300;
-
 const getCachedCategoryBySlug = cache(async (slug: string) => getCategoryBySlug(slug));
+
+export async function generateStaticParams() {
+  return [
+    { slug: "esim" },
+    { slug: "the-nap" },
+    { slug: "the-game" },
+    { slug: "data" },
+  ];
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const category = await getCachedCategoryBySlug(params.slug);
@@ -31,11 +36,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   });
 }
 
-export default async function CategoryPage({ params, searchParams }: PageProps) {
+export default async function CategoryPage({ params }: PageProps) {
   const category = await getCachedCategoryBySlug(params.slug);
   if (!category) notFound();
 
-  const { products, totalPages } = await getProductsByCategory(params.slug, searchParams);
+  const { products, totalPages } = await getProductsByCategory(params.slug, {});
 
   return (
     <>

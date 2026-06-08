@@ -1,6 +1,7 @@
-import { cookies } from "next/headers";
+"use client";
+
 import Image from "next/image";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export interface CountryHeroProps {
   flag: string;
@@ -27,7 +28,7 @@ export default function CountryHero({
   textColor = "#7F1D1D",
   tagBg = "rgba(255,255,255,0.7)",
 }: CountryHeroProps) {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const { language } = useLanguage();
 
   const translateText = (value: string) => {
     if (language === "vi") return value;

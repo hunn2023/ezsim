@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
-import { cookies } from "next/headers";
 import "./globals.css";
 import ToastProvider from "@/components/ui/ToastProvider";
 import BackToTopButton from "@/components/ui/BackToTopButton";
@@ -8,7 +7,6 @@ import FloatingSupportButtons from "@/components/ui/FloatingSupportButtons";
 import AuthProvider from "@/providers/AuthProvider";
 import { SITE } from "@/lib/constants";
 import { SITE_URL } from "@/lib/seo";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin", "vietnamese"],
@@ -47,10 +45,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
-
   return (
-    <html lang={language} className={beVietnamPro.variable}>
+    <html lang="vi" className={beVietnamPro.variable}>
       <body className={`${beVietnamPro.className} min-h-screen flex flex-col`}>
         <AuthProvider>{children}</AuthProvider>
         <FloatingSupportButtons />

@@ -1,7 +1,8 @@
-import { cookies } from "next/headers";
+"use client";
+
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/useLanguage";
 import Logo from "./Logo";
 
 const footerLinks = {
@@ -29,7 +30,7 @@ const footerLinks = {
 };
 
 export default function Footer() {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const { language } = useLanguage();
   const text = {
     brandDescription:
       language === "vi"

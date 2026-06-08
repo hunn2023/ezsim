@@ -1,8 +1,9 @@
-import { cookies } from "next/headers";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
+"use client";
+
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Testimonials() {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const { language } = useLanguage();
   const testimonials =
     language === "en"
       ? [

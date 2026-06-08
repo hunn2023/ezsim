@@ -1,9 +1,10 @@
-import { cookies } from "next/headers";
+"use client";
+
 import Icon from "@/components/ui/Icon";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function TrustBar() {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const { language } = useLanguage();
   const items =
     language === "en"
       ? [

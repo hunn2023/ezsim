@@ -1,23 +1,14 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import RegisterForm from "@/components/auth/RegisterForm";
 import { SITE } from "@/lib/constants";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
-export function generateMetadata(): Metadata {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
-
-  return {
-    title: language === "vi" ? `Tạo tài khoản | ${SITE.name}` : `Create account | ${SITE.name}`,
-    description:
-      language === "vi"
-        ? "Tạo tài khoản để mua sắm, theo dõi đơn hàng và nhận ưu đãi thành viên."
-        : "Create an account to shop, track orders, and receive member benefits.",
-  };
-}
+export const metadata: Metadata = {
+  title: `Tạo tài khoản | ${SITE.name}`,
+  description: "Tạo tài khoản để mua sắm, theo dõi đơn hàng và nhận ưu đãi thành viên.",
+};
 
 function RegisterSkeleton() {
   return (
@@ -52,14 +43,10 @@ function RegisterSkeleton() {
 }
 
 export default function RegisterPage() {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
   const text = {
-    heading: language === "vi" ? "Tạo tài khoản mới ✨" : "Create a new account ✨",
-    subheading:
-      language === "vi"
-        ? "Điền thông tin bên dưới để bắt đầu mua sắm"
-        : "Fill in the details below to start shopping",
-    backHome: language === "vi" ? "Quay lại trang chủ" : "Back to homepage",
+    heading: "Tạo tài khoản mới ✨",
+    subheading: "Điền thông tin bên dưới để bắt đầu mua sắm",
+    backHome: "Quay lại trang chủ",
   };
 
   return (

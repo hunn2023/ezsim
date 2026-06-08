@@ -1,9 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { cookies } from "next/headers";
 import Icon from "@/components/ui/Icon";
 import { getEsimCountries } from "@/lib/api/esimApi";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
 
 interface DestinationVisual {
   image: string;
@@ -48,7 +46,7 @@ const DESTINATION_VISUALS: Record<string, DestinationVisual> = {
 };
 
 export default async function PopularDestinations() {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
+  const language = "vi" as const;
   const destinations = await getEsimCountries();
 
   const featuredDestinations = destinations

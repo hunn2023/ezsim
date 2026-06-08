@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Breadcrumb } from "@/components/ui";
 import { CountryHero, EsimCountryBrowser } from "@/components/esim";
-import { getEsimCountryBySlug } from "@/lib/api/esimApi";
-import { LANGUAGE_COOKIE, normalizeLanguage } from "@/lib/i18n";
+import { getEsimCountries, getEsimCountryBySlug } from "@/lib/api/esimApi";
 
-export const revalidate = 300;
+export async function generateStaticParams() {
+  const countries = await getEsimCountries();
+  return countries.map((c) => ({ slug: c.slug }));
+}
 
 const getCachedEsimCountryBySlug = cache(async (slug: string) => getEsimCountryBySlug(slug));
 
@@ -22,10 +23,9 @@ const COUNTRY_FLAG_CODES: Record<string, string> = {
 // ─── Next.js metadata + params ───────────────────────────────────────────────
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
   const { slug } = await params;
   const country = await getCachedEsimCountryBySlug(slug);
-  if (!country) return { title: language === "vi" ? "Không tìm thấy quốc gia | EZSIM" : "Country not found | EZSIM" };
+  if (!country) return { title: "Không tìm thấy quốc gia | EZSIM" };
   const countryName = country.name.replace(/^eSIM\s+/, "");
   const countryMap: Record<string, string> = {
     "nhat-ban": "Japan",
@@ -34,19 +34,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     "chau-au": "Europe",
     "my": "United States",
   };
-  const displayName = language === "vi" ? countryName : countryMap[country.slug] ?? countryName;
-
   return {
-    title:
-      language === "vi"
-        ? `${country.name} - Kết nối ngay khi đặt chân | EZSIM`
-        : `${displayName} eSIM - Stay connected on arrival | EZSIM`,
+    title: `${country.name} - Kết nối ngay khi đặt chân | EZSIM`,
   };
 }
 
 export default async function EsimCountryPage({ params }: { params: Promise<{ slug: string }> }) {
-  const language = normalizeLanguage(cookies().get(LANGUAGE_COOKIE)?.value);
   const { slug } = await params;
+  const language = "vi" as const;
   const country = await getCachedEsimCountryBySlug(slug);
   if (!country) notFound();
 
