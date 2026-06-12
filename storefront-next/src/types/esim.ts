@@ -32,6 +32,10 @@ export interface EsimPackage {
   stock: number;
   rating: number;
   salesCount: number;
+  // IDs needed for order API
+  productId?: string;
+  productVariantId?: string;
+  esimPackageId?: string;
 }
 
 export interface EsimCountryStat {
@@ -66,7 +70,7 @@ export interface EsimCountrySummary {
 export interface EsimPackageFilters {
   days: number[];
   dataRanges: EsimDataRange[];
-  featureTags: PackageQuickTag[];
+  featureTags: string[];
   quickTag: PackageQuickTag | "all";
   minPrice?: number;
   maxPrice?: number;

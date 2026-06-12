@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import Icon from "@/components/ui/Icon";
@@ -15,19 +16,32 @@ interface TabConfig {
   count: number;
 }
 
-const counts = getCardTabCounts();
-
-const tabs: TabConfig[] = [
-  { key: "telecom", label: "Thẻ Viễn thông", icon: "sim-card", count: counts.telecom },
-  { key: "game", label: "Thẻ Game", icon: "gamepad", count: counts.game },
-  { key: "data", label: "Data 4G/5G", icon: "wifi", count: counts.data },
-  { key: "promo", label: "Khuyến mãi", icon: "fire", count: counts.promo },
-];
+const defaultCounts: Record<CardTab, number> = { telecom: 0, game: 0, data: 0, promo: 0 };
 
 export default function TabSwitcher() {
+  return (
+    <Suspense fallback={<div className="h-12 bg-white border-b border-gray-200" />}>
+      <TabSwitcherInner />
+    </Suspense>
+  );
+}
+
+function TabSwitcherInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = (searchParams.get("tab") as CardTab) || "telecom";
+  const [counts, setCounts] = useState(defaultCounts);
+
+  useEffect(() => {
+    getCardTabCounts().then(setCounts).catch(() => {});
+  }, []);
+
+  const tabs: TabConfig[] = [
+    { key: "telecom", label: "Thẻ Viễn thông", icon: "sim-card", count: counts.telecom },
+    { key: "game", label: "Thẻ Game", icon: "gamepad", count: counts.game },
+    { key: "data", label: "Data 4G/5G", icon: "wifi", count: counts.data },
+    { key: "promo", label: "Khuyến mãi", icon: "fire", count: counts.promo },
+  ];
 
   return (
     <div className="bg-white border-b border-gray-200 sticky z-50" style={{ top: "64px" }}>

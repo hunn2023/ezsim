@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -27,8 +28,20 @@ const REGION_FLAG_CODES: Partial<Record<EsimCountrySummary["region"], string>> =
   "Châu Âu": "eu",
 };
 
-const DEFAULT_VISIBLE_COUNTRIES = 6;
+const DEFAULT_VISIBLE_COUNTRIES = 50;
 export default function EsimDuLichContent({
+  destinations,
+}: {
+  destinations: EsimCountrySummary[];
+}) {
+  return (
+    <Suspense fallback={<div className="min-h-[400px]" />}>
+      <EsimDuLichContentInner destinations={destinations} />
+    </Suspense>
+  );
+}
+
+function EsimDuLichContentInner({
   destinations,
 }: {
   destinations: EsimCountrySummary[];
@@ -77,6 +90,13 @@ export default function EsimDuLichContent({
   };
 
   const getFlagCode = (slug: string) => COUNTRY_FLAG_CODES[slug] ?? null;
+  const getFlagUrl = (d: EsimCountrySummary) => {
+    const code = getFlagCode(d.slug);
+    if (code) return `https://flagcdn.com/w80/${code}.png`;
+    // Use flag from API (flagUrl) directly
+    if (d.flag && d.flag.startsWith("http")) return d.flag;
+    return null;
+  };
   const displayCountryName = (destination: EsimCountrySummary) => {
     if (language === "vi") return destination.name;
 
@@ -247,7 +267,9 @@ export default function EsimDuLichContent({
             <section key={region} style={{ marginBottom: "48px" }}>
               <h2 className="section-title mb-6">{displayRegionName(region)}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                {list.map((d) => (
+                {list.map((d) => {
+                  const flagUrl = getFlagUrl(d);
+                  return (
                   <Link
                     key={d.slug}
                     href={`/esim-du-lich/${d.slug}`}
@@ -258,7 +280,7 @@ export default function EsimDuLichContent({
                       padding: "20px",
                     }}
                   >
-                    {getFlagCode(d.slug) ? (
+                    {flagUrl ? (
                       <div
                         className="relative bg-gray-100 mx-auto flex items-center justify-center overflow-hidden border border-slate-200"
                         style={{
@@ -269,7 +291,7 @@ export default function EsimDuLichContent({
                         }}
                       >
                         <Image
-                          src={`https://flagcdn.com/w80/${getFlagCode(d.slug)}.png`}
+                          src={flagUrl}
                           alt={d.name}
                           width={56}
                           height={38}
@@ -278,26 +300,27 @@ export default function EsimDuLichContent({
                       </div>
                     ) : (
                       <div
-                        className="bg-gray-100 mx-auto flex items-center justify-center"
+                        className="bg-gray-100 mx-auto flex items-center justify-center text-2xl"
                         style={{
                           width: "56px",
-                          height: "56px",
-                          borderRadius: "50%",
+                          height: "38px",
+                          borderRadius: "8px",
                           marginBottom: "12px",
-                          fontSize: "28px",
                         }}
                         aria-hidden
                       >
-                        {d.flag}
+                        🌍
                       </div>
                     )}
                     <div className="font-bold mb-1" style={{ fontSize: "15px" }}>{displayCountryName(d)}</div>
                     <div className="text-primary font-semibold" style={{ fontSize: "13px" }}>
-                      {text.from} {d.startingPrice.toLocaleString("vi-VN")}đ
+                      {d.startingPrice > 0 ? `${text.from} ${d.startingPrice.toLocaleString("vi-VN")}đ` : ""}
                     </div>
-                    <div className="text-gray-500" style={{ fontSize: "12px", marginTop: "4px" }}>
-                      {d.packageCount} {text.packagesAvailable}
-                    </div>
+                    {d.packageCount > 0 && (
+                      <div className="text-gray-500" style={{ fontSize: "12px", marginTop: "4px" }}>
+                        {d.packageCount} {text.packagesAvailable}
+                      </div>
+                    )}
                     {d.bestseller && (
                       <span
                         className="inline-block font-bold mt-1.5"
@@ -313,7 +336,8 @@ export default function EsimDuLichContent({
                       </span>
                     )}
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </section>
           ))}

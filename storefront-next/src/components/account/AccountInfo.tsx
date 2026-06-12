@@ -88,24 +88,14 @@ export default function AccountInfo() {
           {user.email}
         </p>
 
-        {(user.phone || user.address) && (
+        {user.phone && (
           <div className="mt-3 w-full max-w-[220px] space-y-1.5">
-            {user.phone && (
-              <div className="flex items-center gap-2 rounded-lg bg-white/12 px-2.5 py-1.5">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/20">
-                  <Icon icon="phone" className="text-[10px] text-white" />
-                </span>
-                <span className="text-[12px] text-white/90 font-medium truncate">{user.phone}</span>
-              </div>
-            )}
-            {user.address && (
-              <div className="flex items-center gap-2 rounded-lg bg-white/12 px-2.5 py-1.5">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/20">
-                  <Icon icon="map-marker-alt" className="text-[10px] text-white" />
-                </span>
-                <span className="text-[11px] text-white/85 truncate">{user.address}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 rounded-lg bg-white/12 px-2.5 py-1.5">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white/20">
+                <Icon icon="phone" className="text-[10px] text-white" />
+              </span>
+              <span className="text-[12px] text-white/90 font-medium truncate">{user.phone}</span>
+            </div>
           </div>
         )}
       </div>

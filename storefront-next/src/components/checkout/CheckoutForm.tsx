@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { getCheckoutSchema, CheckoutFormData } from "@/lib/schemas/checkoutSchema";
-import { createOrder, mapFormDataToPayload, OrderApiError, OrderItem } from "@/lib/orderApi";
+import { createOrder, confirmOrder, createPaymentQr, getPaymentStatus, mapFormDataToPayload, OrderApiError, OrderItem, PaymentQrData, PaymentStatusData } from "@/lib/orderApi";
 import { useCartStore } from "@/lib/cartStore";
 import { formatPrice } from "@/lib/product";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -129,6 +129,10 @@ export default function CheckoutForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeviceModal, setShowDeviceModal] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [paymentQrData, setPaymentQrData] = useState<PaymentQrData | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusData | null>(null);
+  const paymentPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const {
     control,
@@ -145,10 +149,6 @@ export default function CheckoutForm() {
       fullName: "",
       phone: "",
       email: "",
-      province: "",
-      district: "",
-      ward: "",
-      addressDetail: "",
       orderNote: "",
       paymentMethod: "banking",
       requestInvoice: false,
@@ -170,7 +170,6 @@ export default function CheckoutForm() {
     setValue("fullName", current.fullName || user.name || "", { shouldDirty: false });
     setValue("phone", current.phone || user.phone || "", { shouldDirty: false });
     setValue("email", current.email || user.email || "", { shouldDirty: false });
-    setValue("addressDetail", current.addressDetail || user.address || "", { shouldDirty: false });
     setValue("paymentMethod", "banking", { shouldDirty: false });
     prefilledRef.current = true;
   }, [getValues, isAuthenticated, setValue, user]);
@@ -182,8 +181,57 @@ export default function CheckoutForm() {
     }
   }, [items.length, reset]);
 
+  // Poll payment status when on step 2
+  useEffect(() => {
+    if (currentStep !== 2 || !createdOrderId) return;
+
+    const isPaid = (status: PaymentStatusData): boolean => {
+      const ps = status.paymentStatus;
+      const s = status.status;
+      if (ps === "Paid" || ps === 2 || ps === "2") return true;
+      if (s === "Paid" || s === 2 || s === "2") return true;
+      if (status.paidAt && status.paidAt.length > 10 && !status.paidAt.startsWith("0001")) return true;
+      return false;
+    };
+
+    const poll = async () => {
+      try {
+        const status = await getPaymentStatus(createdOrderId);
+        setPaymentStatus(status);
+        if (isPaid(status)) {
+          if (paymentPollRef.current) {
+            clearInterval(paymentPollRef.current);
+            paymentPollRef.current = null;
+          }
+          toast.success(text.success);
+          clearCart();
+          router.push("/account/orders");
+        }
+      } catch {
+        // Silently ignore polling errors
+      }
+    };
+
+    // Delay first poll by 10 seconds to allow user to scan QR
+    const initialDelay = setTimeout(() => {
+      poll();
+      paymentPollRef.current = setInterval(poll, 5000);
+    }, 10000);
+
+    return () => {
+      clearTimeout(initialDelay);
+      if (paymentPollRef.current) {
+        clearInterval(paymentPollRef.current);
+        paymentPollRef.current = null;
+      }
+    };
+  }, [currentStep, createdOrderId, clearCart, router, text.success]);
+
   const onSubmit = useCallback(
     async (formData: CheckoutFormData) => {
+      if (isSubmitting) return;
+
+      // Step 1 → Step 2: Validate, create order, get QR
       if (currentStep === 1) {
         if (!formData.agreeTerms) {
           toast.error(text.needAgreeTermsFirst);
@@ -195,67 +243,87 @@ export default function CheckoutForm() {
           return;
         }
 
-        setCurrentStep(2);
-        return;
-      }
-
-      if (isSubmitting) return;
-
-      if (items.length === 0) {
-        toast.error(text.cartEmpty);
-        router.push("/");
-        return;
-      }
-
-      setIsSubmitting(true);
-
-      const orderItems: OrderItem[] = items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.image,
-      }));
-
-      const payload = mapFormDataToPayload(formData, orderItems, getTotalAmount());
-
-      try {
-        const result = await createOrder(payload);
-
-        if (result.success) {
-          toast.success(result.message || text.success);
-          const total = getTotalAmount();
-          const params = new URLSearchParams({
-            orderId: result.orderId ?? "",
-            total: total.toString(),
-            paymentMethod: formData.paymentMethod,
-          });
-          // Navigate BEFORE clearCart to prevent checkout page
-          // from re-rendering with empty cart and overriding this redirect
-          router.push(`/order-success?${params.toString()}`);
-          clearCart();
-        } else {
-          toast.error(result.message || text.failed);
+        if (items.length === 0) {
+          toast.error(text.cartEmpty);
+          router.push("/");
+          return;
         }
-      } catch (error) {
-        if (error instanceof OrderApiError) {
-          if (error.statusCode === 408) {
-            toast.error(text.timeout);
-          } else if (error.statusCode >= 500) {
-            toast.error(text.serverError);
-          } else {
-            toast.error(error.message);
+
+        setIsSubmitting(true);
+
+        const orderItems: OrderItem[] = items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+          productId: item.productId,
+          productVariantId: item.productVariantId,
+          esimPackageId: item.esimPackageId,
+          phoneCardId: item.phoneCardId,
+          itemType: item.itemType,
+        }));
+
+        const payload = mapFormDataToPayload(formData, orderItems, getTotalAmount());
+        console.log("[Checkout] createOrder payload:", JSON.stringify(payload, null, 2));
+
+        try {
+          // 1. Create order
+          const result = await createOrder(payload);
+          console.log("[Checkout] createOrder result:", result);
+          if (!result.success || !result.orderId) {
+            toast.error(result.message || text.failed);
+            return;
           }
-        } else if (error instanceof Error) {
-          toast.error(error.message);
-        } else {
-          toast.error(text.unknownError);
+
+          const orderId = result.orderId;
+          setCreatedOrderId(orderId);
+
+          // 2. Confirm order with payment method (optional - some backends auto-confirm)
+          try {
+            await confirmOrder(orderId, formData.paymentMethod);
+          } catch {
+            // Ignore - backend may auto-confirm on create
+          }
+
+          // 3. Generate QR code (non-blocking for step transition)
+          try {
+            const qrData = await createPaymentQr(orderId);
+            setPaymentQrData(qrData);
+          } catch {
+            // Still move to step 2 even if QR generation fails
+            // User will see fallback QR placeholder
+          }
+
+          // Move to step 2
+          setCurrentStep(2);
+        } catch (error) {
+          console.error("[Checkout] createOrder error:", error);
+          if (error instanceof OrderApiError) {
+            if (error.statusCode === 408) {
+              toast.error(text.timeout);
+            } else if (error.statusCode >= 500) {
+              toast.error(text.serverError);
+            } else {
+              toast.error(error.message);
+            }
+          } else if (error instanceof Error) {
+            toast.error(error.message);
+          } else {
+            toast.error(text.unknownError);
+          }
+        } finally {
+          setIsSubmitting(false);
         }
-      } finally {
-        setIsSubmitting(false);
+        return;
       }
+
+      // Step 2: User confirms payment → redirect to order list
+      toast.success(text.success);
+      clearCart();
+      router.push("/account/orders");
     },
-    [currentStep, isSubmitting, items, getTotalAmount, clearCart, router, text]
+    [currentStep, isSubmitting, items, getTotalAmount, clearCart, router, text, createdOrderId, language]
   );
 
   if (items.length === 0) {
@@ -263,7 +331,14 @@ export default function CheckoutForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, (validationErrors) => {
+      console.error("[Checkout] Form validation errors:", validationErrors);
+      // Show first validation error as toast so user gets immediate feedback
+      const firstError = Object.values(validationErrors)[0];
+      if (firstError?.message) {
+        toast.error(firstError.message as string);
+      }
+    })} className="space-y-6">
       {/* Progress indicator */}
       <div className="mb-6">
         <div className="flex items-center justify-between text-sm font-medium">
@@ -296,8 +371,6 @@ export default function CheckoutForm() {
                 <ShippingInfoForm
                   register={register}
                   errors={errors}
-                  setValue={setValue}
-                  watch={watch}
                   language={language}
                 />
 
@@ -433,7 +506,44 @@ export default function CheckoutForm() {
                 language={language}
                 showDetails
                 amount={getTotalAmount()}
+                paymentQrData={paymentQrData}
+                orderId={createdOrderId}
+                onPaymentConfirmed={() => {
+                  toast.success(text.success);
+                  clearCart();
+                  router.push("/account/orders");
+                }}
               />
+
+              {/* Confirm payment button */}
+              <div className="mt-6 pt-4 border-t">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full py-4 rounded-xl font-semibold text-white transition ${
+                    isSubmitting
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-primary hover:bg-primary-dark active:scale-[0.98] shadow-btn"
+                  }`}
+                >
+                  {isSubmitting
+                    ? (language === "vi" ? "Đang kiểm tra..." : "Checking...")
+                    : (language === "vi" ? "Tôi đã thanh toán" : "I have paid")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentStep(1);
+                    if (paymentPollRef.current) {
+                      clearInterval(paymentPollRef.current);
+                      paymentPollRef.current = null;
+                    }
+                  }}
+                  className="w-full mt-2 py-2 text-sm text-gray-500 hover:text-primary transition text-center"
+                >
+                  {text.backToShipping}
+                </button>
+              </div>
             </section>
           )}
         </div>

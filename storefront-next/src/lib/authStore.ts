@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { User } from "@/types/user";
 import type { LoginPayload } from "@/types/auth";
 import { authStorage } from "@/lib/storage";
-import { getMe, login as apiLogin, AuthApiError } from "@/lib/authApi";
+import { getMe, login as apiLogin, logoutApi, AuthApiError } from "@/lib/authApi";
 import { isValidToken, isValidUser } from "@/utils/auth";
 
 interface AuthState {
@@ -39,8 +39,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     if (get().isLoading) return;
     set({ isLoading: true });
     try {
-      const { accessToken, user } = await apiLogin(payload);
+      const { accessToken, refreshToken, user } = await apiLogin(payload);
       authStorage.setToken(accessToken);
+      authStorage.setRefreshToken(refreshToken);
       set({ token: accessToken, user, isAuthenticated: true, isLoading: false });
     } catch (error) {
       set({ isLoading: false });
@@ -49,7 +50,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 
   logout: () => {
-    authStorage.clearToken();
+    const refreshToken = authStorage.getRefreshToken();
+    if (refreshToken) {
+      logoutApi(refreshToken);
+    }
+    authStorage.clearAll();
     set({ token: null, user: null, isAuthenticated: false });
   },
 
@@ -70,7 +75,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
       set({ token, user, isAuthenticated: true, initialized: true, isLoading: false });
     } catch {
-      authStorage.clearToken();
+      authStorage.clearAll();
       set({ token: null, user: null, isAuthenticated: false, initialized: true, isLoading: false });
     }
   },

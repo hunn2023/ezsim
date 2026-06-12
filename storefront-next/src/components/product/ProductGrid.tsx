@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -27,6 +28,14 @@ function formatPrice(price: number) {
 }
 
 export default function ProductGrid({ products, totalPages, loading }: Props) {
+  return (
+    <Suspense fallback={<div className="min-h-[400px]" />}>
+      <ProductGridInner products={products} totalPages={totalPages} loading={loading} />
+    </Suspense>
+  );
+}
+
+function ProductGridInner({ products, totalPages, loading }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("pageIndex") || "1");

@@ -54,7 +54,7 @@ export default function CardMarketplaceBrowser({ content }: { content: CardMarke
     }
 
     addToCart({
-      id: `${selectedProvider.id}-${selectedDenomination.face}`,
+      id: selectedDenomination.phoneCardId || `${selectedProvider.id}-${selectedDenomination.face}`,
       name: `${content.productLabel} ${selectedProvider.name} ${selectedOptionLabel}`,
       slug: `${selectedProvider.id}-${selectedDenomination.face}`,
       href: `/the-nap?tab=${content.tab}`,
@@ -62,6 +62,9 @@ export default function CardMarketplaceBrowser({ content }: { content: CardMarke
       price: selectedDenomination.pay,
       quantity,
       stock: 999,
+      phoneCardId: selectedDenomination.phoneCardId,
+      productVariantId: selectedDenomination.productVariantId,
+      itemType: 2, // PhoneCard
     });
   };
 

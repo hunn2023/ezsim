@@ -1,397 +1,28 @@
-import type { CardMarketplaceContent, CardMarketplaceTab, CardProvider } from "@/types/cardMarketplace";
+import type {
+  CardMarketplaceContent,
+  CardMarketplaceTab,
+  CardProvider,
+  CardDenomination,
+} from "@/types/cardMarketplace";
+import type { ApiPhoneCard, PaginatedResponse } from "@/types/api";
 
-const telecomProviders: CardProvider[] = [
-  {
-    id: "viettel",
-    category: "telecom",
-    name: "Viettel",
-    letter: "V",
-    bg: "#ED1C24",
-    discountPercent: 8,
-    discountLabel: "Chiết khấu 8%",
-    description: "Nhà mạng phủ sóng rộng nhất, nhận mã thẻ ngay sau thanh toán.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 10000, pay: 9200 },
-      { face: 20000, pay: 18400 },
-      { face: 30000, pay: 27600 },
-      { face: 50000, pay: 46000 },
-      { face: 100000, pay: 92000 },
-      { face: 200000, pay: 184000 },
-      { face: 300000, pay: 276000 },
-      { face: 500000, pay: 460000 },
-    ],
-  },
-  {
-    id: "vinaphone",
-    category: "telecom",
-    name: "Vinaphone",
-    letter: "V",
-    bg: "#0066B2",
-    discountPercent: 7,
-    discountLabel: "Chiết khấu 7%",
-    description: "Chiết khấu ổn định cho nhu cầu nạp thuê bao Vinaphone.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 20000, pay: 18600 },
-      { face: 50000, pay: 46500 },
-      { face: 100000, pay: 93000 },
-      { face: 200000, pay: 186000 },
-      { face: 300000, pay: 279000 },
-      { face: 500000, pay: 465000 },
-    ],
-  },
-  {
-    id: "mobifone",
-    category: "telecom",
-    name: "Mobifone",
-    letter: "M",
-    bg: "#E40520",
-    discountPercent: 7,
-    discountLabel: "Chiết khấu 7%",
-    description: "Mã thẻ Mobifone chính hãng, hỗ trợ đơn hàng số lượng lớn.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 10000, pay: 9300 },
-      { face: 20000, pay: 18600 },
-      { face: 50000, pay: 46500 },
-      { face: 100000, pay: 93000 },
-      { face: 200000, pay: 186000 },
-      { face: 500000, pay: 465000 },
-    ],
-  },
-  {
-    id: "vietnamobile",
-    category: "telecom",
-    name: "Vietnamobile",
-    letter: "V",
-    bg: "#FFA500",
-    discountPercent: 10,
-    discountLabel: "Chiết khấu 10%",
-    description: "Chiết khấu cao nhất nhóm viễn thông, giao mã tự động.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 20000, pay: 18000 },
-      { face: 50000, pay: 45000 },
-      { face: 100000, pay: 90000 },
-      { face: 200000, pay: 180000 },
-      { face: 300000, pay: 270000 },
-      { face: 500000, pay: 450000 },
-    ],
-  },
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-const gameProviders: CardProvider[] = [
-  {
-    id: "garena",
-    category: "game",
-    name: "Garena",
-    letter: "G",
-    bg: "#FF7700",
-    discountPercent: 10,
-    discountLabel: "Chiết khấu 10%",
-    description: "Free Fire, Liên Quân, FC Online, nhận mã trong 30 giây.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 20000, pay: 18000 },
-      { face: 50000, pay: 45000 },
-      { face: 100000, pay: 90000 },
-      { face: 200000, pay: 180000 },
-      { face: 300000, pay: 270000 },
-      { face: 500000, pay: 450000 },
-      { face: 1000000, pay: 900000 },
-      { face: 2000000, pay: 1800000 },
-    ],
-  },
-  {
-    id: "zing",
-    category: "game",
-    name: "Zing",
-    letter: "Z",
-    bg: "#006FE6",
-    discountPercent: 12,
-    discountLabel: "Chiết khấu 12%",
-    description: "ZingSpeed, Võ Lâm, mã thẻ giao tức thì qua email.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 20000, pay: 17600 },
-      { face: 50000, pay: 44000 },
-      { face: 100000, pay: 88000 },
-      { face: 200000, pay: 176000 },
-      { face: 500000, pay: 440000 },
-    ],
-  },
-  {
-    id: "vcoin",
-    category: "game",
-    name: "Vcoin (VTC)",
-    letter: "V",
-    bg: "#DC2626",
-    discountPercent: 10,
-    discountLabel: "Chiết khấu 10%",
-    description: "VTC Pay, Đột Kích, Audition, nạp game nhanh và an toàn.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 20000, pay: 18000 },
-      { face: 50000, pay: 45000 },
-      { face: 100000, pay: 90000 },
-      { face: 200000, pay: 180000 },
-      { face: 500000, pay: 450000 },
-    ],
-  },
-  {
-    id: "gate",
-    category: "game",
-    name: "Gate",
-    letter: "G",
-    bg: "#00A651",
-    discountPercent: 11,
-    discountLabel: "Chiết khấu 11%",
-    description: "Funtap, Gate Pay, nạp game đa nền tảng.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 20000, pay: 17800 },
-      { face: 50000, pay: 44500 },
-      { face: 100000, pay: 89000 },
-      { face: 200000, pay: 178000 },
-      { face: 500000, pay: 445000 },
-    ],
-  },
-  {
-    id: "steam",
-    category: "game",
-    name: "Steam Wallet",
-    letter: "S",
-    bg: "#1B2838",
-    discountPercent: 5,
-    discountLabel: "Chiết khấu 5%",
-    description: "Bổ sung Steam Wallet cho game PC, giao mã trong 1 phút.",
-    deliveryTime: "1 phút",
-    denominations: [
-      { face: 50000, pay: 47500 },
-      { face: 100000, pay: 95000 },
-      { face: 200000, pay: 190000 },
-      { face: 500000, pay: 475000 },
-    ],
-  },
-  {
-    id: "riot",
-    category: "game",
-    name: "Riot (LoL)",
-    letter: "R",
-    bg: "#D13639",
-    discountPercent: 7,
-    discountLabel: "Chiết khấu 7%",
-    description: "Valorant, League of Legends, thanh toán nhanh chóng.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 50000, pay: 46500 },
-      { face: 100000, pay: 93000 },
-      { face: 200000, pay: 186000 },
-      { face: 500000, pay: 465000 },
-    ],
-  },
-  {
-    id: "mycard",
-    category: "game",
-    name: "MyCard",
-    letter: "M",
-    bg: "#F5C518",
-    textColor: "#000000",
-    discountPercent: 8,
-    discountLabel: "Chiết khấu 8%",
-    description: "Nạp game quốc tế tiện lợi với mã MyCard chính hãng.",
-    deliveryTime: "1 phút",
-    denominations: [
-      { face: 100000, pay: 92000 },
-      { face: 200000, pay: 184000 },
-      { face: 500000, pay: 460000 },
-    ],
-  },
-  {
-    id: "bit",
-    category: "game",
-    name: "BIT",
-    letter: "B",
-    bg: "#7C3AED",
-    discountPercent: 13,
-    discountLabel: "Chiết khấu 13%",
-    description: "Nhóm game casual/mobile với mức chiết khấu cao nhất.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 20000, pay: 17400 },
-      { face: 50000, pay: 43500 },
-      { face: 100000, pay: 87000 },
-      { face: 200000, pay: 174000 },
-      { face: 500000, pay: 435000 },
-    ],
-  },
-];
+// ─── Content Metadata (static — not from API) ────────────────────────────────
 
-const dataProviders: CardProvider[] = [
-  {
-    id: "viettel-5g",
-    category: "data",
-    name: "Viettel 5G",
-    letter: "5G",
-    bg: "#ED1C24",
-    discountPercent: 12,
-    discountLabel: "Giảm đến 12%",
-    description: "Gói data tốc độ cao cho TikTok, YouTube, làm việc và di chuyển cả ngày.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 10000, pay: 9000, label: "3GB / 1 ngày", description: "Kích hoạt nhanh qua SMS" },
-      { face: 30000, pay: 26500, label: "7GB / 3 ngày", description: "Phù hợp du lịch ngắn" },
-      { face: 50000, pay: 44000, label: "15GB / 7 ngày", description: "Data ổn định cho cả tuần" },
-    ],
-  },
-  {
-    id: "vinaphone-max",
-    category: "data",
-    name: "Vinaphone MAX",
-    letter: "MAX",
-    bg: "#0066B2",
-    discountPercent: 10,
-    discountLabel: "Giảm đến 10%",
-    description: "Combo data linh hoạt cho khách hàng Vinaphone cần nhiều ngày sử dụng hơn.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 20000, pay: 18000, label: "5GB / 2 ngày", description: "Lướt web, chat, video call" },
-      { face: 50000, pay: 45500, label: "12GB / 7 ngày", description: "Xem video HD thoải mái" },
-      { face: 90000, pay: 81000, label: "30GB / 30 ngày", description: "Gói tiết kiệm cho cả tháng" },
-    ],
-  },
-  {
-    id: "mobifone-flex",
-    category: "data",
-    name: "Mobifone Flex",
-    letter: "M",
-    bg: "#E40520",
-    discountPercent: 9,
-    discountLabel: "Giảm đến 9%",
-    description: "Gói data linh hoạt, phù hợp làm việc từ xa và phát hotspot ngắn hạn.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 25000, pay: 22900, label: "4GB / 2 ngày", description: "Dành cho liên lạc cơ bản" },
-      { face: 60000, pay: 54600, label: "20GB / 10 ngày", description: "Xem phim, giải trí trọn gói" },
-      { face: 120000, pay: 109000, label: "45GB / 30 ngày", description: "Dùng dài ngày, giá tốt hơn" },
-    ],
-  },
-  {
-    id: "vietnamobile-data",
-    category: "data",
-    name: "Vietnamobile Data",
-    letter: "4G",
-    bg: "#FFA500",
-    discountPercent: 15,
-    discountLabel: "Giảm đến 15%",
-    description: "Mức giá mềm nhất cho nhóm học sinh, sinh viên và người cần data tiết kiệm.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 10000, pay: 8500, label: "2GB / 1 ngày", description: "Sử dụng nhanh, chi phí thấp" },
-      { face: 40000, pay: 34000, label: "10GB / 7 ngày", description: "Giải trí cuối tuần" },
-      { face: 80000, pay: 68000, label: "25GB / 30 ngày", description: "Tối ưu chi phí dài hạn" },
-    ],
-  },
-];
-
-const promoProviders: CardProvider[] = [
-  {
-    id: "flash-sale",
-    category: "promo",
-    name: "Flash Sale",
-    letter: "FS",
-    bg: "#F97316",
-    discountPercent: 20,
-    discountLabel: "Giảm đến 20%",
-    description: "Deal giờ vàng cho thẻ nạp và gói data, số lượng giới hạn trong ngày.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 50000, pay: 40000, label: "Voucher 50K", description: "Áp dụng đơn từ 299K" },
-      { face: 100000, pay: 80000, label: "Voucher 100K", description: "Áp dụng đơn từ 499K" },
-      { face: 150000, pay: 120000, label: "Voucher 150K", description: "Áp dụng đơn từ 799K" },
-    ],
-  },
-  {
-    id: "combo-gaming",
-    category: "promo",
-    name: "Combo Gaming",
-    letter: "GG",
-    bg: "#7C3AED",
-    discountPercent: 18,
-    discountLabel: "Combo hot 18%",
-    description: "Ưu đãi cho game thủ nạp Garena, Zing, Gate theo combo tiết kiệm.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 100000, pay: 82000, label: "Combo 100K", description: "Ưu đãi cho Garena + Zing" },
-      { face: 200000, pay: 164000, label: "Combo 200K", description: "Tặng thêm mã quay thưởng" },
-      { face: 500000, pay: 410000, label: "Combo 500K", description: "Tiết kiệm mạnh cho game thủ" },
-    ],
-  },
-  {
-    id: "new-user",
-    category: "promo",
-    name: "Ưu đãi New User",
-    letter: "NEW",
-    bg: "#0EA5E9",
-    discountPercent: 25,
-    discountLabel: "Giảm đến 25%",
-    description: "Deal dành cho tài khoản mới, kích hoạt nhanh trong lần mua đầu tiên.",
-    deliveryTime: "30 giây",
-    denominations: [
-      { face: 30000, pay: 22500, label: "Ưu đãi 30K", description: "Cho đơn từ 99K" },
-      { face: 50000, pay: 37500, label: "Ưu đãi 50K", description: "Cho đơn từ 199K" },
-      { face: 80000, pay: 60000, label: "Ưu đãi 80K", description: "Cho đơn từ 299K" },
-    ],
-  },
-  {
-    id: "esim-combo",
-    category: "promo",
-    name: "Combo eSIM",
-    letter: "ES",
-    bg: "#2563EB",
-    discountPercent: 16,
-    discountLabel: "Giảm đến 16%",
-    description: "Kết hợp eSIM du lịch với data nội địa, phù hợp khách ra sân bay hoặc công tác.",
-    deliveryTime: "1 phút",
-    denominations: [
-      { face: 149000, pay: 125000, label: "Combo Basic", description: "eSIM + 7GB data nội địa" },
-      { face: 299000, pay: 251000, label: "Combo Plus", description: "eSIM + 20GB + voucher 30K" },
-      { face: 499000, pay: 419000, label: "Combo Pro", description: "eSIM + data + game voucher" },
-    ],
-  },
-  {
-    id: "weekend-deal",
-    category: "promo",
-    name: "Weekend Deal",
-    letter: "WK",
-    bg: "#16A34A",
-    discountPercent: 14,
-    discountLabel: "Deal cuối tuần 14%",
-    description: "Ưu đãi cuối tuần cho gia đình và nhóm bạn nạp nhiều sản phẩm cùng lúc.",
-    deliveryTime: "45 giây",
-    denominations: [
-      { face: 50000, pay: 43000, label: "Deal 50K", description: "Áp dụng 2 sản phẩm bất kỳ" },
-      { face: 100000, pay: 86000, label: "Deal 100K", description: "Áp dụng 3 sản phẩm trở lên" },
-      { face: 200000, pay: 172000, label: "Deal 200K", description: "Tặng thêm điểm EZSIM" },
-    ],
-  },
-];
-
-const contentByTab: Record<CardMarketplaceTab, CardMarketplaceContent> = {
+const contentMeta: Record<CardMarketplaceTab, Omit<CardMarketplaceContent, "providers">> = {
   telecom: {
     tab: "telecom",
-    breadcrumb: "Mua Thẻ viễn thông",
+    breadcrumb: "Mua Thẻ Viễn Thông",
     pageTitle: "Mua thẻ điện thoại & thẻ game online",
     pageSubtitle:
       "Nạp tiền điện thoại tất cả nhà mạng, mua thẻ game Garena, Zing, Steam, Vcoin... Chiết khấu cao - Nhận mã trong 30 giây.",
-    step1Title: "Bước 1: Chọn nhà mạng viễn thông",
-    step1Desc: "4 nhà mạng phổ biến tại Việt Nam - chiết khấu lên đến 10%",
-    step2Title: "Bước 2: Chọn mệnh giá thẻ",
-    step2Desc: "Giá thanh toán cập nhật theo nhà mạng bạn đang chọn, không còn UI cố định.",
+    step1Title: "Bước 1: Chọn nhà mạng",
+    step1Desc: "Chọn nhà mạng bạn muốn nạp tiền với chiết khấu hấp dẫn.",
+    step2Title: "Bước 2: Chọn mệnh giá",
+    step2Desc: "Mức chiết khấu và giá thanh toán thay đổi theo từng nhà mạng.",
     productLabel: "Thẻ",
     itemUnit: "thẻ",
-    providers: telecomProviders,
   },
   game: {
     tab: "game",
@@ -400,52 +31,144 @@ const contentByTab: Record<CardMarketplaceTab, CardMarketplaceContent> = {
     pageSubtitle:
       "Nạp tiền điện thoại tất cả nhà mạng, mua thẻ game Garena, Zing, Steam, Vcoin... Chiết khấu cao - Nhận mã trong 30 giây.",
     step1Title: "Bước 1: Chọn nhà cung cấp game",
-    step1Desc: "8 nhà cung cấp game phổ biến tại Việt Nam - chiết khấu lên đến 13%",
+    step1Desc: "Nhiều nhà cung cấp game phổ biến tại Việt Nam.",
     step2Title: "Bước 2: Chọn mệnh giá thẻ",
     step2Desc: "Mức chiết khấu và giá thanh toán thay đổi theo từng nhà phát hành.",
     productLabel: "Thẻ",
     itemUnit: "thẻ",
-    providers: gameProviders,
   },
   data: {
     tab: "data",
     breadcrumb: "Mua Data 4G/5G",
     pageTitle: "Mua gói Data 4G/5G online - Kích hoạt siêu nhanh",
     pageSubtitle:
-      "Chọn gói data Viettel, Vinaphone, Mobifone, Vietnamobile theo ngày hoặc theo nhu cầu. Nhận mã kích hoạt trong 30 - 45 giây.",
+      "Chọn gói data Viettel, Vinaphone, Mobifone, Vietnamobile theo ngày hoặc theo nhu cầu.",
     step1Title: "Bước 1: Chọn nhà mạng data",
-    step1Desc: "4 nhóm gói data phổ biến, phù hợp từ lướt web cơ bản đến xem video cả tháng.",
+    step1Desc: "Các nhóm gói data phổ biến, phù hợp từ lướt web cơ bản đến xem video cả tháng.",
     step2Title: "Bước 2: Chọn gói phù hợp",
     step2Desc: "Mỗi gói hiển thị rõ dung lượng, thời hạn và giá thanh toán sau ưu đãi.",
     productLabel: "Gói",
     itemUnit: "gói",
-    providers: dataProviders,
   },
   promo: {
     tab: "promo",
     breadcrumb: "Khuyến mãi EZSIM",
     pageTitle: "Khuyến mãi hot mỗi ngày - Deal tốt cho eSIM, thẻ và data",
     pageSubtitle:
-      "Tổng hợp deal giờ vàng, voucher cho khách mới, combo gaming và các ưu đãi theo mùa. Chọn deal và nhận mã ngay sau thanh toán.",
+      "Tổng hợp deal giờ vàng, voucher cho khách mới, combo gaming và các ưu đãi theo mùa.",
     step1Title: "Bước 1: Chọn chương trình ưu đãi",
-    step1Desc: "5 nhóm deal đang hoạt động, tối ưu cho khách mua thẻ, data và eSIM trong cùng một chỗ.",
+    step1Desc: "Các deal đang hoạt động, tối ưu cho khách mua thẻ, data và eSIM.",
     step2Title: "Bước 2: Chọn mức ưu đãi",
     step2Desc: "Mỗi deal có nhiều mức giảm khác nhau theo giá trị đơn hàng hoặc gói combo.",
     productLabel: "Deal",
     itemUnit: "deal",
-    providers: promoProviders,
   },
 };
 
-export async function getCardMarketplaceContent(tab: CardMarketplaceTab): Promise<CardMarketplaceContent> {
-  return contentByTab[tab] ?? contentByTab.telecom;
+// ─── Mapper ───────────────────────────────────────────────────────────────────
+
+function groupPhoneCardsToProviders(cards: ApiPhoneCard[]): CardProvider[] {
+  const providerMap = new Map<string, { name: string; cards: ApiPhoneCard[] }>();
+
+  for (const card of cards) {
+    const providerName = card.provider?.name || "Khác";
+    const providerId = card.providerId;
+    if (!providerMap.has(providerId)) {
+      providerMap.set(providerId, { name: providerName, cards: [] });
+    }
+    providerMap.get(providerId)!.cards.push(card);
+  }
+
+  const providers: CardProvider[] = [];
+  const entries = Array.from(providerMap.entries());
+  for (const [id, { name, cards: provCards }] of entries) {
+    const denominations: CardDenomination[] = provCards.map((c: ApiPhoneCard) => ({
+      face: c.faceValue,
+      pay: c.price,
+      label: c.name,
+      phoneCardId: c.id,
+      productVariantId: c.productVariantId,
+    }));
+
+    // Calculate discount from first card
+    const firstCard = provCards[0];
+    const discountPercent = firstCard
+      ? Math.round((1 - firstCard.price / firstCard.faceValue) * 100)
+      : 0;
+
+    providers.push({
+      id,
+      category: "telecom", // Will be overridden by caller context
+      name,
+      letter: name.charAt(0).toUpperCase(),
+      bg: getProviderColor(name),
+      discountPercent: Math.abs(discountPercent),
+      discountLabel: `Giảm ${Math.abs(discountPercent)}%`,
+      description: `Thẻ ${name} - Chiết khấu ${Math.abs(discountPercent)}%`,
+      deliveryTime: "30 giây",
+      denominations,
+    });
+  }
+
+  return providers;
 }
 
-export function getCardTabCounts() {
-  return {
-    telecom: telecomProviders.length,
-    game: gameProviders.length,
-    data: dataProviders.reduce((sum, provider) => sum + provider.denominations.length, 0),
-    promo: promoProviders.length,
+function getProviderColor(name: string): string {
+  const colors: Record<string, string> = {
+    Viettel: "bg-red-500",
+    Vinaphone: "bg-blue-600",
+    Mobifone: "bg-green-600",
+    Vietnamobile: "bg-yellow-500",
+    Garena: "bg-orange-500",
+    Steam: "bg-gray-700",
   };
+  return colors[name] || "bg-indigo-500";
+}
+
+// ─── API Calls ────────────────────────────────────────────────────────────────
+
+export async function getCardMarketplaceContent(tab: CardMarketplaceTab): Promise<CardMarketplaceContent> {
+  const meta = contentMeta[tab] ?? contentMeta.telecom;
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/catalog/phone-cards?PageIndex=1&PageSize=100`
+    );
+    if (!response.ok) {
+      return { ...meta, providers: [] };
+    }
+    const json = await response.json();
+    const payload = json.data ?? json;
+    const items: ApiPhoneCard[] = Array.isArray(payload) ? payload : payload.items ?? [];
+
+    const providers = groupPhoneCardsToProviders(items);
+    // Set category on each provider
+    providers.forEach((p) => { p.category = tab; });
+
+    return { ...meta, providers };
+  } catch {
+    return { ...meta, providers: [] };
+  }
+}
+
+export async function getCardTabCounts(): Promise<Record<CardMarketplaceTab, number>> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/catalog/phone-cards?PageIndex=1&PageSize=200`
+    );
+    if (!response.ok) return { telecom: 0, game: 0, data: 0, promo: 0 };
+    const json = await response.json();
+    const payload = json.data ?? json;
+    const items: ApiPhoneCard[] = Array.isArray(payload) ? payload : payload.items ?? [];
+
+    // For now, all cards count as telecom — backend may add category field later
+    return {
+      telecom: items.length,
+      game: 0,
+      data: 0,
+      promo: 0,
+    };
+  } catch {
+    return { telecom: 0, game: 0, data: 0, promo: 0 };
+  }
 }

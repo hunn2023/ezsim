@@ -6,6 +6,8 @@ export interface CardDenomination {
   pay: number;
   label?: string;
   description?: string;
+  phoneCardId?: string;
+  productVariantId?: string;
 }
 
 export interface CardProvider {

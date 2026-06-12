@@ -50,11 +50,6 @@ export default function UpdateProfileForm() {
     phone: language === "vi" ? "Số điện thoại" : "Phone number",
     email: "Email",
     emailHint: language === "vi" ? "(không thể thay đổi)" : "(cannot be changed)",
-    shippingAddress: language === "vi" ? "Địa chỉ giao hàng" : "Shipping address",
-    shippingAddressPlaceholder:
-      language === "vi"
-        ? "Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-        : "House number, street, ward, district, province/city",
     saved: language === "vi" ? "Thông tin đã được lưu" : "Information saved",
     saving: language === "vi" ? "Đang lưu..." : "Saving...",
     saveChanges: language === "vi" ? "Lưu thay đổi" : "Save changes",
@@ -71,7 +66,6 @@ export default function UpdateProfileForm() {
     defaultValues: {
       name: user?.name ?? "",
       phone: user?.phone ?? "",
-      address: user?.address ?? "",
     },
   });
 
@@ -80,7 +74,6 @@ export default function UpdateProfileForm() {
       reset({
         name: user.name ?? "",
         phone: user.phone ?? "",
-        address: user.address ?? "",
       });
     }
   }, [user?.id, reset]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -149,23 +142,6 @@ export default function UpdateProfileForm() {
               readOnly
               tabIndex={-1}
               className="input pl-10 bg-gray-50 text-gray-400 cursor-not-allowed select-none"
-            />
-          </div>
-        </Field>
-
-        {/* Address */}
-        <Field id="pf-address" label={text.shippingAddress} error={errors.address?.message}>
-          <div className="relative">
-            <span className="absolute left-4 top-3.5 text-gray-400 pointer-events-none">
-              <Icon icon="map-marker-alt" className="text-sm" />
-            </span>
-            <textarea
-              id="pf-address"
-              rows={2}
-              placeholder={text.shippingAddressPlaceholder}
-              disabled={isSaving}
-              {...register("address")}
-              className={`input pl-10 resize-none leading-relaxed ${errors.address ? "input-error" : ""} disabled:bg-gray-50 disabled:cursor-not-allowed`}
             />
           </div>
         </Field>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -42,20 +42,18 @@ export default function RegisterForm() {
   const registerSchema = useMemo(() => getRegisterSchema(language), [language]);
 
   const text = {
-    otpVerifyTitle:
-      language === "vi" ? "Xác thực email để hoàn tất đăng ký" : "Verify email to complete registration",
     otpSentTo:
       language === "vi"
         ? "Mã OTP gồm 6 số đã được gửi tới"
-        : "A 6-digit OTP has been sent to",
+        : "A 6-digit verification code has been sent to",
     otpValidUntil: language === "vi" ? "Mã còn hiệu lực:" : "Code valid for:",
     otpExpired: language === "vi" ? "Đã hết hạn" : "Expired",
-    otpLabel: language === "vi" ? "Mã OTP" : "OTP code",
-    otpPlaceholder: language === "vi" ? "Nhập 6 số OTP" : "Enter 6-digit OTP",
+    otpLabel: language === "vi" ? "Nhập mã 6 số" : "Enter your 6-digit code",
     verifying: language === "vi" ? "Đang xác thực..." : "Verifying...",
     verifyAndCreate:
-      language === "vi" ? "Xác thực OTP và tạo tài khoản" : "Verify OTP and create account",
+      language === "vi" ? "Xác nhận" : "Confirm",
     resendOtp: language === "vi" ? "Gửi lại mã OTP" : "Resend OTP",
+    dontHaveCode: language === "vi" ? "Chưa nhận được mã?" : "Don't have a code?",
     editInfo: language === "vi" ? "Chỉnh sửa thông tin" : "Edit information",
     fullName: language === "vi" ? "Họ và tên" : "Full name",
     fullNamePlaceholder: language === "vi" ? "Nguyễn Văn A" : "John Doe",
@@ -98,6 +96,34 @@ export default function RegisterForm() {
   const otpExpired = otpSession ? remainingMs <= 0 : false;
   const otpCountdownText = `${String(Math.floor(remainingMs / 60000)).padStart(2, "0")}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, "0")}`;
 
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleOtpDigitChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const newCode = otpCode.split("");
+    newCode[index] = digit;
+    const joined = newCode.join("").slice(0, 6);
+    setOtpCode(joined.padEnd(6, "").trimEnd());
+
+    if (digit && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    setOtpCode(pasted);
+    const focusIndex = Math.min(pasted.length, 5);
+    otpInputRefs.current[focusIndex]?.focus();
+  };
+
   const handleOtpSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     await verifyOtpAndRegister(otpCode);
@@ -106,53 +132,59 @@ export default function RegisterForm() {
   if (otpSession) {
     return (
       <form onSubmit={handleOtpSubmit} noValidate className="space-y-5">
-        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-sm font-semibold text-navy">{text.otpVerifyTitle}</p>
-          <p className="mt-1 text-sm text-slate-600">
-            {text.otpSentTo} <span className="font-semibold text-navy">{otpSession.maskedEmail}</span>.
+        <div className="text-center">
+          <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center">
+            <Icon icon="envelope" className="text-2xl text-primary" />
+          </div>
+          <p className="text-sm text-slate-600">
+            {text.otpSentTo}
           </p>
-          <p className="mt-2 text-xs text-slate-500">
-            {text.otpValidUntil} <span className={`font-semibold ${otpExpired ? "text-danger" : "text-primary"}`}>{otpExpired ? text.otpExpired : otpCountdownText}</span>
-          </p>
+          <p className="mt-1 font-semibold text-navy">{otpSession.maskedEmail}</p>
         </div>
 
         <div>
-          <label htmlFor="register-otp" className="block text-sm font-medium text-navy mb-1.5">
-            {text.otpLabel}
+          <label className="block text-sm font-medium text-navy mb-3">
+            {text.otpLabel} <span className="text-danger">*</span>
           </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <Icon icon="shield-alt" className="text-sm" />
-            </span>
-            <input
-              id="register-otp"
-              type="text"
-              value={otpCode}
-              onChange={(event) => {
-                const normalizedValue = event.target.value.replace(/\D/g, "").slice(0, 6);
-                setOtpCode(normalizedValue);
-              }}
-              autoComplete="one-time-code"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={6}
-              placeholder={text.otpPlaceholder}
-              disabled={isLoading}
-              className="input pl-10 tracking-[0.35em]"
-            />
+          <div className="flex items-center justify-center gap-2 sm:gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <input
+                key={i}
+                ref={(el) => { otpInputRefs.current[i] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otpCode[i] || ""}
+                onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                onPaste={i === 0 ? handleOtpPaste : undefined}
+                disabled={isLoading}
+                autoFocus={i === 0}
+                className="w-11 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold rounded-lg border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition disabled:bg-gray-50 disabled:cursor-not-allowed"
+              />
+            ))}
           </div>
+          {otpSession && (
+            <p className="mt-3 text-center text-xs text-slate-500">
+              {text.otpValidUntil}{" "}
+              <span className={`font-semibold ${otpExpired ? "text-danger" : "text-primary"}`}>
+                {otpExpired ? text.otpExpired : otpCountdownText}
+              </span>
+            </p>
+          )}
         </div>
 
         <button
           type="submit"
-          disabled={isLoading || otpExpired}
+          disabled={isLoading || otpExpired || otpCode.replace(/\s/g, "").length < 6}
           aria-busy={isLoading}
           className="btn btn-primary w-full py-3.5 text-base disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isLoading ? text.verifying : text.verifyAndCreate}
         </button>
 
-        <div className="flex items-center justify-between gap-3 text-sm">
+        <div className="text-center text-sm text-slate-500">
+          <span>{text.dontHaveCode} </span>
           <button
             type="button"
             onClick={resendOtp}
@@ -161,13 +193,16 @@ export default function RegisterForm() {
           >
             {text.resendOtp}
           </button>
+        </div>
+
+        <div className="text-center">
           <button
             type="button"
             onClick={cancelOtp}
             disabled={isLoading}
-            className="font-semibold text-gray-500 hover:text-navy transition disabled:opacity-60"
+            className="text-sm font-semibold text-gray-500 hover:text-navy transition disabled:opacity-60"
           >
-            {text.editInfo}
+            ← {text.editInfo}
           </button>
         </div>
       </form>

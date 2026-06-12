@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -10,15 +10,21 @@ import { useLogin } from "@/hooks/useLogin";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function LoginForm() {
+  return (
+    <Suspense fallback={<div className="min-h-[300px]" />}>
+      <LoginFormInner />
+    </Suspense>
+  );
+}
+
+function LoginFormInner() {
   const [showPassword, setShowPassword] = useState(false);
   const { handleLogin, isLoading } = useLogin();
   const { language } = useLanguage();
   const loginSchema = useMemo(() => getLoginSchema(language), [language]);
 
   const text = {
-    testAccountTitle: language === "vi" ? "Tài khoản test tạm thời" : "Temporary test account",
     password: language === "vi" ? "Mật khẩu" : "Password",
-    fillTest: language === "vi" ? "Điền sẵn tài khoản test" : "Fill test credentials",
     forgotPassword: language === "vi" ? "Quên mật khẩu?" : "Forgot password?",
     hidePassword: language === "vi" ? "Ẩn mật khẩu" : "Hide password",
     showPassword: language === "vi" ? "Hiện mật khẩu" : "Show password",
@@ -31,17 +37,11 @@ export default function LoginForm() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
   });
-
-  const fillTestAccount = () => {
-    setValue("email", "test@ezsim.vn", { shouldValidate: true });
-    setValue("password", "123456", { shouldValidate: true });
-  };
 
   return (
     <form
@@ -49,28 +49,6 @@ export default function LoginForm() {
       noValidate
       className="space-y-4 md:space-y-5"
     >
-      {/* Test account notice — TEMP, gỡ khi backend thật sẵn sàng */}
-      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm">
-        <div className="flex items-start gap-2">
-          <span className="text-amber-600 font-bold mt-0.5" aria-hidden>ℹ</span>
-          <div className="flex-1">
-            <div className="font-semibold text-amber-900">{text.testAccountTitle}</div>
-            <div className="mt-1 text-amber-800">
-              Email: <code className="bg-white/60 px-1.5 py-0.5 rounded font-mono">test@ezsim.vn</code>
-              {" · "}
-              {text.password}: <code className="bg-white/60 px-1.5 py-0.5 rounded font-mono">123456</code>
-            </div>
-            <button
-              type="button"
-              onClick={fillTestAccount}
-              className="mt-2 text-xs font-semibold text-amber-900 hover:text-amber-700 underline underline-offset-2"
-            >
-              {text.fillTest}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Email */}
       <div>
         <label

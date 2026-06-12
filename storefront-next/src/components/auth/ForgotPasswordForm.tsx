@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -8,10 +8,8 @@ import Icon from "@/components/ui/Icon";
 import { useForgotPassword } from "@/hooks/useForgotPassword";
 import {
   forgotPasswordEmailSchema,
-  forgotPasswordOtpSchema,
   resetPasswordSchema,
   type ForgotPasswordEmailFormData,
-  type ForgotPasswordOtpFormData,
   type ResetPasswordFormData,
 } from "@/lib/schemas/forgotPasswordSchema";
 
@@ -20,17 +18,17 @@ export default function ForgotPasswordForm() {
     step,
     maskedEmail,
     isLoading,
-    remainingMs,
+    expiresAt,
     requestOtp,
     resendOtp,
-    verifyOtp,
     resetPassword,
     backToEmail,
-    backToOtp,
   } = useForgotPassword();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const {
     register: registerEmail,
@@ -38,15 +36,6 @@ export default function ForgotPasswordForm() {
     formState: { errors: emailErrors },
   } = useForm<ForgotPasswordEmailFormData>({
     resolver: zodResolver(forgotPasswordEmailSchema),
-    mode: "onBlur",
-  });
-
-  const {
-    register: registerOtp,
-    handleSubmit: handleOtpSubmit,
-    formState: { errors: otpErrors },
-  } = useForm<ForgotPasswordOtpFormData>({
-    resolver: zodResolver(forgotPasswordOtpSchema),
     mode: "onBlur",
   });
 
@@ -59,25 +48,51 @@ export default function ForgotPasswordForm() {
     mode: "onBlur",
   });
 
-  const [countdownMs, setCountdownMs] = useState(remainingMs);
+  // Countdown
+  const [countdownMs, setCountdownMs] = useState(0);
 
   useEffect(() => {
-    setCountdownMs(remainingMs);
-  }, [remainingMs, step]);
-
-  useEffect(() => {
-    if (step !== "otp") return;
+    if (!expiresAt) { setCountdownMs(0); return; }
+    setCountdownMs(Math.max(0, expiresAt - Date.now()));
     const timer = window.setInterval(() => {
-      setCountdownMs((current) => Math.max(0, current - 1000));
+      setCountdownMs(Math.max(0, expiresAt - Date.now()));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [step]);
+  }, [expiresAt]);
 
+  const otpExpired = step === "reset" && countdownMs <= 0;
   const countdownLabel = useMemo(() => {
     const minutes = Math.floor(countdownMs / 60000);
     const seconds = Math.floor((countdownMs % 60000) / 1000);
     return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }, [countdownMs]);
+
+  // OTP digit handlers
+  const handleOtpDigitChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const newCode = otpCode.padEnd(6, " ").split("");
+    newCode[index] = digit || " ";
+    const joined = newCode.join("").replace(/ +$/, "");
+    setOtpCode(joined);
+
+    if (digit && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    setOtpCode(pasted);
+    const focusIndex = Math.min(pasted.length, 5);
+    otpInputRefs.current[focusIndex]?.focus();
+  };
 
   if (step === "email") {
     return (
@@ -125,82 +140,55 @@ export default function ForgotPasswordForm() {
     );
   }
 
-  if (step === "otp") {
-    return (
-      <form onSubmit={handleOtpSubmit((data) => verifyOtp(data.otp))} noValidate className="space-y-5">
-        <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-sm font-semibold text-navy">Nhập mã OTP đã gửi về email</p>
-          <p className="mt-1 text-sm text-slate-600">
-            Chúng tôi đã gửi mã OTP tới <span className="font-semibold text-navy">{maskedEmail}</span>.
-          </p>
-          <p className="mt-2 text-xs text-slate-500">
-            Mã còn hiệu lực: <span className={`font-semibold ${countdownMs > 0 ? "text-primary" : "text-danger"}`}>{countdownMs > 0 ? countdownLabel : "Đã hết hạn"}</span>
-          </p>
-        </div>
-
-        <div>
-          <label htmlFor="forgot-otp" className="block text-sm font-medium text-navy mb-1.5">
-            Mã OTP (6 số)
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <Icon icon="shield-alt" className="text-sm" />
-            </span>
-            <input
-              id="forgot-otp"
-              type="text"
-              autoComplete="one-time-code"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="Nhập mã OTP"
-              disabled={isLoading}
-              {...registerOtp("otp")}
-              className={`input pl-10 tracking-[0.3em] ${otpErrors.otp ? "input-error" : ""} disabled:bg-gray-50 disabled:cursor-not-allowed`}
-            />
-          </div>
-          {otpErrors.otp && (
-            <p role="alert" className="text-danger text-xs mt-1.5 flex items-center gap-1">
-              <span aria-hidden>⚠</span> {otpErrors.otp.message}
-            </p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="btn btn-primary w-full py-3.5 text-base disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          Xác thực OTP
-        </button>
-
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <button
-            type="button"
-            onClick={resendOtp}
-            disabled={isLoading}
-            className="font-semibold text-primary hover:text-primary-dark transition disabled:opacity-60"
-          >
-            Gửi lại mã
-          </button>
-          <button
-            type="button"
-            onClick={backToEmail}
-            disabled={isLoading}
-            className="font-semibold text-gray-500 hover:text-navy transition disabled:opacity-60"
-          >
-            Đổi email khác
-          </button>
-        </div>
-      </form>
-    );
-  }
-
+  // Step "reset": OTP + New password combined
   return (
-    <form onSubmit={handleResetSubmit((data) => resetPassword(data.password))} noValidate className="space-y-5">
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-        OTP hợp lệ. Hãy đặt mật khẩu mới cho tài khoản của bạn.
+    <form
+      onSubmit={handleResetSubmit((data) => resetPassword(otpCode, data.password))}
+      noValidate
+      className="space-y-5"
+    >
+      {/* OTP Section */}
+      <div className="text-center">
+        <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+          <Icon icon="envelope" className="text-xl text-primary" />
+        </div>
+        <p className="text-sm text-slate-600">
+          Mã OTP gồm 6 số đã được gửi tới
+        </p>
+        <p className="mt-1 font-semibold text-navy">{maskedEmail}</p>
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-navy mb-3">
+          Nhập mã 6 số <span className="text-danger">*</span>
+        </label>
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <input
+              key={i}
+              ref={(el) => { otpInputRefs.current[i] = el; }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={otpCode[i] || ""}
+              onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+              onKeyDown={(e) => handleOtpKeyDown(i, e)}
+              onPaste={i === 0 ? handleOtpPaste : undefined}
+              disabled={isLoading}
+              autoFocus={i === 0}
+              className="w-11 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold rounded-lg border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition disabled:bg-gray-50 disabled:cursor-not-allowed"
+            />
+          ))}
+        </div>
+        <p className="mt-2 text-center text-xs text-slate-500">
+          Mã còn hiệu lực:{" "}
+          <span className={`font-semibold ${otpExpired ? "text-danger" : "text-primary"}`}>
+            {otpExpired ? "Đã hết hạn" : countdownLabel}
+          </span>
+        </p>
+      </div>
+
+      {/* New password fields */}
       <div>
         <label htmlFor="new-password" className="block text-sm font-medium text-navy mb-1.5">
           Mật khẩu mới
@@ -220,7 +208,7 @@ export default function ForgotPasswordForm() {
           />
           <button
             type="button"
-            onClick={() => setShowPassword((value) => !value)}
+            onClick={() => setShowPassword((v) => !v)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy transition"
             aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
           >
@@ -253,7 +241,7 @@ export default function ForgotPasswordForm() {
           />
           <button
             type="button"
-            onClick={() => setShowConfirmPassword((value) => !value)}
+            onClick={() => setShowConfirmPassword((v) => !v)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy transition"
             aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
           >
@@ -267,22 +255,38 @@ export default function ForgotPasswordForm() {
         )}
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || otpExpired || otpCode.replace(/\s/g, "").length < 6}
         className="btn btn-primary w-full py-3.5 text-base disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isLoading ? "Đang cập nhật..." : "Đặt mật khẩu mới"}
       </button>
 
-      <button
-        type="button"
-        onClick={backToOtp}
-        disabled={isLoading}
-        className="btn btn-outline w-full py-3 text-sm"
-      >
-        Quay lại bước OTP
-      </button>
+      {/* Resend / Back */}
+      <div className="text-center text-sm text-slate-500">
+        <span>Chưa nhận được mã? </span>
+        <button
+          type="button"
+          onClick={resendOtp}
+          disabled={isLoading}
+          className="font-semibold text-primary hover:text-primary-dark transition disabled:opacity-60"
+        >
+          Gửi lại mã
+        </button>
+      </div>
+
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={backToEmail}
+          disabled={isLoading}
+          className="text-sm font-semibold text-gray-500 hover:text-navy transition disabled:opacity-60"
+        >
+          ← Đổi email khác
+        </button>
+      </div>
     </form>
   );
 }

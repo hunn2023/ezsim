@@ -5,8 +5,9 @@ import type {
   RegisterResponse,
 } from "@/types/auth";
 import type { User } from "@/types/user";
+import type { ApiLoginResponse, ApiUserProfile } from "@/types/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const TIMEOUT_MS = 30_000;
 
 export class AuthApiError extends Error {
@@ -35,15 +36,27 @@ async function request<T>(
 
     clearTimeout(timeoutId);
 
+    const json = await response.json().catch(() => ({}));
+
+    // Unwrap { isSuccess, data, error } wrapper
+    if (typeof json === "object" && json !== null && "isSuccess" in json) {
+      if (!json.isSuccess || !response.ok) {
+        throw new AuthApiError(
+          json.error ?? json.message ?? getErrorMessage(response.status),
+          response.status
+        );
+      }
+      return json.data as T;
+    }
+
     if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
       throw new AuthApiError(
-        (data as { message?: string }).message ?? getErrorMessage(response.status),
+        (json as { message?: string }).message ?? getErrorMessage(response.status),
         response.status
       );
     }
 
-    return response.json() as Promise<T>;
+    return json as T;
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof AuthApiError) throw error;
@@ -57,33 +70,79 @@ async function request<T>(
   }
 }
 
-const MOCK_USER: User = {
-  id: "1",
-  name: "Nguyễn Test",
-  email: "test@ezsim.vn",
-  phone: "0987654321",
-  address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-};
+function mapProfileToUser(profile: ApiUserProfile): User {
+  return {
+    id: profile.id,
+    name: profile.fullName || profile.email,
+    email: profile.email,
+    phone: profile.phone || undefined,
+    avatar: profile.avatarUrl || undefined,
+  };
+}
 
-// TODO: replace with real API calls when backend is ready
-export async function getMe(_token: string): Promise<User> {
-  return MOCK_USER;
+export async function getMe(token: string): Promise<User> {
+  const profile = await request<ApiUserProfile>(
+    "/api/auth/profile",
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    },
+    (status) => {
+      if (status === 401) return "Phiên đăng nhập đã hết hạn.";
+      if (status >= 500) return "Server đang gặp sự cố. Vui lòng thử lại sau.";
+      return "Không thể lấy thông tin người dùng.";
+    }
+  );
+  return mapProfileToUser(profile);
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  if (payload.email === "test@ezsim.vn" && payload.password === "123456") {
-    return { accessToken: "mock-token-123", user: MOCK_USER };
+  const data = await request<ApiLoginResponse>(
+    "/api/auth/login",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: payload.email, password: payload.password }),
+    },
+    (status) => {
+      if (status === 401) return "Email hoặc mật khẩu không chính xác.";
+      if (status === 403) return "Tài khoản đã bị khóa.";
+      if (status === 429) return "Quá nhiều lần đăng nhập. Vui lòng thử lại sau.";
+      if (status >= 500) return "Server đang gặp sự cố. Vui lòng thử lại sau.";
+      return "Đăng nhập thất bại. Vui lòng thử lại.";
+    }
+  );
+
+  // Fetch profile if not included in login response
+  let user: User;
+  if (data.user) {
+    user = mapProfileToUser(data.user);
+  } else {
+    user = await getMe(data.accessToken);
   }
-  throw new AuthApiError("Email hoặc mật khẩu không chính xác.", 401);
+
+  return {
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    user,
+  };
 }
 
 export async function register(payload: RegisterPayload): Promise<RegisterResponse> {
   return request<RegisterResponse>(
-    "/auth/register",
+    "/api/auth/register",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        email: payload.email,
+        phone: payload.phone,
+        fullName: payload.name,
+        password: payload.password,
+      }),
     },
     (status) => {
       if (status === 409) return "Email này đã được sử dụng. Vui lòng dùng email khác.";
@@ -93,4 +152,57 @@ export async function register(payload: RegisterPayload): Promise<RegisterRespon
       return "Đăng ký thất bại. Vui lòng thử lại.";
     }
   );
+}
+
+export async function verifyRegisterOtp(email: string, otpCode: string): Promise<void> {
+  await request<unknown>(
+    "/api/auth/verify-register-otp",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        otpCode,
+        ipAddress:"1",
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+      }),
+    },
+    (status) => {
+      if (status === 400) return "Mã OTP không chính xác hoặc đã hết hạn.";
+      if (status === 404) return "Không tìm thấy yêu cầu đăng ký.";
+      if (status === 429) return "Quá nhiều lần thử. Vui lòng đợi và thử lại.";
+      if (status >= 500) return "Server đang gặp sự cố. Vui lòng thử lại sau.";
+      return "Xác thực OTP thất bại. Vui lòng thử lại.";
+    }
+  );
+}
+
+export async function resendRegisterOtp(email: string): Promise<void> {
+  await request<unknown>(
+    "/api/auth/register/resend-otp",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    },
+    (status) => {
+      if (status === 404) return "Không tìm thấy yêu cầu đăng ký cho email này.";
+      if (status === 429) return "Vui lòng đợi trước khi gửi lại mã OTP.";
+      if (status >= 500) return "Server đang gặp sự cố. Vui lòng thử lại sau.";
+      return "Gửi lại OTP thất bại. Vui lòng thử lại.";
+    }
+  );
+}
+
+export async function logoutApi(refreshToken: string): Promise<void> {
+  // Fire and forget — don't block UI on logout failure
+  try {
+    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+  } catch {
+    // ignore
+  }
 }

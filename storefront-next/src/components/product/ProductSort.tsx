@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const sortOptions = [
@@ -10,6 +11,14 @@ const sortOptions = [
 ];
 
 export default function ProductSort() {
+  return (
+    <Suspense fallback={<div className="h-10" />}>
+      <ProductSortInner />
+    </Suspense>
+  );
+}
+
+function ProductSortInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSort = searchParams.get("sort") || "newest";

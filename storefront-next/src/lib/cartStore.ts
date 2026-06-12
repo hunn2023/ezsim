@@ -36,6 +36,12 @@ function normalizeCartItem(rawItem: unknown): CartItem | null {
     price: Math.max(0, price),
     quantity,
     stock,
+    // Preserve order-related IDs
+    productId: typeof item.productId === "string" ? item.productId : undefined,
+    productVariantId: typeof item.productVariantId === "string" ? item.productVariantId : undefined,
+    esimPackageId: typeof item.esimPackageId === "string" ? item.esimPackageId : undefined,
+    phoneCardId: typeof item.phoneCardId === "string" ? item.phoneCardId : undefined,
+    itemType: typeof item.itemType === "number" ? item.itemType : undefined,
   };
 }
 
@@ -79,7 +85,18 @@ export const useCartStore = create<CartState>()(
             const newQty = Math.min(existing.quantity + normalizedItem.quantity, existing.stock);
             return {
               items: state.items.map((i) =>
-                i.id === normalizedItem.id ? { ...i, quantity: newQty } : i
+                i.id === normalizedItem.id
+                  ? {
+                      ...i,
+                      quantity: newQty,
+                      // Merge API IDs if not already set
+                      productId: i.productId || normalizedItem.productId,
+                      productVariantId: i.productVariantId || normalizedItem.productVariantId,
+                      esimPackageId: i.esimPackageId || normalizedItem.esimPackageId,
+                      phoneCardId: i.phoneCardId || normalizedItem.phoneCardId,
+                      itemType: i.itemType || normalizedItem.itemType,
+                    }
+                  : i
               ),
             };
           }

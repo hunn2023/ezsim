@@ -64,9 +64,9 @@ export default function CheckoutPage() {
     );
   }
 
-  // Cart empty guard - redirect to eSIM du lich page
+  // Cart empty guard - redirect to order history
   if (items.length === 0) {
-    router.push("/esim-du-lich");
+    router.push("/account/orders");
     return null;
   }
 

@@ -7,6 +7,12 @@ export interface CartItem {
   price: number;
   quantity: number;
   stock: number;
+  // IDs for order API mapping
+  productId?: string;
+  productVariantId?: string;
+  esimPackageId?: string;
+  phoneCardId?: string;
+  itemType?: number; // 1=EsimPackage, 2=PhoneCard
 }
 
 export interface CartState {

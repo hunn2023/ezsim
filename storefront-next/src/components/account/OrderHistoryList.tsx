@@ -139,7 +139,7 @@ interface OrderHistoryListProps {
 }
 
 export default function OrderHistoryList({ language = "vi" }: OrderHistoryListProps) {
-  const { orders, isLoading, error, page, totalPages, setPage, refetch } = useOrderHistory(language);
+  const { orders, isLoading, error, page, totalPages, filters, setPage, setFilters, refetch } = useOrderHistory(language);
   const [keyword, setKeyword] = useState("");
 
   const filteredOrders = useMemo(() => {
@@ -153,43 +153,131 @@ export default function OrderHistoryList({ language = "vi" }: OrderHistoryListPr
     });
   }, [orders, keyword]);
 
+  const statusOptions: { value: number | undefined; label: string }[] = [
+    { value: undefined, label: language === "vi" ? "Tất cả trạng thái" : "All statuses" },
+    { value: 1, label: language === "vi" ? "Chờ xác nhận" : "Pending" },
+    { value: 2, label: language === "vi" ? "Đã xác nhận" : "Confirmed" },
+    { value: 3, label: language === "vi" ? "Đang xử lý" : "Processing" },
+    { value: 4, label: language === "vi" ? "Đang giao" : "Shipping" },
+    { value: 5, label: language === "vi" ? "Đã giao" : "Delivered" },
+    { value: 6, label: language === "vi" ? "Đã hủy" : "Cancelled" },
+    { value: 7, label: language === "vi" ? "Hoàn tiền" : "Refunded" },
+  ];
+
+  const paymentStatusOptions: { value: number | undefined; label: string }[] = [
+    { value: undefined, label: language === "vi" ? "Tất cả TT thanh toán" : "All payment statuses" },
+    { value: 1, label: language === "vi" ? "Chờ thanh toán" : "Pending" },
+    { value: 2, label: language === "vi" ? "Đã thanh toán" : "Paid" },
+    { value: 3, label: language === "vi" ? "Thanh toán thất bại" : "Failed" },
+    { value: 4, label: language === "vi" ? "Đã hoàn tiền" : "Refunded" },
+    { value: 5, label: language === "vi" ? "Đã hủy" : "Cancelled" },
+  ];
+
   const text = {
-    searchPlaceholder: language === "vi" ? "Nhập tên sản phẩm hoặc mã đơn..." : "Type product name or order code...",
+    searchPlaceholder: language === "vi" ? "Nhập mã đơn hàng..." : "Type order code...",
     noSearchResultTitle: language === "vi" ? "Không tìm thấy đơn hàng phù hợp" : "No matching orders found",
     noSearchResultDescription:
       language === "vi"
         ? "Thử từ khóa khác hoặc xóa bộ lọc để xem toàn bộ danh sách."
         : "Try another keyword or clear the filter to view all orders.",
+    filterLabel: language === "vi" ? "Lọc đơn hàng" : "Filter orders",
+    clearFilters: language === "vi" ? "Xóa bộ lọc" : "Clear filters",
   };
+
+  const hasActiveFilters = filters.status !== undefined || filters.paymentStatus !== undefined || filters.keyword !== "";
 
   return (
     <div>
-      {!isLoading && !error && orders.length > 0 && (
-        <div className="mb-5">
-          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
-            {language === "vi" ? "Lọc đơn hàng" : "Filter orders"}
+      {/* Filter section */}
+      <div className="mb-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {text.filterLabel}
           </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-              <Icon icon="search" className="text-xs" />
-            </span>
-            <input
-              type="text"
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-              placeholder={text.searchPlaceholder}
-              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-navy outline-none transition focus:border-primary"
-            />
-          </div>
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                setFilters({ keyword: "", status: undefined, paymentStatus: undefined });
+                setKeyword("");
+              }}
+              className="text-xs text-primary hover:text-primary-dark font-medium transition"
+            >
+              {text.clearFilters}
+            </button>
+          )}
         </div>
-      )}
+
+        {/* Keyword search */}
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <Icon icon="search" className="text-xs" />
+          </span>
+          <input
+            type="text"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                setFilters({ ...filters, keyword: keyword.trim() });
+              }
+            }}
+            onBlur={() => {
+              if (keyword.trim() !== filters.keyword) {
+                setFilters({ ...filters, keyword: keyword.trim() });
+              }
+            }}
+            placeholder={text.searchPlaceholder}
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-navy outline-none transition focus:border-primary"
+          />
+        </div>
+
+        {/* Dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <select
+            value={filters.status ?? ""}
+            onChange={(e) => {
+              const val = e.target.value ? Number(e.target.value) : undefined;
+              setFilters({ ...filters, status: val });
+            }}
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 px-3 text-sm text-navy outline-none transition focus:border-primary appearance-none cursor-pointer"
+          >
+            {statusOptions.map((opt) => (
+              <option key={opt.value ?? "all"} value={opt.value ?? ""}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filters.paymentStatus ?? ""}
+            onChange={(e) => {
+              const val = e.target.value ? Number(e.target.value) : undefined;
+              setFilters({ ...filters, paymentStatus: val });
+            }}
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 px-3 text-sm text-navy outline-none transition focus:border-primary appearance-none cursor-pointer"
+          >
+            {paymentStatusOptions.map((opt) => (
+              <option key={opt.value ?? "all"} value={opt.value ?? ""}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {isLoading ? (
         <OrderSkeleton />
       ) : error ? (
         <ErrorState message={error} onRetry={refetch} language={language} />
       ) : orders.length === 0 ? (
-        <EmptyState language={language} />
+        hasActiveFilters ? (
+          <div className="bg-white rounded-2xl border border-gray-100 px-6 py-12 text-center">
+            <h3 className="font-semibold text-navy mb-1">{text.noSearchResultTitle}</h3>
+            <p className="text-sm text-gray-400">{text.noSearchResultDescription}</p>
+          </div>
+        ) : (
+          <EmptyState language={language} />
+        )
       ) : filteredOrders.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 px-6 py-12 text-center">
           <h3 className="font-semibold text-navy mb-1">{text.noSearchResultTitle}</h3>

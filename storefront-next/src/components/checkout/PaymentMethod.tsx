@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faCreditCard, faQrcode, faUniversity } from "@fortawesome/free-solid-svg-icons";
 import type { Language } from "@/lib/i18n";
 import { toast } from "sonner";
+import type { PaymentQrData } from "@/lib/orderApi";
 
 interface Props {
   register: UseFormRegister<CheckoutFormData>;
@@ -14,13 +15,16 @@ interface Props {
   language?: Language;
   showDetails?: boolean;
   amount?: number;
+  paymentQrData?: PaymentQrData | null;
+  orderId?: string | null;
+  onPaymentConfirmed?: () => void;
 }
 
 function formatAmount(amount: number) {
   return `${amount.toLocaleString("vi-VN")}đ`;
 }
 
-export default function PaymentMethod({ register, selectedMethod, language = "vi", showDetails = true, amount = 0 }: Props) {
+export default function PaymentMethod({ register, selectedMethod, language = "vi", showDetails = true, amount = 0, paymentQrData, orderId, onPaymentConfirmed }: Props) {
   const [secondsLeft, setSecondsLeft] = useState(600);
 
   const text = {
@@ -76,9 +80,12 @@ export default function PaymentMethod({ register, selectedMethod, language = "vi
     }
   };
 
-  const accountName = "CONG TY EZSIM VIET NAM";
-  const accountNumber = "1234567890";
-  const amountText = formatAmount(amount);
+  const accountName = paymentQrData?.accountName || "CONG TY EZSIM VIET NAM";
+  const accountNumber = paymentQrData?.accountNumber || "";
+  const bankName = paymentQrData?.bankName || "Vietcombank";
+  const transferContent = paymentQrData?.content || "";
+  const qrImageUrl = paymentQrData?.qrCodeUrl || paymentQrData?.qrDataUrl || "";
+  const amountText = formatAmount(paymentQrData?.amount || amount);
 
   return (
     <div className="space-y-4">
@@ -104,13 +111,21 @@ export default function PaymentMethod({ register, selectedMethod, language = "vi
       {showDetails && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 p-4 bg-gray-50 rounded-lg text-sm text-gray-500">
           <div className="md:col-span-2 rounded-lg border border-dashed border-primary/40 bg-white p-5 text-center flex flex-col items-center justify-center min-h-[400px]">
-            <div className="w-[300px] h-[300px] max-w-full rounded-2xl border border-primary/20 bg-primary-light/30 flex flex-col items-center justify-center">
-              <FontAwesomeIcon icon={faQrcode} className="text-8xl text-primary mb-3" />
-              <p className="text-sm text-gray-500">{text.qrPlaceholder}</p>
-            </div>
+            {qrImageUrl ? (
+              <img
+                src={qrImageUrl}
+                alt={text.qrPlaceholder}
+                className="w-[300px] h-[300px] max-w-full rounded-2xl border border-primary/20 object-contain"
+              />
+            ) : (
+              <div className="w-[300px] h-[300px] max-w-full rounded-2xl border border-primary/20 bg-primary-light/30 flex flex-col items-center justify-center">
+                <FontAwesomeIcon icon={faQrcode} className="text-8xl text-primary mb-3" />
+                <p className="text-sm text-gray-500">{text.qrPlaceholder}</p>
+              </div>
+            )}
             <div className="mt-3 inline-flex items-center gap-1 text-[11px] text-gray-400">
               <FontAwesomeIcon icon={faUniversity} />
-              <span>Vietcombank</span>
+              <span>{bankName}</span>
             </div>
           </div>
 
@@ -119,7 +134,7 @@ export default function PaymentMethod({ register, selectedMethod, language = "vi
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span>{text.bank}: <span className="font-semibold">Vietcombank</span></span>
+                <span>{text.bank}: <span className="font-semibold">{bankName}</span></span>
               </div>
 
               <div className="flex items-center justify-between gap-2">
@@ -154,12 +169,26 @@ export default function PaymentMethod({ register, selectedMethod, language = "vi
                   type="button"
                   title={text.copyAction}
                   aria-label={`${text.copyAction} ${text.amount}`}
-                  onClick={() => copyValue(amount.toString())}
+                  onClick={() => copyValue((paymentQrData?.amount || amount).toString())}
                   className="text-primary text-sm font-semibold inline-flex items-center hover:opacity-80"
                 >
                   <FontAwesomeIcon icon={faCopy} />
                 </button>
               </div>
+
+              {transferContent && (
+                <div className="flex items-center justify-between gap-2">
+                  <span>{language === "vi" ? "Nội dung CK" : "Transfer note"}: <span className="font-semibold text-xs break-all">{transferContent}</span></span>
+                  <button
+                    type="button"
+                    title={text.copyAction}
+                    onClick={() => copyValue(transferContent)}
+                    className="text-primary text-sm font-semibold inline-flex items-center hover:opacity-80"
+                  >
+                    <FontAwesomeIcon icon={faCopy} />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="mt-3 rounded-lg border border-primary/20 bg-white px-3 py-2">

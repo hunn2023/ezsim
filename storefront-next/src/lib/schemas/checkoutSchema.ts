@@ -10,17 +10,6 @@ export function getCheckoutSchema(language: Language = "vi") {
         ? "Số điện thoại không hợp lệ (phải là số Việt Nam)"
         : "Invalid phone number (must be a Vietnam number format)",
     emailInvalid: language === "vi" ? "Email không hợp lệ" : "Invalid email address",
-    provinceRequired: language === "vi" ? "Vui lòng chọn tỉnh/thành phố" : "Please select a province/city",
-    districtRequired: language === "vi" ? "Vui lòng chọn quận/huyện" : "Please select a district",
-    wardRequired: language === "vi" ? "Vui lòng chọn phường/xã" : "Please select a ward",
-    addressMin:
-      language === "vi"
-        ? "Địa chỉ cụ thể phải có ít nhất 5 ký tự"
-        : "Address detail must be at least 5 characters",
-    addressMax:
-      language === "vi"
-        ? "Địa chỉ không được vượt quá 200 ký tự"
-        : "Address must be at most 200 characters",
     orderNoteMax:
       language === "vi"
         ? "Ghi chú không được vượt quá 500 ký tự"
@@ -54,22 +43,6 @@ export function getCheckoutSchema(language: Language = "vi") {
       .email(t.emailInvalid)
       .optional()
       .or(z.literal("")),
-    province: z
-      .string()
-      .min(1, t.provinceRequired),
-
-    district: z
-      .string()
-      .min(1, t.districtRequired),
-
-    ward: z
-      .string()
-      .min(1, t.wardRequired),
-
-    addressDetail: z
-      .string()
-      .min(5, t.addressMin)
-      .max(200, t.addressMax),
 
     orderNote: z
       .string()

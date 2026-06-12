@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SuccessCard from "@/components/order-success/SuccessCard";
 import OrderSummary from "@/components/order-success/OrderSummary";
@@ -20,6 +21,14 @@ function safeTotal(val: SearchParam): number | undefined {
 }
 
 export default function OrderSuccessContent() {
+  return (
+    <Suspense fallback={<div className="min-h-[200px]" />}>
+      <OrderSuccessContentInner />
+    </Suspense>
+  );
+}
+
+function OrderSuccessContentInner() {
   const searchParams = useSearchParams();
 
   const orderId = safeString(searchParams.get("orderId"));

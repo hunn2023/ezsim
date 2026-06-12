@@ -1,4 +1,5 @@
 const TOKEN_KEY = "ezsim_token";
+const REFRESH_TOKEN_KEY = "ezsim_refresh_token";
 
 const isClient = () => typeof window !== "undefined";
 
@@ -32,6 +33,16 @@ export const authStorage = {
   },
   setToken(token: string): void {
     safeSet(TOKEN_KEY, token);
+  },
+  getRefreshToken(): string | null {
+    return safeGet(REFRESH_TOKEN_KEY);
+  },
+  setRefreshToken(token: string): void {
+    safeSet(REFRESH_TOKEN_KEY, token);
+  },
+  clearAll(): void {
+    safeRemove(TOKEN_KEY);
+    safeRemove(REFRESH_TOKEN_KEY);
   },
   clearToken(): void {
     safeRemove(TOKEN_KEY);

@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { Product } from "@/types/product";
@@ -14,6 +15,14 @@ interface Props {
 }
 
 export default function CategoryProducts({ products, totalPages, categorySlug }: Props) {
+  return (
+    <Suspense fallback={<div className="min-h-[200px]" />}>
+      <CategoryProductsInner products={products} totalPages={totalPages} categorySlug={categorySlug} />
+    </Suspense>
+  );
+}
+
+function CategoryProductsInner({ products, totalPages, categorySlug }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 

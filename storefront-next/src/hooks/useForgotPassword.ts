@@ -1,17 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-const OTP_LENGTH = 6;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const OTP_EXPIRES_IN_MS = 5 * 60 * 1000;
 
-type ForgotPasswordStep = "email" | "otp" | "reset";
-
-function generateOtpCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+type ForgotPasswordStep = "email" | "reset";
 
 function maskEmail(email: string): string {
   const [localPart, domain = ""] = email.split("@");
@@ -28,81 +24,91 @@ export function useForgotPassword() {
   const [step, setStep] = useState<ForgotPasswordStep>("email");
   const [email, setEmail] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
-  const [otpCode, setOtpCode] = useState("");
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const router = useRouter();
-
-  const remainingMs = useMemo(() => {
-    if (!expiresAt) return 0;
-    return Math.max(0, expiresAt - Date.now());
-  }, [expiresAt]);
 
   const requestOtp = async (nextEmail: string) => {
     if (isLoading) return;
 
     setIsLoading(true);
     try {
-      const nextOtp = generateOtpCode();
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: nextEmail }),
+      });
+
+      const json = await response.json().catch(() => ({}));
+
+      if (!response.ok || (json && json.isSuccess === false)) {
+        const errorMsg = json?.error || json?.message || "Không thể gửi mã OTP. Vui lòng thử lại.";
+        toast.error(errorMsg);
+        return;
+      }
+
       setEmail(nextEmail);
       setMaskedEmail(maskEmail(nextEmail));
-      setOtpCode(nextOtp);
       setExpiresAt(Date.now() + OTP_EXPIRES_IN_MS);
-      setStep("otp");
-
+      setStep("reset");
       toast.success("Mã OTP đã được gửi tới email của bạn.");
-      if (process.env.NODE_ENV !== "production") {
-        toast.info(`Mã OTP demo: ${nextOtp}`);
-      }
+    } catch {
+      toast.error("Lỗi kết nối. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const resendOtp = () => {
-    if (!email) return;
+  const resendOtp = async () => {
+    if (!email || isLoading) return;
 
-    const nextOtp = generateOtpCode();
-    setOtpCode(nextOtp);
-    setExpiresAt(Date.now() + OTP_EXPIRES_IN_MS);
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    toast.success("Đã gửi lại mã OTP.");
-    if (process.env.NODE_ENV !== "production") {
-      toast.info(`Mã OTP demo mới: ${nextOtp}`);
+      const json = await response.json().catch(() => ({}));
+
+      if (!response.ok || (json && json.isSuccess === false)) {
+        const errorMsg = json?.error || json?.message || "Không thể gửi lại mã OTP.";
+        toast.error(errorMsg);
+        return;
+      }
+
+      setExpiresAt(Date.now() + OTP_EXPIRES_IN_MS);
+      toast.success("Đã gửi lại mã OTP.");
+    } catch {
+      toast.error("Lỗi kết nối. Vui lòng thử lại.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const verifyOtp = async (inputOtp: string) => {
-    if (isLoading) return false;
-
-    const normalizedOtp = inputOtp.trim();
-    if (normalizedOtp.length !== OTP_LENGTH) {
-      toast.error("Mã OTP phải gồm 6 chữ số.");
-      return false;
-    }
-
-    if (!expiresAt || Date.now() > expiresAt) {
-      toast.error("Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.");
-      return false;
-    }
-
-    if (normalizedOtp !== otpCode) {
-      toast.error("Mã OTP không chính xác.");
-      return false;
-    }
-
-    setStep("reset");
-    toast.success("Xác thực OTP thành công. Vui lòng đặt mật khẩu mới.");
-    return true;
-  };
-
-  const resetPassword = async (_password: string) => {
+  const resetPassword = async (otp: string, newPassword: string) => {
     if (isLoading) return;
 
     setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      toast.success("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.");
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otpCode: otp, newPassword }),
+      });
+
+      const json = await response.json().catch(() => ({}));
+
+      if (!response.ok || (json && json.isSuccess === false)) {
+        const errorMsg = json?.error || json?.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.";
+        toast.error(errorMsg);
+        return;
+      }
+
+      toast.success("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
       router.push("/login");
+    } catch {
+      toast.error("Lỗi kết nối. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
@@ -113,21 +119,15 @@ export function useForgotPassword() {
     setExpiresAt(null);
   };
 
-  const backToOtp = () => {
-    setStep("otp");
-  };
-
   return {
     isLoading,
     step,
     email,
     maskedEmail,
-    remainingMs,
+    expiresAt,
     requestOtp,
     resendOtp,
-    verifyOtp,
     resetPassword,
     backToEmail,
-    backToOtp,
   };
 }

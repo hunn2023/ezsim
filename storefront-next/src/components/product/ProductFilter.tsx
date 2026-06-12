@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import Icon from "@/components/ui/Icon";
@@ -13,6 +14,14 @@ const categories = [
 ];
 
 export default function ProductFilter() {
+  return (
+    <Suspense fallback={<div className="min-h-[100px]" />}>
+      <ProductFilterInner />
+    </Suspense>
+  );
+}
+
+function ProductFilterInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

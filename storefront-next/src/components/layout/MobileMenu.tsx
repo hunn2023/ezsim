@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
 import Image from "next/image";
@@ -40,6 +40,14 @@ function isMenuActive(item: MobileMenuItem, pathname: string, currentTab: string
 }
 
 export default function MobileMenu() {
+  return (
+    <Suspense fallback={<div className="lg:hidden w-10 h-10" />}>
+      <MobileMenuInner />
+    </Suspense>
+  );
+}
+
+function MobileMenuInner() {
   const [open, setOpen] = useState(false);
   const { language, setLanguage } = useLanguage();
   const router = useRouter();

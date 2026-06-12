@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Icon from "@/components/ui/Icon";
 import { useLanguage } from "@/hooks/useLanguage";
 import { getDataRangeForPackage } from "@/lib/api/esimApi";
-import type { EsimDataRange, EsimPackage, PackageQuickTag } from "@/types/esim";
+import type { EsimDataRange, EsimPackage } from "@/types/esim";
 
 const dataRangeLabels: Record<EsimDataRange, string> = {
   "1-3": "1 - 3 GB",
@@ -14,16 +14,12 @@ const dataRangeLabels: Record<EsimDataRange, string> = {
   unlimited: "Không giới hạn",
 };
 
-const featureLabels: Array<{ key: PackageQuickTag; label: string }> = [
-  { key: "hotspot", label: "Hỗ trợ Hotspot" },
-  { key: "5g", label: "5G" },
-  { key: "phone", label: "Có SĐT gọi" },
-];
+// Feature filter options derived dynamically from package data
 
 interface SidebarFilters {
   days: number[];
   dataRanges: EsimDataRange[];
-  featureTags: PackageQuickTag[];
+  featureTags: string[];
   minPrice?: number;
   maxPrice?: number;
 }
@@ -40,7 +36,7 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
   const [panelOpen, setPanelOpen] = useState(false);
   const [days, setDays] = useState<number[]>(appliedFilters.days);
   const [dataRanges, setDataRanges] = useState<EsimDataRange[]>(appliedFilters.dataRanges);
-  const [featureTags, setFeatureTags] = useState<PackageQuickTag[]>(appliedFilters.featureTags);
+  const [featureTags, setFeatureTags] = useState<string[]>(appliedFilters.featureTags);
   const [minPrice, setMinPrice] = useState(appliedFilters.minPrice?.toString() ?? "");
   const [maxPrice, setMaxPrice] = useState(appliedFilters.maxPrice?.toString() ?? "");
 
@@ -71,13 +67,16 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
       .map((key) => ({ key, label: dataRangeLabels[key], count: counts[key] }));
   }, [packages]);
 
-  const featureOptions = useMemo(
-    () => featureLabels.map((feature) => ({
-      ...feature,
-      count: packages.filter((pkg) => pkg.quickTags?.includes(feature.key)).length,
-    })),
-    [packages]
-  );
+  const featureOptions = useMemo(() => {
+    // Collect all unique feature strings from package data
+    const featureCount = new Map<string, number>();
+    for (const pkg of packages) {
+      for (const feat of pkg.features) {
+        featureCount.set(feat, (featureCount.get(feat) || 0) + 1);
+      }
+    }
+    return Array.from(featureCount.entries()).map(([label, count]) => ({ label, count }));
+  }, [packages]);
 
   const toggleArrayValue = <T,>(current: T[], value: T) =>
     current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
@@ -107,20 +106,6 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
     };
 
     return map[range];
-  };
-
-  const featureLabel = (key: PackageQuickTag) => {
-    if (language === "vi") {
-      return featureLabels.find((feature) => feature.key === key)?.label ?? key;
-    }
-
-    const map: Partial<Record<PackageQuickTag, string>> = {
-      hotspot: "Hotspot support",
-      "5g": "5G",
-      phone: "Includes phone number",
-    };
-
-    return map[key] ?? key;
   };
 
   const handleApply = () => {
@@ -215,23 +200,25 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
         </div>
       </div>
 
-      <div className="mb-4">
-        <div className="font-bold text-sm mb-3">{text.features}</div>
-        <div className="flex flex-col gap-2.5">
-          {featureOptions.map((opt) => (
-            <label key={opt.label} className="flex items-center gap-2.5 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={featureTags.includes(opt.key)}
-                onChange={() => setFeatureTags((current) => toggleArrayValue(current, opt.key))}
-                className="w-4 h-4 accent-primary"
-              />
-              {featureLabel(opt.key)}
-              <span className="ml-auto text-gray-500 text-xs">{opt.count}</span>
-            </label>
-          ))}
+      {featureOptions.length > 0 && (
+        <div className="mb-4">
+          <div className="font-bold text-sm mb-3">{text.features}</div>
+          <div className="flex flex-col gap-2.5">
+            {featureOptions.map((opt) => (
+              <label key={opt.label} className="flex items-center gap-2.5 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={featureTags.includes(opt.label)}
+                  onChange={() => setFeatureTags((current) => toggleArrayValue(current, opt.label))}
+                  className="w-4 h-4 accent-primary"
+                />
+                {opt.label}
+                <span className="ml-auto text-gray-500 text-xs">{opt.count}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-col gap-2">
         <button

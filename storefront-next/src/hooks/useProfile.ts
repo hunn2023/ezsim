@@ -20,7 +20,6 @@ export function useProfile() {
       const updatedUser = await updateProfile({
         name: data.name,
         phone: data.phone,
-        address: data.address,
       });
       setUser(updatedUser);
       toast.success(language === "vi" ? "Cập nhật thông tin thành công!" : "Profile updated successfully!");

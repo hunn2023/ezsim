@@ -126,6 +126,10 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
       price: pkg.price,
       quantity,
       stock: pkg.stock,
+      productId: pkg.productId,
+      productVariantId: pkg.productVariantId,
+      esimPackageId: pkg.esimPackageId || pkg.id,
+      itemType: 1, // EsimPackage
     });
     triggerFlyToCart(pkg.image, triggerElement);
   };

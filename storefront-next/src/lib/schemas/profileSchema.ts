@@ -9,7 +9,6 @@ export function getProfileSchema(language: Language = "vi") {
       language === "vi"
         ? "Số điện thoại không hợp lệ (VD: 0987654321)"
         : "Invalid phone number (e.g. 0987654321)",
-    addressMax: language === "vi" ? "Địa chỉ không được vượt quá 200 ký tự" : "Address must be at most 200 characters",
   };
 
   return z.object({
@@ -22,11 +21,6 @@ export function getProfileSchema(language: Language = "vi") {
       .string()
       .trim()
       .regex(/^(0|\+84)\d{9,10}$/, t.phoneInvalid),
-    address: z
-      .string()
-      .trim()
-      .max(200, t.addressMax)
-      .optional(),
   });
 }
 

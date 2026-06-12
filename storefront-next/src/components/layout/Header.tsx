@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Icon from "@/components/ui/Icon";
 import Link from "next/link";
 import Image from "next/image";
@@ -71,6 +71,14 @@ function isMenuActive(item: MainMenuItem, pathname: string, currentTab: string |
 }
 
 export default function Header() {
+  return (
+    <Suspense fallback={<div className="h-16" />}>
+      <HeaderInner />
+    </Suspense>
+  );
+}
+
+function HeaderInner() {
   const { cartIconRef } = useCartAnimation();
   const { initialized, isAuthenticated } = useAuth();
   const { language, setLanguage } = useLanguage();

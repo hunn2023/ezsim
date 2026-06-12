@@ -53,10 +53,11 @@ export default function OrderHistoryItem({ order, language = "vi" }: Props) {
   const text = {
     extraItems: language === "vi" ? "sản phẩm khác" : "more items",
     viewDetails: language === "vi" ? "Xem chi tiết" : "View details",
+    noItems: language === "vi" ? "Đơn hàng" : "Order",
   };
 
-  const firstItem = order.items[0];
-  const extraCount = order.items.length - 1;
+  const firstItem = order.items?.[0];
+  const extraCount = (order.items?.length || 0) - 1;
 
   return (
     <article className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.05)] overflow-hidden hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] transition-shadow">
@@ -80,16 +81,22 @@ export default function OrderHistoryItem({ order, language = "vi" }: Props) {
 
       {/* Items preview */}
       <div className="px-5 py-3.5 border-b border-gray-50">
-        <p className="text-sm text-navy font-medium line-clamp-1">
-          {firstItem.name}
-          {firstItem.quantity > 1 && (
-            <span className="text-gray-400 font-normal ml-1">x{firstItem.quantity}</span>
-          )}
-        </p>
-        {extraCount > 0 && (
-          <p className="text-xs text-gray-400 mt-0.5">
-            + {extraCount} {text.extraItems}
-          </p>
+        {firstItem ? (
+          <>
+            <p className="text-sm text-navy font-medium line-clamp-1">
+              {firstItem.name}
+              {firstItem.quantity > 1 && (
+                <span className="text-gray-400 font-normal ml-1">x{firstItem.quantity}</span>
+              )}
+            </p>
+            {extraCount > 0 && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                + {extraCount} {text.extraItems}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-gray-400">{text.noItems} #{order.orderCode}</p>
         )}
       </div>
 

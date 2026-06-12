@@ -1,4 +1,7 @@
 import { CheckoutFormData } from "./schemas/checkoutSchema";
+import { fetchWithAuth } from "./fetchWithAuth";
+import { useAuthStore } from "./authStore";
+import type { ApiCreateOrderCommand, ApiCreateOrderItem, OrderItemType } from "@/types/api";
 
 export interface OrderItem {
   id: string;
@@ -6,6 +9,12 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image?: string;
+  // For API mapping
+  itemType?: OrderItemType | number;
+  productId?: string;
+  productVariantId?: string;
+  esimPackageId?: string;
+  phoneCardId?: string;
 }
 
 export interface CreateOrderPayload {
@@ -13,12 +22,6 @@ export interface CreateOrderPayload {
     fullName: string;
     phone: string;
     email?: string;
-  };
-  shipping: {
-    province: string;
-    district: string;
-    ward: string;
-    addressDetail: string;
   };
   items: OrderItem[];
   paymentMethod: "cod" | "banking";
@@ -42,50 +45,64 @@ export class OrderApiError extends Error {
   }
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
-const TIMEOUT_MS = 30000;
-
 export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<CreateOrderResponse> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  // Map to backend API schema (CreateOrderCommand)
+  const apiItems: ApiCreateOrderItem[] = payload.items.map((item) => ({
+    itemType: item.itemType ?? 1, // default EsimPackage
+    productId: item.productId || item.id,
+    productVariantId: item.productVariantId || null,
+    esimPackageId: item.esimPackageId || item.id,
+    phoneCardId: item.phoneCardId || null,
+    productName: item.name,
+    variantName: null,
+    sku: null,
+    quantity: item.quantity,
+    unitPrice: item.price,
+  }));
+
+  const apiPayload: ApiCreateOrderCommand = {
+    customerId: useAuthStore.getState().user?.id,
+    customerEmail: payload.customer.email || undefined,
+    customerPhone: payload.customer.phone,
+    customerName: payload.customer.fullName,
+    currency: "VND",
+    note: payload.orderNote || undefined,
+    items: apiItems,
+  };
 
   try {
-    const response = await fetch(`${API_BASE_URL}/orders`, {
+    const response = await fetchWithAuth("/api/orders", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
+      body: JSON.stringify(apiPayload),
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new OrderApiError(
-        errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        (errorData as { message?: string }).message || `HTTP ${response.status}: ${response.statusText}`,
         response.status
       );
     }
 
-    return response.json();
+    const json = await response.json();
+    const data = json.data ?? json;
+    // data may be a string (orderId directly) or an object with id/orderId
+    const orderId = typeof data === "string" ? data : (data.id || data.orderId);
+    return {
+      success: true,
+      orderId,
+      message: "Đặt hàng thành công!",
+    };
   } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (error instanceof OrderApiError) {
-      throw error;
-    }
-
+    if (error instanceof OrderApiError) throw error;
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         throw new OrderApiError("Yêu cầu bị timeout", 408);
       }
       throw new OrderApiError(error.message, 500);
     }
-
     throw new OrderApiError("Lỗi không xác định", 500);
   }
 }
@@ -101,17 +118,92 @@ export function mapFormDataToPayload(
       phone: formData.phone,
       email: formData.email || undefined,
     },
-    shipping: {
-      province: formData.province,
-      district: formData.district,
-      ward: formData.ward,
-      addressDetail: formData.addressDetail,
-    },
     items,
     paymentMethod: formData.paymentMethod,
     orderNote: formData.orderNote || undefined,
     totalAmount,
   };
+}
+
+// ─── Payment QR ───────────────────────────────────────────────────────────────
+
+export interface PaymentQrData {
+  qrCodeUrl?: string;
+  qrDataUrl?: string;
+  bankName?: string;
+  bankCode?: string;
+  accountNumber?: string;
+  accountName?: string;
+  amount?: number;
+  content?: string;
+  orderId?: string;
+  transactionId?: string;
+  expiredAt?: string;
+}
+
+export interface PaymentStatusData {
+  orderId?: string;
+  status?: string | number;
+  paymentStatus?: string | number;
+  amount?: number;
+  paidAt?: string;
+  transactionId?: string;
+}
+
+export async function confirmOrder(orderId: string, paymentMethod: string = "banking") {
+  const response = await fetchWithAuth(`/api/orders/${orderId}/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ paymentMethod }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new OrderApiError(
+      (errorData as { error?: string }).error || `Không thể xác nhận đơn hàng. HTTP ${response.status}`,
+      response.status
+    );
+  }
+  const json = await response.json();
+  return json.data ?? json;
+}
+
+export async function createPaymentQr(orderId: string): Promise<PaymentQrData> {
+  const response = await fetchWithAuth("/api/payments/qr", {
+    method: "POST",
+    body: JSON.stringify({ orderId }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new OrderApiError(
+      (errorData as { error?: string }).error || "Không thể tạo mã QR thanh toán.",
+      response.status
+    );
+  }
+  const json = await response.json();
+  return json.data ?? json;
+}
+
+export async function getPaymentStatus(orderId: string): Promise<PaymentStatusData> {
+  const response = await fetchWithAuth(`/api/payments/orders/${orderId}`, {
+    method: "GET",
+  });
+  if (!response.ok) {
+    throw new OrderApiError("Không thể kiểm tra trạng thái thanh toán.", response.status);
+  }
+  const json = await response.json();
+  return json.data ?? json;
+}
+
+// ─── Order Detail ─────────────────────────────────────────────────────────────
+
+export async function getOrderDetail(orderId: string) {
+  const response = await fetchWithAuth(`/api/orders/${orderId}`, {
+    method: "GET",
+  });
+  if (!response.ok) {
+    throw new OrderApiError("Không tìm thấy đơn hàng.", response.status);
+  }
+  const json = await response.json();
+  return json.data ?? json;
 }
 
 // ─── Order History ────────────────────────────────────────────────────────────
@@ -140,8 +232,15 @@ export interface OrderHistoryItem {
   orderCode: string;
   createdAt: string;
   status: OrderStatus;
+  paymentStatus?: string;
   paymentMethod: OrderPaymentMethod;
   totalAmount: number;
+  subTotal?: number;
+  discountAmount?: number;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  paidAt?: string;
   items: OrderHistoryLineItem[];
 }
 
@@ -152,107 +251,140 @@ export interface OrderHistoryResponse {
   pageSize: number;
 }
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 10;
 
-const MOCK_ORDER_HISTORY: OrderHistoryItem[] = [
-  {
-    id: "ord-001",
-    orderCode: "EZ241115",
-    createdAt: "2024-11-15T08:30:00.000Z",
-    status: "delivered",
-    paymentMethod: "cod",
-    totalAmount: 450000,
-    items: [
-      { id: "i1", name: "eSIM Nhật Bản 7 ngày 10GB", quantity: 1, price: 250000 },
-      { id: "i2", name: "eSIM Hàn Quốc 5 ngày 5GB", quantity: 1, price: 200000 },
-    ],
-  },
-  {
-    id: "ord-002",
-    orderCode: "EZ241020",
-    createdAt: "2024-10-20T14:15:00.000Z",
-    status: "shipped",
-    paymentMethod: "banking",
-    totalAmount: 320000,
-    items: [
-      { id: "i3", name: "Thẻ Viettel 100.000đ", quantity: 2, price: 100000 },
-      { id: "i4", name: "Gói Data 4G Mobifone 30 ngày", quantity: 1, price: 120000 },
-    ],
-  },
-  {
-    id: "ord-003",
-    orderCode: "EZ241001",
-    createdAt: "2024-10-01T09:00:00.000Z",
-    status: "cancelled",
-    paymentMethod: "cod",
-    totalAmount: 150000,
-    items: [
-      { id: "i5", name: "eSIM Thái Lan 3 ngày 3GB", quantity: 1, price: 150000 },
-    ],
-  },
-  {
-    id: "ord-004",
-    orderCode: "EZ240915",
-    createdAt: "2024-09-15T16:45:00.000Z",
-    status: "delivered",
-    paymentMethod: "banking",
-    totalAmount: 780000,
-    items: [
-      { id: "i6", name: "eSIM châu Âu 14 ngày 20GB", quantity: 1, price: 580000 },
-      { id: "i7", name: "Thẻ game Garena 200.000đ", quantity: 1, price: 200000 },
-    ],
-  },
-  {
-    id: "ord-005",
-    orderCode: "EZ240830",
-    createdAt: "2024-08-30T11:20:00.000Z",
-    status: "pending",
-    paymentMethod: "banking",
-    totalAmount: 290000,
-    items: [
-      { id: "i8", name: "Thẻ game PUBG Mobile 300 UC", quantity: 1, price: 290000 },
-    ],
-  },
-  {
-    id: "ord-006",
-    orderCode: "EZ240810",
-    createdAt: "2024-08-10T07:55:00.000Z",
-    status: "confirmed",
-    paymentMethod: "cod",
-    totalAmount: 195000,
-    items: [
-      { id: "i9", name: "Thẻ Vietnamobile 100.000đ", quantity: 1, price: 100000 },
-      { id: "i10", name: "Gói Data 4G Vinaphone 30 ngày", quantity: 1, price: 95000 },
-    ],
-  },
-  {
-    id: "ord-007",
-    orderCode: "EZ240720",
-    createdAt: "2024-07-20T13:30:00.000Z",
-    status: "delivered",
-    paymentMethod: "banking",
-    totalAmount: 1200000,
-    items: [
-      { id: "i11", name: "eSIM Mỹ 30 ngày 30GB Unlimited", quantity: 1, price: 1200000 },
-    ],
-  },
-];
+// Map backend integer status to string (enum starts from 1)
+function mapOrderStatus(status: number | string): OrderStatus {
+  if (typeof status === "string") {
+    const lower = status.toLowerCase();
+    if (lower === "pending" || lower === "new") return "pending";
+    if (lower === "confirmed") return "confirmed";
+    if (lower === "processing") return "processing";
+    if (lower === "shipped") return "shipped";
+    if (lower === "delivered") return "delivered";
+    if (lower === "cancelled") return "cancelled";
+    if (lower === "refunded") return "refunded";
+    return "pending";
+  }
+  const map: Record<number, OrderStatus> = {
+    1: "pending",
+    2: "confirmed",
+    3: "processing",
+    4: "shipped",
+    5: "delivered",
+    6: "cancelled",
+    7: "refunded",
+  };
+  return map[status] ?? "pending";
+}
 
-// TODO: replace with real API calls when backend is ready
-export async function getMyOrders(page: number = 1): Promise<OrderHistoryResponse> {
-  const start = (page - 1) * PAGE_SIZE;
-  const orders = MOCK_ORDER_HISTORY.slice(start, start + PAGE_SIZE);
+function mapPaymentMethod(method: number | string | null | undefined): OrderPaymentMethod {
+  if (typeof method === "string") {
+    const lower = method.toLowerCase();
+    if (lower === "cod") return "cod";
+    if (lower === "momo") return "momo";
+    if (lower === "vnpay") return "vnpay";
+    return "banking";
+  }
+  // Integer enum: 0=COD, 1=Banking, 2=Momo, 3=VNPay
+  if (method === 0) return "cod";
+  if (method === 2) return "momo";
+  if (method === 3) return "vnpay";
+  return "banking";
+}
+
+/* eslint-disable */
+function mapApiOrderToHistoryItem(apiOrder: any): OrderHistoryItem {
+  const items: OrderHistoryLineItem[] = (apiOrder.items || apiOrder.orderItems || []).map(
+    (item: any) => ({
+      id: item.id || item.productId || "",
+      name: item.productName || item.name || "Sản phẩm",
+      quantity: item.quantity || 1,
+      price: item.unitPrice || item.price || 0,
+      image: item.image || item.imageUrl || undefined,
+    })
+  );
+
   return {
-    orders,
-    total: MOCK_ORDER_HISTORY.length,
+    id: apiOrder.id,
+    orderCode: apiOrder.orderCode || apiOrder.id?.substring(0, 8).toUpperCase() || "",
+    createdAt: apiOrder.createdAt || new Date().toISOString(),
+    status: mapOrderStatus(apiOrder.status),
+    paymentStatus: apiOrder.paymentStatus != null ? String(apiOrder.paymentStatus) : undefined,
+    paymentMethod: mapPaymentMethod(apiOrder.paymentMethod),
+    totalAmount: apiOrder.totalAmount || 0,
+    subTotal: apiOrder.subTotal,
+    discountAmount: apiOrder.discountAmount,
+    customerName: apiOrder.customerName,
+    customerEmail: apiOrder.customerEmail,
+    customerPhone: apiOrder.customerPhone,
+    paidAt: apiOrder.paidAt,
+    items,
+  };
+}
+/* eslint-enable */
+
+export interface OrderFilters {
+  customerId?: string;
+  keyword?: string;
+  status?: number;
+  paymentStatus?: number;
+}
+
+export async function getMyOrders(page: number = 1, filters: OrderFilters = {}): Promise<OrderHistoryResponse> {
+  const params = new URLSearchParams({
+    pageIndex: page.toString(),
+    pageSize: PAGE_SIZE.toString(),
+  });
+  if (filters.customerId) params.set("customerId", filters.customerId);
+  if (filters.keyword) params.set("keyword", filters.keyword);
+  if (filters.status) params.set("status", filters.status.toString());
+  if (filters.paymentStatus) params.set("paymentStatus", filters.paymentStatus.toString());
+
+  const response = await fetchWithAuth(`/api/orders/paged?${params.toString()}`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new OrderApiError("Không thể tải danh sách đơn hàng.", response.status);
+  }
+
+  const json = await response.json();
+  const data = json.data ?? json;
+
+  // Handle paged response: { items: [], totalCount, pageIndex, pageSize }
+  // or possibly an array directly
+  if (Array.isArray(data)) {
+    return {
+      orders: data.map(mapApiOrderToHistoryItem),
+      total: data.length,
+      page,
+      pageSize: PAGE_SIZE,
+    };
+  }
+
+  const items = data.items || data.orders || [];
+  const total = data.totalCount ?? data.total ?? items.length;
+
+  return {
+    orders: items.map(mapApiOrderToHistoryItem),
+    total,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize: data.pageSize || PAGE_SIZE,
   };
 }
 
 export async function getOrderById(id: string): Promise<OrderHistoryItem> {
-  const order = MOCK_ORDER_HISTORY.find((o) => o.id === id);
-  if (!order) throw new OrderApiError("Không tìm thấy đơn hàng.", 404);
-  return order;
+  const response = await fetchWithAuth(`/api/orders/${id}`, {
+    method: "GET",
+  });
+
+  if (!response.ok) {
+    throw new OrderApiError("Không tìm thấy đơn hàng.", response.status);
+  }
+
+  const json = await response.json();
+  const data = json.data ?? json;
+  return mapApiOrderToHistoryItem(data);
 }
 

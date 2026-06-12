@@ -1,7 +1,11 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Icon from "@/components/ui/Icon";
 import { getEsimCountries } from "@/lib/api/esimApi";
+import type { EsimCountrySummary } from "@/types/esim";
 
 interface DestinationVisual {
   image: string;
@@ -45,9 +49,16 @@ const DESTINATION_VISUALS: Record<string, DestinationVisual> = {
   },
 };
 
-export default async function PopularDestinations() {
+export default function PopularDestinations() {
   const language = "vi" as const;
-  const destinations = await getEsimCountries();
+  const [destinations, setDestinations] = useState<EsimCountrySummary[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getEsimCountries()
+      .then(setDestinations)
+      .finally(() => setLoading(false));
+  }, []);
 
   const featuredDestinations = destinations
     .filter((destination) => DESTINATION_VISUALS[destination.slug])
@@ -88,6 +99,25 @@ export default async function PopularDestinations() {
     };
     return map[slug] ?? fallback;
   };
+
+  if (loading) {
+    return (
+      <section style={{ padding: "0 0 64px" }}>
+        <div className="max-w-container mx-auto px-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 bg-gray-200 rounded w-48" />
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-56 bg-gray-200 rounded-2xl" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredDestinations.length === 0) return null;
 
   return (
     <section style={{ padding: "0 0 64px" }}>

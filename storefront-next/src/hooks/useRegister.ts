@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { register, AuthApiError } from "@/lib/authApi";
+import { register, verifyRegisterOtp, resendRegisterOtp, AuthApiError } from "@/lib/authApi";
 import type { RegisterPayload } from "@/types/auth";
 
 const OTP_LENGTH = 6;
@@ -12,13 +12,7 @@ const OTP_EXPIRES_IN_MS = 5 * 60 * 1000;
 interface RegisterOtpSession {
   email: string;
   maskedEmail: string;
-  code: string;
   expiresAt: number;
-  payload: RegisterPayload;
-}
-
-function generateOtpCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 function maskEmail(email: string): string {
@@ -41,20 +35,17 @@ export function useRegister() {
     setIsLoading(true);
 
     try {
-      const code = generateOtpCode();
+      // Call register API — backend sends OTP to email
+      await register(payload);
+
       const nextSession: RegisterOtpSession = {
         email: payload.email,
         maskedEmail: maskEmail(payload.email),
-        code,
         expiresAt: Date.now() + OTP_EXPIRES_IN_MS,
-        payload,
       };
 
       setOtpSession(nextSession);
       toast.success(`Mã OTP đã được gửi tới ${nextSession.maskedEmail}.`);
-      if (process.env.NODE_ENV !== "production") {
-        toast.info(`Mã OTP demo: ${code}`);
-      }
     } catch (error) {
       if (error instanceof AuthApiError) {
         toast.error(error.message);
@@ -66,20 +57,25 @@ export function useRegister() {
     }
   };
 
-  const resendOtp = () => {
-    if (!otpSession) return;
+  const resendOtp = async () => {
+    if (!otpSession || isLoading) return;
+    setIsLoading(true);
 
-    const nextCode = generateOtpCode();
-    const nextSession = {
-      ...otpSession,
-      code: nextCode,
-      expiresAt: Date.now() + OTP_EXPIRES_IN_MS,
-    };
-
-    setOtpSession(nextSession);
-    toast.success(`Đã gửi lại mã OTP tới ${nextSession.maskedEmail}.`);
-    if (process.env.NODE_ENV !== "production") {
-      toast.info(`Mã OTP demo mới: ${nextCode}`);
+    try {
+      await resendRegisterOtp(otpSession.email);
+      setOtpSession({
+        ...otpSession,
+        expiresAt: Date.now() + OTP_EXPIRES_IN_MS,
+      });
+      toast.success(`Đã gửi lại mã OTP tới ${otpSession.maskedEmail}.`);
+    } catch (error) {
+      if (error instanceof AuthApiError) {
+        toast.error(error.message);
+      } else {
+        toast.error("Gửi lại OTP thất bại. Vui lòng thử lại.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,15 +98,10 @@ export function useRegister() {
       return;
     }
 
-    if (normalizedCode !== otpSession.code) {
-      toast.error("Mã OTP không chính xác.");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      await register(otpSession.payload);
+      await verifyRegisterOtp(otpSession.email, normalizedCode);
       setOtpSession(null);
       toast.success("Tạo tài khoản thành công! Vui lòng đăng nhập.");
       router.push("/login");
