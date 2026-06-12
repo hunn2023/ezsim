@@ -46,7 +46,114 @@ export default function LoginContent() {
   };
 
   return (
-    <div className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden px-4 py-6 bg-gradient-to-br from-blue-50 via-white to-sky-50">
+    <div className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden px-4 py-6 bg-gradient-to-br from-sky-50 via-blue-50/50 to-cyan-50">
+     {/* Background */}
+<div className="absolute inset-0 overflow-hidden pointer-events-none">
+  {/* Main gradient */}
+  <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-sky-50 to-cyan-100" />
+
+  {/* Strong glow top-left */}
+  <div
+    className="
+      absolute
+      -top-40
+      -left-40
+      h-[800px]
+      w-[800px]
+      rounded-full
+      bg-blue-300/45
+      blur-[140px]
+    "
+  />
+
+  {/* Strong glow bottom-right */}
+  <div
+    className="
+      absolute
+      -bottom-40
+      -right-40
+      h-[700px]
+      w-[700px]
+      rounded-full
+      bg-cyan-300/40
+      blur-[120px]
+    "
+  />
+
+  {/* Large wave shapes */}
+  <div
+    className="
+      absolute
+      -bottom-48
+      -left-32
+      h-[700px]
+      w-[1200px]
+      rounded-[50%]
+      bg-white/90
+    "
+  />
+
+  <div
+    className="
+      absolute
+      -bottom-64
+      right-[-300px]
+      h-[800px]
+      w-[1400px]
+      rounded-[50%]
+      bg-sky-200/50
+    "
+  />
+
+  {/* Center glow */}
+  <div
+    className="
+      absolute
+      top-[20%]
+      left-[30%]
+      h-[500px]
+      w-[500px]
+      rounded-full
+      bg-sky-300/25
+      blur-[100px]
+    "
+  />
+
+  {/* SVG Curves */}
+  <svg
+    className="absolute inset-0 h-full w-full"
+    viewBox="0 0 1920 1080"
+    preserveAspectRatio="none"
+  >
+    <path
+      d="M-100 250 C 500 50, 1000 50, 2100 300"
+      fill="none"
+      stroke="rgba(59,130,246,0.18)"
+      strokeWidth="2"
+    />
+
+    <path
+      d="M-100 450 C 500 150, 1000 150, 2100 500"
+      fill="none"
+      stroke="rgba(59,130,246,0.12)"
+      strokeWidth="1.5"
+    />
+
+    <path
+      d="M-100 700 C 500 400, 1000 400, 2100 750"
+      fill="none"
+      stroke="rgba(59,130,246,0.10)"
+      strokeWidth="1.5"
+    />
+  </svg>
+
+  {/* Floating dots */}
+  <div className="absolute top-[18%] left-[22%] h-2 w-2 rounded-full bg-sky-400/70" />
+  <div className="absolute top-[28%] right-[18%] h-2 w-2 rounded-full bg-blue-400/70" />
+  <div className="absolute bottom-[32%] left-[35%] h-2 w-2 rounded-full bg-sky-400/70" />
+  <div className="absolute bottom-[22%] right-[28%] h-2 w-2 rounded-full bg-cyan-400/70" />
+  <div className="absolute top-[55%] left-[75%] h-2 w-2 rounded-full bg-sky-400/70" />
+</div>
       <div className="relative z-10 w-full max-w-[960px]">
         <div className="rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.08),0_4px_16px_rgba(0,0,0,0.04)] border border-gray-100/80 bg-white">
           <div className="grid grid-cols-1 md:grid-cols-2">
