@@ -5,14 +5,6 @@ import Icon from "@/components/ui/Icon";
 import { useLanguage } from "@/hooks/useLanguage";
 import CountrySearchBox from "@/components/common/CountrySearchBox";
 
-const COUNTRY_FLAG_CODES: Record<string, string> = {
-  "nhat-ban": "jp",
-  "han-quoc": "kr",
-  "thai-lan": "th",
-  "chau-au": "eu",
-  "my": "us",
-};
-
 export default function HeroBanner() {
   const { language } = useLanguage();
 

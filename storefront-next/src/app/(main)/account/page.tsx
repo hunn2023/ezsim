@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import AccountSkeleton from "@/components/account/AccountSkeleton";
 import AccountInfo from "@/components/account/AccountInfo";
 import UpdateProfileForm from "@/components/account/UpdateProfileForm";
+import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function AccountPage() {
@@ -65,9 +66,10 @@ export default function AccountPage() {
             <AccountInfo />
           </div>
 
-          {/* Right: edit form */}
-          <div className="flex-1 w-full">
+          {/* Right: edit form + change password */}
+          <div className="flex-1 w-full space-y-6">
             <UpdateProfileForm />
+            <ChangePasswordForm />
           </div>
         </div>
       </div>

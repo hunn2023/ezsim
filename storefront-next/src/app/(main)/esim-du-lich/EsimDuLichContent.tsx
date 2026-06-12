@@ -295,6 +295,7 @@ function EsimDuLichContentInner({
                           alt={d.name}
                           width={56}
                           height={38}
+                          loading="lazy"
                           className="h-full w-full object-cover"
                         />
                       </div>

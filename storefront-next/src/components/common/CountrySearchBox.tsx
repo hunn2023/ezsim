@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
@@ -9,20 +9,13 @@ import type { Language } from "@/lib/i18n";
 type CountrySearchItem = {
   slug: string;
   name: string;
-  nameEn: string;
+  flagUrl: string | null;
   region: string;
-  regionEn: string;
-  startingPrice: number;
-  flagCode: string;
+  priceFrom: number;
+  code: string;
 };
 
-const SEARCH_COUNTRIES: CountrySearchItem[] = [
-  { slug: "nhat-ban", name: "Nhật Bản", nameEn: "Japan", region: "Châu Á", regionEn: "Asia", startingPrice: 79000, flagCode: "jp" },
-  { slug: "han-quoc", name: "Hàn Quốc", nameEn: "South Korea", region: "Châu Á", regionEn: "Asia", startingPrice: 89000, flagCode: "kr" },
-  { slug: "thai-lan", name: "Thái Lan", nameEn: "Thailand", region: "Châu Á", regionEn: "Asia", startingPrice: 69000, flagCode: "th" },
-  { slug: "chau-au", name: "Châu Âu", nameEn: "Europe", region: "Châu Âu", regionEn: "Europe", startingPrice: 249000, flagCode: "eu" },
-  { slug: "my", name: "Mỹ", nameEn: "United States", region: "Châu Mỹ", regionEn: "Americas", startingPrice: 199000, flagCode: "us" },
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 interface CountrySearchBoxProps {
   language: Language;
@@ -50,8 +43,37 @@ export default function CountrySearchBox({
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [open, setOpen] = useState(false);
+  const [countries, setCountries] = useState<CountrySearchItem[]>([]);
   const deferredKeyword = useDeferredValue(keyword);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const fetchedRef = useRef(false);
+
+  const fetchCountries = useCallback(async () => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/catalog/countries/home?PageSize=50`);
+      if (!res.ok) return;
+      const json = await res.json();
+      const payload = json.data ?? json;
+      const items: { countryId: string; code: string; name: string; slug: string; flagUrl: string | null; region: string | null; priceFrom: number }[] =
+        Array.isArray(payload) ? payload : payload.items ?? [];
+      setCountries(
+        items.map((item) => ({
+          slug: item.slug.trim().replace(/\s+/g, "-"),
+          name: item.name,
+          flagUrl: item.flagUrl,
+          region: item.region ?? "Châu Á",
+          priceFrom: item.priceFrom ?? 0,
+          code: item.code?.toLowerCase() ?? "",
+        }))
+      );
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    fetchCountries();
+  }, [fetchCountries]);
 
   useEffect(() => {
     if (!open) return;
@@ -71,18 +93,15 @@ export default function CountrySearchBox({
   const filteredResults = useMemo(() => {
     const normalizedKeyword = deferredKeyword.trim().toLowerCase();
     const baseList = normalizedKeyword
-      ? SEARCH_COUNTRIES.filter((country) => {
-          const displayName = language === "en" ? country.nameEn : country.name;
-          const displayRegion = language === "en" ? country.regionEn : country.region;
-          return (
-            displayName.toLowerCase().includes(normalizedKeyword) ||
-            displayRegion.toLowerCase().includes(normalizedKeyword)
-          );
-        })
-      : SEARCH_COUNTRIES;
+      ? countries.filter((country) =>
+          country.name.toLowerCase().includes(normalizedKeyword) ||
+          country.region.toLowerCase().includes(normalizedKeyword) ||
+          country.code.includes(normalizedKeyword)
+        )
+      : countries;
 
     return baseList.slice(0, 6);
-  }, [deferredKeyword, language]);
+  }, [deferredKeyword, countries]);
 
   const goToCountry = (slug: string) => {
     setOpen(false);
@@ -102,10 +121,9 @@ export default function CountrySearchBox({
       return;
     }
 
-    const exactMatch = SEARCH_COUNTRIES.find((country) => {
-      const displayName = language === "en" ? country.nameEn : country.name;
-      return displayName.toLowerCase() === search.toLowerCase();
-    });
+    const exactMatch = countries.find(
+      (country) => country.name.toLowerCase() === search.toLowerCase()
+    );
 
     if (exactMatch) {
       goToCountry(exactMatch.slug);
@@ -115,6 +133,12 @@ export default function CountrySearchBox({
     router.push(`/esim-du-lich?q=${encodeURIComponent(search)}`);
     setOpen(false);
     onClose?.();
+  };
+
+  const getFlagSrc = (country: CountrySearchItem) => {
+    if (country.flagUrl) return country.flagUrl;
+    if (country.code) return `https://flagcdn.com/w40/${country.code}.png`;
+    return null;
   };
 
   return (
@@ -189,38 +213,45 @@ export default function CountrySearchBox({
           style={{ top: "calc(100% + 8px)", zIndex: 140 }}
         >
           {filteredResults.length > 0 ? (
-            filteredResults.map((country) => (
-              <button
-                key={country.slug}
-                type="button"
-                onClick={() => goToCountry(country.slug)}
-                className="w-full text-left flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-50 transition"
-              >
-                <span
-                  className="flex h-6 w-9 items-center justify-center rounded-md bg-slate-100 shrink-0 overflow-hidden border border-slate-200"
-                  aria-hidden
+            filteredResults.map((country) => {
+              const flagSrc = getFlagSrc(country);
+              return (
+                <button
+                  key={country.slug}
+                  type="button"
+                  onClick={() => goToCountry(country.slug)}
+                  className="w-full text-left flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-50 transition"
                 >
-                  <Image
-                    src={`https://flagcdn.com/w40/${country.flagCode}.png`}
-                    alt={language === "en" ? country.nameEn : country.name}
-                    width={36}
-                    height={24}
-                    className="h-full w-full object-cover"
-                  />
-                </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-semibold text-navy truncate">
-                    eSIM {language === "en" ? country.nameEn : country.name}
+                  <span
+                    className="flex h-6 w-9 items-center justify-center rounded-md bg-slate-100 shrink-0 overflow-hidden border border-slate-200"
+                    aria-hidden
+                  >
+                    {flagSrc && (
+                      <Image
+                        src={flagSrc}
+                        alt={country.name}
+                        width={36}
+                        height={24}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                   </span>
-                  <span className="block text-xs text-gray-500 truncate">
-                    {language === "en" ? country.regionEn : country.region}
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-semibold text-navy truncate">
+                      eSIM {country.name}
+                    </span>
+                    <span className="block text-xs text-gray-500 truncate">
+                      {country.region}
+                    </span>
                   </span>
-                </span>
-                <span className="text-xs text-primary font-semibold whitespace-nowrap">
-                  {fromLabel} {country.startingPrice.toLocaleString("vi-VN")}đ
-                </span>
-              </button>
-            ))
+                  {country.priceFrom > 0 && (
+                    <span className="text-xs text-primary font-semibold whitespace-nowrap">
+                      {fromLabel} {country.priceFrom.toLocaleString("vi-VN")}đ
+                    </span>
+                  )}
+                </button>
+              );
+            })
           ) : (
             <p className="text-sm text-gray-500 px-2 py-3">{notFoundText}</p>
           )}

@@ -6,20 +6,25 @@ import type {
   EsimPackageFilters,
   PackageQuickTag,
 } from "@/types/esim";
-import type { ApiCountry, ApiEsimPackage, ApiResponse, PaginatedResponse } from "@/types/api";
+import type { ApiCountryHome, ApiEsimPackage } from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function mapApiCountryToSummary(country: ApiCountry & { packageCount?: number; startingPrice?: number }): EsimCountrySummary {
+/** Normalize slug: replace spaces with hyphens, trim */
+function normalizeSlug(slug: string): string {
+  return slug.trim().replace(/\s+/g, "-");
+}
+
+function mapApiCountryHomeToSummary(country: ApiCountryHome): EsimCountrySummary {
   return {
-    slug: country.slug,
+    slug: normalizeSlug(country.slug),
     flag: country.flagUrl || `https://flagcdn.com/w160/${country.code?.toLowerCase()}.png`,
     name: country.name,
     region: mapRegion(country.region),
-    startingPrice: country.startingPrice ?? 0,
-    bestseller: country.sortOrder <= 3,
+    startingPrice: country.priceFrom ?? 0,
+    bestseller: country.isHot,
     packageCount: country.packageCount ?? 0,
   };
 }
@@ -87,15 +92,15 @@ function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
 export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/catalog/countries?PageIndex=1&PageSize=50`
+      `${API_BASE_URL}/api/catalog/countries/home`
     );
     if (!response.ok) return [];
     const json = await response.json();
     // Unwrap { isSuccess, data: { items } } wrapper
     const payload = json.data ?? json;
-    const items: (ApiCountry & { packageCount?: number; startingPrice?: number })[] =
+    const items: ApiCountryHome[] =
       Array.isArray(payload) ? payload : payload.items ?? [];
-    return items.map(mapApiCountryToSummary);
+    return items.map(mapApiCountryHomeToSummary);
   } catch {
     return [];
   }
@@ -103,38 +108,83 @@ export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
 
 export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail | null> {
   try {
-    // First get country info
-    const countriesRes = await fetch(
-      `${API_BASE_URL}/api/catalog/countries?PageIndex=1&PageSize=100`
+    // Try ProductSlug first (for product slugs like "esim-han-quoc")
+    let response = await fetch(
+      `${API_BASE_URL}/api/catalog/products/variants?ProductSlug=${encodeURIComponent(slug)}`
     );
-    if (!countriesRes.ok) return null;
-    const countriesJson = await countriesRes.json();
-    const countriesPayload = countriesJson.data ?? countriesJson;
-    const countries: ApiCountry[] = Array.isArray(countriesPayload) ? countriesPayload : countriesPayload.items ?? [];
-    const country = countries.find((c) => c.slug === slug);
-    if (!country) return null;
+    let json = response.ok ? await response.json() : null;
+    let payload = json?.data ?? json;
+    let items: ApiProductVariant[] = Array.isArray(payload) ? payload : payload?.items ?? [];
 
-    // Then get packages for this country
-    const pkgRes = await fetch(
-      `${API_BASE_URL}/api/catalog/esim-packages?CountryId=${country.id}&PageIndex=1&PageSize=100`
-    );
-    if (!pkgRes.ok) return null;
-    const pkgJson = await pkgRes.json();
-    const pkgPayload = pkgJson.data ?? pkgJson;
-    const apiPackages: ApiEsimPackage[] = Array.isArray(pkgPayload) ? pkgPayload : pkgPayload.items ?? [];
+    // If no results, try CountrySlug (for country slugs like "viet-nam")
+    if (items.length === 0) {
+      response = await fetch(
+        `${API_BASE_URL}/api/catalog/products/variants?CountrySlug=${encodeURIComponent(slug)}`
+      );
+      json = response.ok ? await response.json() : null;
+      if (json?.isSuccess === false) return null;
+      payload = json?.data ?? json;
+      items = Array.isArray(payload) ? payload : payload?.items ?? [];
+    } else if (json?.isSuccess === false) {
+      return null;
+    }
 
-    const packages = apiPackages.map(mapApiPackageToEsim);
+    if (items.length === 0) return null;
+
+    // Use the first item for product-level info
+    const first = items[0];
+
+    const packages: EsimPackage[] = items.map((variant) => {
+      const price = variant.salePrice ?? variant.originalPrice ?? 0;
+      const oldPrice = variant.originalPrice && variant.originalPrice > price ? variant.originalPrice : undefined;
+      const discount = oldPrice ? `-${Math.round((1 - price / oldPrice) * 100)}%` : undefined;
+
+      const features: string[] = (variant.features || [])
+        .sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder)
+        .map((f: { text: string }) => f.text);
+
+      const quickTags: PackageQuickTag[] = [];
+      const nameL = (variant.variantName || "").toLowerCase();
+      if (nameL.includes("unlimited") || nameL.includes("không giới hạn")) quickTags.push("unlimited");
+      if (variant.isHot) quickTags.push("bestseller");
+
+      return {
+        id: variant.productVariantId,
+        slug: variant.sku || variant.productVariantId,
+        name: variant.variantName || variant.variantShortName || "Gói eSIM",
+        image: variant.thumbnailUrl || `https://picsum.photos/seed/${slug}/640/480`,
+        productId: variant.productId,
+        productVariantId: variant.productVariantId,
+        esimPackageId: variant.productVariantId,
+        data: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? "∞" : "—",
+        dataUnit: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? "Không giới hạn" : "GB",
+        subtitle: variant.variantDescription || `${variant.variantShortName}`,
+        tag: variant.variantShortName || variant.variantName || "",
+        tagType: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? "unlimited" : undefined,
+        features,
+        price,
+        oldPrice,
+        discount,
+        featured: variant.isFeatured,
+        days: extractDays(variant.variantDescription || variant.sku || ""),
+        dataGB: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? null : 0,
+        quickTags,
+        stock: 999,
+        rating: 4.5,
+        salesCount: variant.soldCount ?? 0,
+      };
+    });
 
     return {
-      slug: country.slug,
-      flag: country.flagUrl || `https://flagcdn.com/w160/${country.code?.toLowerCase()}.png`,
-      name: country.name,
-      nameEn: country.code || country.name,
-      region: mapRegion(country.region),
+      slug,
+      flag: first.thumbnailUrl || `https://flagcdn.com/w160/${(first.countryName || "").slice(0, 2).toLowerCase()}.png`,
+      name: first.productName || `eSIM ${first.countryName}`,
+      nameEn: first.productCode || first.productSlug || slug,
+      region: mapRegion(null),
       gradient: "from-blue-500 to-purple-600",
       textColor: "text-white",
       tagBg: "bg-white/20",
-      tags: [country.region || "Châu Á"].filter(Boolean) as string[],
+      tags: [first.locationText, first.categoryName].filter(Boolean) as string[],
       stats: [
         { label: "Số gói", value: String(packages.length) },
         { label: "Giá từ", value: packages.length > 0 ? `${Math.min(...packages.map(p => p.price)).toLocaleString("vi-VN")}đ` : "—" },
@@ -144,6 +194,39 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
   } catch {
     return null;
   }
+}
+
+interface ApiProductVariant {
+  productId: string;
+  productCode: string;
+  productName: string;
+  productSlug: string;
+  productVariantId: string;
+  sku: string;
+  variantName: string;
+  variantShortName: string;
+  variantDescription: string;
+  categoryId: string;
+  categoryName: string;
+  countryId: string;
+  countryName: string;
+  shortDescription: string;
+  locationText: string | null;
+  thumbnailUrl: string | null;
+  originalPrice: number;
+  salePrice: number | null;
+  currency: string;
+  isFeatured: boolean;
+  isHot: boolean;
+  soldCount: number;
+  productSortOrder: number;
+  variantSortOrder: number;
+  features: { productVariantId: string; text: string; icon: string | null; sortOrder: number }[];
+}
+
+function extractDays(text: string): number {
+  const match = text.match(/(\d+)\s*(?:ngày|days?|d)/i);
+  return match ? parseInt(match[1], 10) : 7;
 }
 
 // ─── Pure Utilities (no API call) ─────────────────────────────────────────────

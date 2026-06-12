@@ -1,20 +1,42 @@
 import type { Metadata } from "next";
 import EsimCountryPageClient from "./EsimCountryPageClient";
 
-export const dynamicParams = false;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
+  const slugSet = new Set<string>();
+
+  // Fetch product slugs (e.g., "esim-han-quoc")
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`);
+    if (res.ok) {
+      const json = await res.json();
+      const items: { slug: string }[] = json.data ?? [];
+      for (const item of items) slugSet.add(item.slug);
+    }
+  } catch { /* ignore */ }
+
+  // Fetch country slugs (e.g., "viet-nam")
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/catalog/countries/home`);
+    if (res.ok) {
+      const json = await res.json();
+      const payload = json.data ?? json;
+      const items: { slug: string }[] = Array.isArray(payload) ? payload : payload.items ?? [];
+      for (const item of items) slugSet.add(item.slug.trim().replace(/\s+/g, "-"));
+    }
+  } catch { /* ignore */ }
+
+  if (slugSet.size > 0) {
+    return Array.from(slugSet).map((slug) => ({ slug }));
+  }
+
+  // Fallback
   return [
-    { slug: "nhat-ban" },
-    { slug: "han-quoc" },
-    { slug: "thai-lan" },
-    { slug: "chau-au" },
-    { slug: "my" },
-    { slug: "singapore" },
-    { slug: "dai-loan" },
-    { slug: "trung-quoc" },
-    { slug: "uc" },
-    { slug: "canada" },
+    { slug: "esim-han-quoc" },
+    { slug: "viet-nam" },
   ];
 }
 

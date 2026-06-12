@@ -118,6 +118,14 @@ export default function CountryHero({
                 height={64}
                 className="h-16 w-24 rounded-lg object-cover"
               />
+            ) : flag && flag.startsWith("http") ? (
+              <Image
+                src={flag}
+                alt={displayName}
+                width={96}
+                height={96}
+                className="h-full w-full object-cover"
+              />
             ) : (
               <span style={{ fontSize: "64px" }}>{flag}</span>
             )}

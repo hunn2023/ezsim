@@ -192,6 +192,11 @@ a, button {
   animation: cart-impact 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 /* Hide scrollbar but keep scroll functionality */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;

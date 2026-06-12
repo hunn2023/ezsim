@@ -68,6 +68,20 @@ export interface ApiCountry {
   isActive: boolean;
 }
 
+/** Shape returned by /api/catalog/countries/home */
+export interface ApiCountryHome {
+  countryId: string;
+  code: string;
+  name: string;
+  slug: string;
+  flagUrl: string | null;
+  region: string | null;
+  priceFrom: number;
+  currency: string;
+  packageCount: number;
+  isHot: boolean;
+}
+
 // ─── Catalog: Category ────────────────────────────────────────────────────────
 export interface ApiCategory {
   id: string;

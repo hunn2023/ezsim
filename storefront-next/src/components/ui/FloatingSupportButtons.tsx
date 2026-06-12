@@ -1,4 +1,5 @@
 import Icon from "@/components/ui/Icon";
+import ChatbotWidget from "@/components/ui/ChatbotWidget";
 
 const SUPPORT_LINKS = {
   zalo: "#",
@@ -39,6 +40,8 @@ export default function FloatingSupportButtons() {
           <Icon icon="phone" className="text-base transition-transform duration-300 group-hover:rotate-12" />
         </a>
       </div>
+
+      <ChatbotWidget />
     </div>
   );
 }

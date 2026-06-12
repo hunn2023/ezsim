@@ -47,6 +47,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" className={beVietnamPro.variable}>
+      <head>
+        <link rel="preconnect" href="https://images.relipacheck.io.vn" />
+        <link rel="dns-prefetch" href="https://images.relipacheck.io.vn" />
+        <link rel="preconnect" href="https://flagcdn.com" />
+        <link rel="dns-prefetch" href="https://flagcdn.com" />
+      </head>
       <body className={`${beVietnamPro.className} min-h-screen flex flex-col`}>
         <AuthProvider>{children}</AuthProvider>
         <FloatingSupportButtons />
