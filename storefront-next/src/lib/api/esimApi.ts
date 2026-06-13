@@ -176,30 +176,54 @@ export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
   }
 }
 
-export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail | null> {
-  try {
-    // Try ProductSlug first (for product slugs like "esim-han-quoc")
-    let response = await fetch(
-      `${API_BASE_URL}/api/catalog/products/variants?ProductSlug=${encodeURIComponent(slug)}`
-    );
-    let json = response.ok ? await response.json() : null;
-    let payload = json?.data ?? json;
-    let items: ApiProductVariant[] = Array.isArray(payload) ? payload : payload?.items ?? [];
+/** Build a placeholder country (no packages) so the detail page always renders. */
+function buildEmptyEsimCountry(slug: string): EsimCountryDetail {
+  const displayName = slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  return {
+    slug,
+    flag: "",
+    name: displayName ? `eSIM ${displayName}` : "eSIM",
+    nameEn: slug,
+    region: mapRegion(null),
+    gradient: "from-blue-500 to-purple-600",
+    textColor: "text-white",
+    tagBg: "bg-white/20",
+    tags: [],
+    stats: [
+      { label: "Số gói", value: "0" },
+      { label: "Giá từ", value: "—" },
+    ],
+    packages: [],
+  };
+}
 
-    // If no results, try CountrySlug (for country slugs like "viet-nam")
+export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail> {
+  try {
+    // NOTE: the backend currently ignores the ProductSlug/CountrySlug filters and
+    // returns every product's variants, so we fetch the full list (large page size)
+    // and filter client-side by productSlug.
+    const response = await fetch(
+      `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`
+    );
+    const json = response.ok ? await response.json() : null;
+    if (json?.isSuccess === false) return buildEmptyEsimCountry(slug);
+    const payload = json?.data ?? json;
+    const allItems: ApiProductVariant[] = Array.isArray(payload) ? payload : payload?.items ?? [];
+
+    // Match the route slug against the product slug. Country-style slugs
+    // (e.g. "han-quoc") map to their product slug ("esim-han-quoc").
+    const normalized = slug.trim().toLowerCase();
+    let items = allItems.filter((v) => v.productSlug?.toLowerCase() === normalized);
     if (items.length === 0) {
-      response = await fetch(
-        `${API_BASE_URL}/api/catalog/products/variants?CountrySlug=${encodeURIComponent(slug)}`
-      );
-      json = response.ok ? await response.json() : null;
-      if (json?.isSuccess === false) return null;
-      payload = json?.data ?? json;
-      items = Array.isArray(payload) ? payload : payload?.items ?? [];
-    } else if (json?.isSuccess === false) {
-      return null;
+      items = allItems.filter((v) => v.productSlug?.toLowerCase() === `esim-${normalized}`);
     }
 
-    if (items.length === 0) return null;
+    // No matching product: still show the page, just without packages.
+    if (items.length === 0) return buildEmptyEsimCountry(slug);
 
     // Use the first item for product-level info
     const first = items[0];
@@ -262,7 +286,7 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
       packages,
     };
   } catch {
-    return null;
+    return buildEmptyEsimCountry(slug);
   }
 }
 

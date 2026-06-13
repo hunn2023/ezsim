@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getEsimCountryBySlug } from "@/lib/api/esimApi";
 import EsimCountryView from "./EsimCountryView";
 
@@ -44,43 +43,17 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const country = await getEsimCountryBySlug(params.slug);
-
-  if (country) {
-    const description =
-      country.tags && country.tags.length > 0
-        ? `Gói ${country.name}: ${country.tags.join(", ")}. Kích hoạt nhanh bằng QR Code.`
-        : `Các gói ${country.name} giá tốt, kích hoạt nhanh bằng QR Code.`;
-    return {
-      title: `${country.name} - Kết nối ngay khi đặt chân | EZSIM`,
-      description,
-    };
-  }
-
-  // Fallback when the country could not be resolved.
-  const nameMap: Record<string, string> = {
-    "nhat-ban": "Nhật Bản",
-    "han-quoc": "Hàn Quốc",
-    "thai-lan": "Thái Lan",
-    "chau-au": "Châu Âu",
-    "my": "Mỹ",
-    "singapore": "Singapore",
-    "dai-loan": "Đài Loan",
-    "trung-quoc": "Trung Quốc",
-    "uc": "Úc",
-    "canada": "Canada",
-  };
-  const name = nameMap[params.slug] ?? params.slug;
+  const description =
+    country.tags && country.tags.length > 0
+      ? `Gói ${country.name}: ${country.tags.join(", ")}. Kích hoạt nhanh bằng QR Code.`
+      : `Các gói ${country.name} giá tốt, kích hoạt nhanh bằng QR Code.`;
   return {
-    title: `eSIM ${name} - Kết nối ngay khi đặt chân | EZSIM`,
+    title: `${country.name} - Kết nối ngay khi đặt chân | EZSIM`,
+    description,
   };
 }
 
 export default async function EsimCountryPage({ params }: { params: { slug: string } }) {
   const country = await getEsimCountryBySlug(params.slug);
-
-  if (!country) {
-    notFound();
-  }
-
   return <EsimCountryView country={country} />;
 }
