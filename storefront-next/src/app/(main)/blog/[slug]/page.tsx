@@ -6,6 +6,12 @@ import { buildMetadata } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const slugs = await getBlogSlugs();
+  // `output: export` requires at least one param for a dynamic route. When the
+  // CMS has no published articles yet, emit a placeholder slug that resolves to
+  // notFound() (404) so the static export build still succeeds.
+  if (slugs.length === 0) {
+    return [{ slug: "_" }];
+  }
   return slugs.map((slug) => ({ slug }));
 }
 

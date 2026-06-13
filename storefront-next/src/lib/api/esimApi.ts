@@ -89,6 +89,76 @@ function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
+export interface CatalogThumbnailMaps {
+  byVariant: Map<string, string>;
+  byProduct: Map<string, string>;
+}
+
+let catalogThumbnailsPromise: Promise<CatalogThumbnailMaps> | null = null;
+
+/**
+ * Fetches all catalog variant thumbnails and indexes them by productVariantId
+ * and productId. Cached at module level so repeated lookups (e.g. opening
+ * several order detail popups) hit the network only once.
+ */
+export async function getCatalogThumbnails(): Promise<CatalogThumbnailMaps> {
+  if (!catalogThumbnailsPromise) {
+    catalogThumbnailsPromise = (async () => {
+      const byVariant = new Map<string, string>();
+      const byProduct = new Map<string, string>();
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`
+        );
+        if (response.ok) {
+          const json = await response.json();
+          const payload = json?.data ?? json;
+          const items: ApiProductVariant[] = Array.isArray(payload) ? payload : payload?.items ?? [];
+          for (const item of items) {
+            if (!item.thumbnailUrl) continue;
+            if (item.productVariantId) byVariant.set(item.productVariantId, item.thumbnailUrl);
+            if (item.productId && !byProduct.has(item.productId)) {
+              byProduct.set(item.productId, item.thumbnailUrl);
+            }
+          }
+        }
+      } catch {
+        // Network failures fall back to no thumbnails — caller handles gracefully.
+      }
+      return { byVariant, byProduct };
+    })();
+  }
+  return catalogThumbnailsPromise;
+}
+
+export interface HomeEsimProduct {
+  id: string;
+  name: string;
+  slug: string;
+  locationText: string | null;
+  thumbnailUrl: string | null;
+  flagUrl: string | null;
+  priceFrom: number;
+  currency: string;
+  isHot: boolean;
+  isFeatured: boolean;
+}
+
+/** Featured eSIM products for the homepage "Điểm đến nổi bật" section. */
+export async function getHomeEsimProducts(): Promise<HomeEsimProduct[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`, {
+      next: { revalidate: 300 },
+    });
+    if (!response.ok) return [];
+    const json = await response.json();
+    const data = json?.data ?? json ?? [];
+    return Array.isArray(data) ? (data as HomeEsimProduct[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
   try {
     const response = await fetch(

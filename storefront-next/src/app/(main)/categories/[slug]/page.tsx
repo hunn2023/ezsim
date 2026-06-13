@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { SITE } from "@/lib/constants";
-import CategoryPageClient from "./CategoryPageClient";
+import { getCategoryBySlug, getProductsByCategory } from "@/lib/api/categoriesApi";
+import CategoryView from "./CategoryView";
 
 interface PageProps {
   params: { slug: string };
@@ -15,7 +17,18 @@ export async function generateStaticParams() {
   ];
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const category = await getCategoryBySlug(params.slug);
+
+  if (category) {
+    return {
+      title: `${category.name} | ${SITE.name}`,
+      description:
+        category.description ||
+        `Khám phá các sản phẩm ${category.name} chính hãng tại ${SITE.name}. Giá tốt, giao hàng nhanh.`,
+    };
+  }
+
   const nameMap: Record<string, string> = {
     esim: "eSIM Du lịch",
     "the-nap": "Thẻ Viễn thông",
@@ -29,6 +42,21 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function CategoryPage({ params }: PageProps) {
-  return <CategoryPageClient slug={params.slug} />;
+export default async function CategoryPage({ params }: PageProps) {
+  const category = await getCategoryBySlug(params.slug);
+
+  if (!category) {
+    notFound();
+  }
+
+  const { products, totalPages } = await getProductsByCategory(params.slug, {});
+
+  return (
+    <CategoryView
+      category={category}
+      products={products}
+      totalPages={totalPages}
+      slug={params.slug}
+    />
+  );
 }

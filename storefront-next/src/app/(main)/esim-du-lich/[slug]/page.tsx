@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import EsimCountryPageClient from "./EsimCountryPageClient";
+import { notFound } from "next/navigation";
+import { getEsimCountryBySlug } from "@/lib/api/esimApi";
+import EsimCountryView from "./EsimCountryView";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -40,7 +42,21 @@ export async function generateStaticParams() {
   ];
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const country = await getEsimCountryBySlug(params.slug);
+
+  if (country) {
+    const description =
+      country.tags && country.tags.length > 0
+        ? `Gói ${country.name}: ${country.tags.join(", ")}. Kích hoạt nhanh bằng QR Code.`
+        : `Các gói ${country.name} giá tốt, kích hoạt nhanh bằng QR Code.`;
+    return {
+      title: `${country.name} - Kết nối ngay khi đặt chân | EZSIM`,
+      description,
+    };
+  }
+
+  // Fallback when the country could not be resolved.
   const nameMap: Record<string, string> = {
     "nhat-ban": "Nhật Bản",
     "han-quoc": "Hàn Quốc",
@@ -59,6 +75,12 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-export default function EsimCountryPage({ params }: { params: { slug: string } }) {
-  return <EsimCountryPageClient slug={params.slug} />;
+export default async function EsimCountryPage({ params }: { params: { slug: string } }) {
+  const country = await getEsimCountryBySlug(params.slug);
+
+  if (!country) {
+    notFound();
+  }
+
+  return <EsimCountryView country={country} />;
 }

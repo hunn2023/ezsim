@@ -1,6 +1,7 @@
 import { CheckoutFormData } from "./schemas/checkoutSchema";
 import { fetchWithAuth } from "./fetchWithAuth";
 import { useAuthStore } from "./authStore";
+import { getCatalogThumbnails } from "./api/esimApi";
 import type { ApiCreateOrderCommand, ApiCreateOrderItem, OrderItemType } from "@/types/api";
 
 export interface OrderItem {
@@ -225,6 +226,11 @@ export interface OrderHistoryLineItem {
   quantity: number;
   price: number;
   image?: string;
+  variantName?: string;
+  sku?: string;
+  itemType?: number;
+  productId?: string;
+  productVariantId?: string;
 }
 
 export interface OrderHistoryItem {
@@ -233,10 +239,14 @@ export interface OrderHistoryItem {
   createdAt: string;
   status: OrderStatus;
   paymentStatus?: string;
+  paymentStatusCode?: number;
   paymentMethod: OrderPaymentMethod;
   totalAmount: number;
   subTotal?: number;
   discountAmount?: number;
+  shippingFee?: number;
+  currency?: string;
+  note?: string;
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
@@ -301,7 +311,12 @@ function mapApiOrderToHistoryItem(apiOrder: any): OrderHistoryItem {
       name: item.productName || item.name || "Sản phẩm",
       quantity: item.quantity || 1,
       price: item.unitPrice || item.price || 0,
-      image: item.image || item.imageUrl || undefined,
+      image: item.image || item.imageUrl || item.thumbnailUrl || undefined,
+      variantName: item.variantName || undefined,
+      sku: item.sku || undefined,
+      itemType: typeof item.itemType === "number" ? item.itemType : undefined,
+      productId: item.productId || undefined,
+      productVariantId: item.productVariantId || undefined,
     })
   );
 
@@ -311,10 +326,14 @@ function mapApiOrderToHistoryItem(apiOrder: any): OrderHistoryItem {
     createdAt: apiOrder.createdAt || new Date().toISOString(),
     status: mapOrderStatus(apiOrder.status),
     paymentStatus: apiOrder.paymentStatus != null ? String(apiOrder.paymentStatus) : undefined,
+    paymentStatusCode: typeof apiOrder.paymentStatus === "number" ? apiOrder.paymentStatus : undefined,
     paymentMethod: mapPaymentMethod(apiOrder.paymentMethod),
     totalAmount: apiOrder.totalAmount || 0,
-    subTotal: apiOrder.subTotal,
+    subTotal: apiOrder.subTotal ?? apiOrder.subtotal,
     discountAmount: apiOrder.discountAmount,
+    shippingFee: apiOrder.shippingFee,
+    currency: apiOrder.currency || "VND",
+    note: apiOrder.note || apiOrder.orderNote || undefined,
     customerName: apiOrder.customerName,
     customerEmail: apiOrder.customerEmail,
     customerPhone: apiOrder.customerPhone,
@@ -385,6 +404,31 @@ export async function getOrderById(id: string): Promise<OrderHistoryItem> {
 
   const json = await response.json();
   const data = json.data ?? json;
-  return mapApiOrderToHistoryItem(data);
+  return enrichOrderImages(mapApiOrderToHistoryItem(data));
+}
+
+/**
+ * Order items returned by the backend don't carry a thumbnail. Resolve the
+ * correct eSIM/product image from the public catalog by productVariantId
+ * (falling back to productId) so the order detail view shows real images.
+ */
+async function enrichOrderImages(order: OrderHistoryItem): Promise<OrderHistoryItem> {
+  if (!order.items.some((item) => !item.image)) return order;
+  try {
+    const { byVariant, byProduct } = await getCatalogThumbnails();
+    return {
+      ...order,
+      items: order.items.map((item) => {
+        if (item.image) return item;
+        const resolved =
+          (item.productVariantId && byVariant.get(item.productVariantId)) ||
+          (item.productId && byProduct.get(item.productId)) ||
+          undefined;
+        return resolved ? { ...item, image: resolved } : item;
+      }),
+    };
+  } catch {
+    return order;
+  }
 }
 

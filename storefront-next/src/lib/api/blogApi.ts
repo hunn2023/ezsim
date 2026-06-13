@@ -1,8 +1,11 @@
-import { mockBlogPosts } from "@/lib/mock-blog-posts";
 import type { Language } from "@/lib/i18n";
 import type { BlogPost, BlogPostSummary } from "@/types/blog";
 
 export const BLOG_PAGE_SIZE = 6;
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+/** Cache the build/SSR fetch for 5 minutes (ignored in static export, fetched once at build). */
+const REVALIDATE_SECONDS = 300;
 
 export interface BlogListResult {
   posts: BlogPostSummary[];
@@ -11,193 +14,159 @@ export interface BlogListResult {
   totalPosts: number;
 }
 
-const EN_BLOG_OVERRIDES: Record<
-  string,
-  {
-    title: string;
-    excerpt: string;
-    metaTitle: string;
-    metaDescription: string;
-    author?: string;
-    content: string;
+// ─── Backend response shapes ────────────────────────────────────────────────────
+
+/** Public content article as returned by /api/content/articles* (PublicContentArticles). */
+interface ApiContentArticle {
+  id: string;
+  title: string | null;
+  slug: string | null;
+  summary: string | null;
+  content: string | null;
+  thumbnailUrl: string | null;
+  authorName: string | null;
+  categoryCode: string | null;
+  tags: string | null;
+  status?: number;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  publishedAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+interface ApiResult<T> {
+  isSuccess: boolean;
+  data: T | null;
+  error: unknown;
+}
+
+interface ApiPagedData<T> {
+  items: T[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+// ─── Mapping ────────────────────────────────────────────────────────────────────
+
+function fallbackThumbnail(slug: string): string {
+  return `https://picsum.photos/seed/${encodeURIComponent(slug || "blog")}/1200/630`;
+}
+
+function mapArticleToPost(article: ApiContentArticle): BlogPost {
+  const slug = article.slug ?? "";
+  return {
+    id: article.id,
+    title: article.title ?? "",
+    slug,
+    excerpt: article.summary ?? "",
+    content: article.content ?? "",
+    thumbnail: article.thumbnailUrl || fallbackThumbnail(slug),
+    publishedAt: article.publishedAt || article.createdAt || article.updatedAt || "",
+    author: article.authorName ?? undefined,
+  };
+}
+
+function toSummary({ content: _content, ...summary }: BlogPost): BlogPostSummary {
+  return summary;
+}
+
+// ─── HTTP layer ─────────────────────────────────────────────────────────────────
+
+async function fetchJson<T>(path: string): Promise<T | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      next: { revalidate: REVALIDATE_SECONDS },
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as T;
+  } catch {
+    return null;
   }
-> = {
-  "top-10-meo-dung-esim-du-lich-nam-2026": {
-    title: "Top 10 travel eSIM tips for 2026",
-    excerpt: "A practical guide to choosing the right eSIM package, avoiding roaming fees, and staying connected on every trip.",
-    metaTitle: "Top 10 travel eSIM tips for 2026 | EZSIM",
-    metaDescription: "Discover 10 practical tips to choose, activate, and use travel eSIM efficiently in 2026.",
-    author: "EZSIM Editorial Team",
-    content: `
-      <p>Travel eSIM has become the default option for many travelers because it removes the need to buy a physical SIM at the airport.</p>
-      <h2>1. Check device compatibility</h2>
-      <p>Before purchasing, make sure your phone supports eSIM and is carrier-unlocked.</p>
-      <h2>2. Buy before departure</h2>
-      <p>Purchase your package before your trip so you can connect as soon as you land.</p>
-      <blockquote>Tip: Keep your primary SIM active for OTP and calls, and use eSIM for data.</blockquote>
-      <h2>3. Choose by trip duration</h2>
-      <ul>
-        <li>Short trips (3-5 days): smaller and cheaper plans</li>
-        <li>Business trips (7-10 days): balanced plans with stable speed</li>
-        <li>Long stays (15+ days): large or unlimited plans</li>
-      </ul>
-      <p>Choosing the right validity period is usually more important than choosing the largest data package.</p>
-    `,
-  },
-  "cach-kich-hoat-esim-trong-chua-den-1-phut": {
-    title: "How to activate eSIM in under 1 minute",
-    excerpt: "Quick setup guide for iPhone and Android, plus troubleshooting tips when QR scanning fails.",
-    metaTitle: "How to activate eSIM in under 1 minute | EZSIM",
-    metaDescription: "A quick setup guide for eSIM on iPhone and Android with common troubleshooting tips.",
-    author: "Admin",
-    content: `
-      <p>Most eSIM activations take less than one minute if you follow the setup flow correctly.</p>
-      <h2>Recommended setup sequence</h2>
-      <ol>
-        <li>Connect to stable Wi-Fi.</li>
-        <li>Open eSIM settings and scan your QR code.</li>
-        <li>Name your line clearly, for example: Travel Data.</li>
-        <li>Set eSIM as data line and keep primary SIM for calls.</li>
-      </ol>
-      <p>If QR scanning fails, use the SM-DP+ address and activation code from your order email.</p>
-    `,
-  },
-  "nhung-quoc-gia-phu-hop-nhat-cho-nguoi-moi-dung-esim": {
-    title: "Best countries for first-time eSIM users",
-    excerpt: "If this is your first eSIM trip, these destinations offer smoother setup and more stable experience.",
-    metaTitle: "Best countries for first-time eSIM users",
-    metaDescription: "Explore beginner-friendly destinations with stable network quality and easy eSIM setup.",
-    author: "Content Team",
-    content: `
-      <p>Japan, South Korea, Thailand, and Singapore are ideal for first-time eSIM users thanks to reliable networks and simple activation.</p>
-      <h2>Why are these destinations beginner-friendly?</h2>
-      <ul>
-        <li>Wide 4G/5G coverage in major cities</li>
-        <li>Clear carrier information and predictable quality</li>
-        <li>Stable speed and easy onboarding flow</li>
-      </ul>
-      <p>Always check hotspot policy, fair-usage limits, and package validity start time.</p>
-    `,
-  },
-  "kinh-nghiem-du-lich-nhat-ban-chon-goi-esim-the-nao-cho-hop-ly": {
-    title: "Japan travel guide: how to choose the right eSIM package",
-    excerpt: "Learn how to pick data size, validity, and cost-saving options for your Japan trip.",
-    metaTitle: "Japan travel guide: how to choose the right eSIM package",
-    metaDescription: "Choose the right Japan eSIM based on itinerary, group size, and daily data usage.",
-    author: "EZSIM Travel Desk",
-    content: `
-      <p>Japan is one of the top markets for travel eSIM because travelers heavily rely on maps, translation, and public transport apps.</p>
-      <h2>How should you choose your package?</h2>
-      <ul>
-        <li>3-5 days: 3GB to 5GB packages</li>
-        <li>7-10 days: 5GB/day or 10GB total packages</li>
-        <li>Group travel: prioritize hotspot-enabled packages</li>
-      </ul>
-      <p>If you use video calls and maps frequently, choose a slightly larger package to avoid mid-trip top-ups.</p>
-    `,
-  },
-  "esim-hay-sim-vat-ly-dau-la-lua-chon-tot-hon-cho-du-lich-nuoc-ngoai": {
-    title: "eSIM vs physical SIM: which is better for international travel?",
-    excerpt: "A quick comparison of cost, convenience, and activation speed to help you choose confidently.",
-    metaTitle: "eSIM vs physical SIM: which is better for international travel?",
-    metaDescription: "Compare eSIM and physical SIM options and choose the best one for your upcoming trip.",
-    author: "Editor",
-    content: `
-      <p>eSIM is ideal if you want instant setup, no SIM swap, and online purchase before departure.</p>
-      <h2>When should you choose eSIM?</h2>
-      <ul>
-        <li>Short business or leisure trips</li>
-        <li>Need to keep your primary SIM for OTP</li>
-        <li>Prefer setup before boarding</li>
-      </ul>
-      <p>Physical SIM still makes sense for older devices, but for most modern users, eSIM is significantly more convenient.</p>
-    `,
-  },
-  "meo-tiet-kiem-5-15-phan-tram-khi-mua-the-game-va-esim-tai-ezsim": {
-    title: "How to save 5-15% when buying game cards and eSIM on EZSIM",
-    excerpt: "Smart purchasing habits can noticeably reduce your costs for eSIM and game cards.",
-    metaTitle: "How to save 5-15% when buying game cards and eSIM on EZSIM",
-    metaDescription: "Explore practical tips to save money when buying eSIM and game cards regularly.",
-    author: "Content Development Team",
-    content: `
-      <p>If you buy eSIM or game cards regularly, choosing the right timing and package can reduce your total spend significantly.</p>
-      <h2>Useful savings tips</h2>
-      <ul>
-        <li>Track seasonal promotions</li>
-        <li>Match package size with itinerary instead of overbuying</li>
-        <li>Purchase early to avoid last-minute pricing</li>
-      </ul>
-      <p>For group travel, planning shared purchases before departure is often more cost-effective than buying individually.</p>
-    `,
-  },
-};
+}
 
-function localizeBlogPost(post: BlogPost, language: Language): BlogPost {
-  if (language !== "en") return post;
+/** Fetch a page of published articles, already mapped to BlogPost. */
+async function fetchArticlesPage(
+  pageIndex: number,
+  pageSize: number
+): Promise<{ posts: BlogPost[]; totalCount: number; totalPages: number; pageIndex: number }> {
+  const params = new URLSearchParams({
+    pageIndex: String(pageIndex),
+    pageSize: String(pageSize),
+  });
+  const json = await fetchJson<ApiResult<ApiPagedData<ApiContentArticle>>>(
+    `/api/content/articles?${params.toString()}`
+  );
 
-  const override = EN_BLOG_OVERRIDES[post.slug];
-  if (!override) return post;
+  const data = json?.data;
+  if (!data || !Array.isArray(data.items)) {
+    return { posts: [], totalCount: 0, totalPages: 0, pageIndex };
+  }
 
   return {
-    ...post,
-    title: override.title,
-    excerpt: override.excerpt,
-    metaTitle: override.metaTitle,
-    metaDescription: override.metaDescription,
-    author: override.author ?? post.author,
-    content: override.content,
+    posts: data.items.map(mapArticleToPost),
+    totalCount: data.totalCount ?? data.items.length,
+    totalPages: data.totalPages ?? 0,
+    pageIndex: data.pageIndex ?? pageIndex,
   };
 }
 
-function sortByPublishDateDesc(a: { publishedAt: string }, b: { publishedAt: string }) {
-  return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+// ─── Public API (signatures unchanged) ────────────────────────────────────────────
+
+export async function getBlogPosts(_language: Language = "vi"): Promise<BlogPostSummary[]> {
+  // Pull a generous page so callers that need the full list (slugs, related) are covered.
+  const { posts } = await fetchArticlesPage(1, 100);
+  return posts.map(toSummary);
 }
 
-export async function getBlogPosts(language: Language = "vi"): Promise<BlogPostSummary[]> {
-  return getSortedBlogPosts(language).map(({ content: _content, ...summary }) => summary);
+export async function getLatestBlogPosts(limit = 3, _language: Language = "vi"): Promise<BlogPostSummary[]> {
+  const { posts } = await fetchArticlesPage(1, limit);
+  return posts.slice(0, limit).map(toSummary);
 }
 
-export async function getLatestBlogPosts(limit = 3, language: Language = "vi"): Promise<BlogPostSummary[]> {
-  return getSortedBlogPosts(language)
-    .slice(0, limit)
-    .map(({ content: _content, ...summary }) => summary);
-}
-
-export async function getBlogPostsPage(page = 1, pageSize = BLOG_PAGE_SIZE, language: Language = "vi"): Promise<BlogListResult> {
-  const sortedPosts = getSortedBlogPosts(language);
-  const totalPosts = sortedPosts.length;
-  const totalPages = Math.max(1, Math.ceil(totalPosts / pageSize));
-  const currentPage = Math.min(Math.max(1, page), totalPages);
-  const startIndex = (currentPage - 1) * pageSize;
+export async function getBlogPostsPage(
+  page = 1,
+  pageSize = BLOG_PAGE_SIZE,
+  _language: Language = "vi"
+): Promise<BlogListResult> {
+  const requestedPage = Math.max(1, page);
+  const { posts, totalCount, totalPages: apiTotalPages, pageIndex } = await fetchArticlesPage(
+    requestedPage,
+    pageSize
+  );
+  const totalPages = Math.max(1, apiTotalPages || Math.ceil(totalCount / pageSize) || 1);
 
   return {
-    posts: sortedPosts
-      .slice(startIndex, startIndex + pageSize)
-      .map(({ content: _content, ...summary }) => summary),
-    currentPage,
+    posts: posts.map(toSummary),
+    currentPage: Math.min(Math.max(1, pageIndex || requestedPage), totalPages),
     totalPages,
-    totalPosts,
+    totalPosts: totalCount,
   };
 }
 
-export async function getBlogPostBySlug(slug: string, language: Language = "vi"): Promise<BlogPost | null> {
-  const post = mockBlogPosts.find((item) => item.slug === slug) ?? null;
-  return post ? localizeBlogPost(post, language) : null;
+export async function getBlogPostBySlug(slug: string, _language: Language = "vi"): Promise<BlogPost | null> {
+  const json = await fetchJson<ApiResult<ApiContentArticle>>(
+    `/api/content/articles/${encodeURIComponent(slug)}`
+  );
+  const article = json?.data;
+  if (!article || json?.isSuccess === false) return null;
+  return mapArticleToPost(article);
 }
 
-export async function getRelatedBlogPosts(slug: string, limit = 3, language: Language = "vi"): Promise<BlogPostSummary[]> {
-  return getSortedBlogPosts(language)
+export async function getRelatedBlogPosts(slug: string, limit = 3, _language: Language = "vi"): Promise<BlogPostSummary[]> {
+  // Backend has no "related" endpoint; mirror previous behaviour: latest posts excluding the current one.
+  const { posts } = await fetchArticlesPage(1, limit + 1);
+  return posts
     .filter((post) => post.slug !== slug)
     .slice(0, limit)
-    .map(({ content: _content, ...summary }) => summary);
+    .map(toSummary);
 }
 
 export async function getBlogSlugs(): Promise<string[]> {
-  return getSortedBlogPosts("vi").map((post) => post.slug);
-}
-
-function getSortedBlogPosts(language: Language = "vi"): BlogPost[] {
-  return [...mockBlogPosts]
-    .map((post) => localizeBlogPost(post, language))
-    .sort(sortByPublishDateDesc);
+  const { posts } = await fetchArticlesPage(1, 100);
+  return posts.map((post) => post.slug).filter(Boolean);
 }
