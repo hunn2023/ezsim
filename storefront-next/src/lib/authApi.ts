@@ -155,7 +155,7 @@ export async function register(payload: RegisterPayload): Promise<RegisterRespon
 }
 
 export async function verifyRegisterOtp(email: string, otpCode: string): Promise<void> {
-  await request<unknown>(
+  const result = await request<{ success?: { isSuccess: boolean; error?: string }; message?: string }>(
     "/api/auth/verify-register-otp",
     {
       method: "POST",
@@ -175,6 +175,13 @@ export async function verifyRegisterOtp(email: string, otpCode: string): Promise
       return "Xác thực OTP thất bại. Vui lòng thử lại.";
     }
   );
+
+  if (result?.success && !result.success.isSuccess) {
+    throw new AuthApiError(
+      result.success.error ?? "Xác thực OTP thất bại.",
+      400
+    );
+  }
 }
 
 export async function resendRegisterOtp(email: string): Promise<void> {
