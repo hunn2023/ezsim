@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import Icon from "@/components/ui/Icon";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
@@ -10,23 +11,19 @@ export default function ChangePasswordForm() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess(false);
 
     if (newPassword.length < 6) {
-      setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
+      toast.error("Mật khẩu xác nhận không khớp.");
       return;
     }
 
@@ -37,22 +34,24 @@ export default function ChangePasswordForm() {
         body: JSON.stringify({
           currentPassword,
           newPassword,
+          confirmNewPassword: confirmPassword,
         }),
       });
 
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok || json.isSuccess === false) {
-        setError(json.error ?? json.message ?? "Đổi mật khẩu thất bại. Vui lòng thử lại.");
+        toast.error(json.error ?? json.message ?? "Đổi mật khẩu thất bại. Vui lòng thử lại.");
         return;
       }
 
-      setSuccess(true);
+      toast.success("Đổi mật khẩu thành công!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setExpanded(false);
     } catch {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -152,18 +151,6 @@ export default function ChangePasswordForm() {
             />
           </div>
         </div>
-
-        {/* Error / Success messages */}
-        {error && (
-          <p className="text-danger text-sm flex items-center gap-1.5">
-            <span aria-hidden>⚠</span> {error}
-          </p>
-        )}
-        {success && (
-          <p className="text-success text-sm flex items-center gap-1.5">
-            <Icon icon="check-circle" className="text-sm" /> Đổi mật khẩu thành công!
-          </p>
-        )}
 
         {/* Submit */}
         <div className="pt-1">
