@@ -1,17 +1,29 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Breadcrumb } from "@/components/ui";
 import { BlogList } from "@/components/blog";
 import { useLanguage } from "@/hooks/useLanguage";
-import type { BlogListResult } from "@/lib/api/blogApi";
+import { BLOG_PAGE_SIZE } from "@/lib/api/blogApi";
+import type { BlogPostSummary } from "@/types/blog";
 
 interface BlogPageClientProps {
-  blogPageVi: BlogListResult | null;
-  blogPageEn: BlogListResult | null;
+  postsVi: BlogPostSummary[] | null;
+  postsEn: BlogPostSummary[] | null;
 }
 
-export default function BlogPageClient({ blogPageVi, blogPageEn }: BlogPageClientProps) {
+export default function BlogPageClient(props: BlogPageClientProps) {
+  return (
+    <Suspense fallback={<div className="min-h-[400px]" />}>
+      <BlogPageClientInner {...props} />
+    </Suspense>
+  );
+}
+
+function BlogPageClientInner({ postsVi, postsEn }: BlogPageClientProps) {
   const { language } = useLanguage();
+  const searchParams = useSearchParams();
   const text = {
     breadcrumb: language === "vi" ? "Tin tổng hợp" : "Blog",
     heading: language === "vi" ? "Tin tức tổng hợp" : "News & insights",
@@ -27,9 +39,9 @@ export default function BlogPageClient({ blogPageVi, blogPageEn }: BlogPageClien
         : "Unable to load blog posts. Please try again later.",
   };
 
-  const blogPage = language === "en" ? blogPageEn : blogPageVi;
+  const allPosts = language === "en" ? postsEn : postsVi;
 
-  if (!blogPage) {
+  if (!allPosts) {
     return (
       <>
         <Breadcrumb items={[{ label: text.breadcrumb }]} />
@@ -42,7 +54,16 @@ export default function BlogPageClient({ blogPageVi, blogPageEn }: BlogPageClien
     );
   }
 
-  const { posts, currentPage, totalPages, totalPosts } = blogPage;
+  const totalPosts = allPosts.length;
+  const totalPages = Math.max(1, Math.ceil(totalPosts / BLOG_PAGE_SIZE));
+  const currentPage = Math.min(
+    Math.max(1, Number(searchParams.get("page")) || 1),
+    totalPages
+  );
+  const posts = allPosts.slice(
+    (currentPage - 1) * BLOG_PAGE_SIZE,
+    currentPage * BLOG_PAGE_SIZE
+  );
 
   return (
     <>

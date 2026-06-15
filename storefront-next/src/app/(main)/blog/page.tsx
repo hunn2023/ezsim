@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import BlogPageClient from "@/app/(main)/blog/BlogPageClient";
-import { getBlogPostsPage, BLOG_PAGE_SIZE } from "@/lib/api/blogApi";
+import { getBlogPosts } from "@/lib/api/blogApi";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -9,23 +9,15 @@ export const metadata: Metadata = buildMetadata({
   canonicalPath: "/blog",
 });
 
-interface BlogPageProps {
-  searchParams?: {
-    page?: string;
-  };
-}
-
-export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const page = Math.max(1, Number(searchParams?.page) || 1);
-
+export default async function BlogPage() {
   try {
-    const [blogPageVi, blogPageEn] = await Promise.all([
-      getBlogPostsPage(page, BLOG_PAGE_SIZE, "vi"),
-      getBlogPostsPage(page, BLOG_PAGE_SIZE, "en"),
+    const [postsVi, postsEn] = await Promise.all([
+      getBlogPosts("vi"),
+      getBlogPosts("en"),
     ]);
 
-    return <BlogPageClient blogPageVi={blogPageVi} blogPageEn={blogPageEn} />;
+    return <BlogPageClient postsVi={postsVi} postsEn={postsEn} />;
   } catch {
-    return <BlogPageClient blogPageVi={null} blogPageEn={null} />;
+    return <BlogPageClient postsVi={null} postsEn={null} />;
   }
 }
