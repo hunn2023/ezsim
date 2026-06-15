@@ -171,10 +171,10 @@ export default function CountrySearchBox({
           placeholder={placeholder}
           className={
             variant === "hero"
-              ? "flex-1 border-none outline-none text-navy font-sans"
-              : "w-full py-3 pl-11 pr-10 border-[1.5px] border-gray-200 rounded-xl text-sm font-sans outline-none focus:border-primary transition"
+              ? "flex-1 border-none outline-none text-navy font-sans text-[16px] sm:text-[14px]"
+              : "w-full py-3 pl-11 pr-10 border-[1.5px] border-gray-200 rounded-xl text-[16px] sm:text-[13px] font-sans outline-none focus:border-primary transition"
           }
-          style={variant === "hero" ? { padding: "13px 16px", fontSize: "14px" } : undefined}
+          style={variant === "hero" ? { padding: "13px 16px" } : undefined}
         />
 
         {variant === "hero" && submitLabel && (
