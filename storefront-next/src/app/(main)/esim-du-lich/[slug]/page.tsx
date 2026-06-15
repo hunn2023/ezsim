@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getEsimCountryBySlug } from "@/lib/api/esimApi";
+import { getProductContents, getProductFaqs } from "@/lib/api/productContentApi";
 import EsimCountryView from "./EsimCountryView";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -55,5 +56,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function EsimCountryPage({ params }: { params: { slug: string } }) {
   const country = await getEsimCountryBySlug(params.slug);
-  return <EsimCountryView country={country} />;
+  const [contents, faqs] = country.productId
+    ? await Promise.all([
+        getProductContents(country.productId),
+        getProductFaqs(country.productId),
+      ])
+    : [[], []];
+
+  return <EsimCountryView country={country} contents={contents} faqs={faqs} />;
 }

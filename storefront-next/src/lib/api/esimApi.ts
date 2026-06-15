@@ -142,13 +142,24 @@ export interface HomeEsimProduct {
   currency: string;
   isHot: boolean;
   isFeatured: boolean;
+  packageCount?: number;
+}
+
+function matchesProductSlug(productSlug: string | null | undefined, slug: string): boolean {
+  const normalizedProductSlug = productSlug?.trim().toLowerCase();
+  const normalizedRouteSlug = slug.trim().toLowerCase();
+  return (
+    normalizedProductSlug === normalizedRouteSlug ||
+    normalizedProductSlug === `esim-${normalizedRouteSlug}` ||
+    `esim-${normalizedProductSlug}` === normalizedRouteSlug
+  );
 }
 
 /** Featured eSIM products for the homepage "Điểm đến nổi bật" section. */
 export async function getHomeEsimProducts(): Promise<HomeEsimProduct[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`, {
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
     if (!response.ok) return [];
     const json = await response.json();
@@ -159,20 +170,49 @@ export async function getHomeEsimProducts(): Promise<HomeEsimProduct[]> {
   }
 }
 
+async function getHomeEsimProductBySlug(slug: string): Promise<HomeEsimProduct | null> {
+  const products = await getHomeEsimProducts();
+  return products.find((product) => matchesProductSlug(product.slug, slug)) ?? null;
+}
+
+// TODO: mock tạm để test khi API chưa có data — bỏ khi backend trả về dữ liệu thật.
+const MOCK_DESTINATIONS: EsimCountrySummary[] = [
+  { slug: "nhat-ban", flag: "https://flagcdn.com/w160/jp.png", name: "Nhật Bản", region: "Châu Á", startingPrice: 99000, bestseller: true, packageCount: 12 },
+  { slug: "han-quoc", flag: "https://flagcdn.com/w160/kr.png", name: "Hàn Quốc", region: "Châu Á", startingPrice: 89000, bestseller: false, packageCount: 8 },
+  { slug: "thai-lan", flag: "https://flagcdn.com/w160/th.png", name: "Thái Lan", region: "Châu Á", startingPrice: 79000, bestseller: false, packageCount: 6 },
+];
+
+// Backend caps PageSize at 100; loop pages so every country is returned.
+const COUNTRIES_PAGE_SIZE = 100;
+
 export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/countries/home`
-    );
-    if (!response.ok) return [];
-    const json = await response.json();
-    // Unwrap { isSuccess, data: { items } } wrapper
-    const payload = json.data ?? json;
-    const items: ApiCountryHome[] =
-      Array.isArray(payload) ? payload : payload.items ?? [];
-    return items.map(mapApiCountryHomeToSummary);
+    const all: ApiCountryHome[] = [];
+    let pageIndex = 1;
+
+    while (true) {
+      const response = await fetch(
+        `${API_BASE_URL}/api/catalog/countries/home?PageIndex=${pageIndex}&PageSize=${COUNTRIES_PAGE_SIZE}`
+      );
+      if (!response.ok) break;
+      const json = await response.json();
+      // Unwrap { isSuccess, data: { items, totalPages, hasNextPage } } wrapper
+      const payload = json.data ?? json;
+      const items: ApiCountryHome[] =
+        Array.isArray(payload) ? payload : payload.items ?? [];
+      all.push(...items);
+
+      const hasNext = Array.isArray(payload)
+        ? items.length === COUNTRIES_PAGE_SIZE
+        : payload.hasNextPage ?? pageIndex < (payload.totalPages ?? 1);
+      if (!hasNext || items.length === 0) break;
+      pageIndex += 1;
+    }
+
+    if (all.length === 0) return MOCK_DESTINATIONS;
+    return all.map(mapApiCountryHomeToSummary);
   } catch {
-    return [];
+    return MOCK_DESTINATIONS;
   }
 }
 
@@ -207,7 +247,8 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
     // returns every product's variants, so we fetch the full list (large page size)
     // and filter client-side by productSlug.
     const response = await fetch(
-      `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`
+      `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`,
+      { cache: "no-store" }
     );
     const json = response.ok ? await response.json() : null;
     if (json?.isSuccess === false) return buildEmptyEsimCountry(slug);
@@ -216,14 +257,31 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
 
     // Match the route slug against the product slug. Country-style slugs
     // (e.g. "han-quoc") map to their product slug ("esim-han-quoc").
-    const normalized = slug.trim().toLowerCase();
-    let items = allItems.filter((v) => v.productSlug?.toLowerCase() === normalized);
-    if (items.length === 0) {
-      items = allItems.filter((v) => v.productSlug?.toLowerCase() === `esim-${normalized}`);
-    }
+    let items = allItems.filter((v) => matchesProductSlug(v.productSlug, slug));
 
     // No matching product: still show the page, just without packages.
-    if (items.length === 0) return buildEmptyEsimCountry(slug);
+    if (items.length === 0) {
+      const product = await getHomeEsimProductBySlug(slug);
+      if (!product) return buildEmptyEsimCountry(slug);
+
+      return {
+        productId: product.id,
+        slug: product.slug,
+        flag: product.flagUrl || product.thumbnailUrl || "",
+        name: product.name,
+        nameEn: product.slug,
+        region: mapRegion(null),
+        gradient: "from-blue-500 to-purple-600",
+        textColor: "text-white",
+        tagBg: "bg-white/20",
+        tags: [product.locationText].filter(Boolean) as string[],
+        stats: [
+          { label: "Số gói", value: String(product.packageCount ?? 0) },
+          { label: "Giá từ", value: product.priceFrom ? `${product.priceFrom.toLocaleString("vi-VN")}đ` : "—" },
+        ],
+        packages: [],
+      };
+    }
 
     // Use the first item for product-level info
     const first = items[0];
@@ -238,30 +296,39 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
         .map((f: { text: string }) => f.text);
 
       const quickTags: PackageQuickTag[] = [];
-      const nameL = (variant.variantName || "").toLowerCase();
-      if (nameL.includes("unlimited") || nameL.includes("không giới hạn")) quickTags.push("unlimited");
+      const searchableText = [
+        variant.variantName,
+        variant.variantShortName,
+        variant.variantDescription,
+        variant.sku,
+      ].filter(Boolean).join(" ");
+      const nameL = searchableText.toLowerCase();
+      const isUnlimited = nameL.includes("unlimited") || nameL.includes("không giới hạn") || nameL.includes("vô hạn");
+      const dataInfo = extractDataInfo(searchableText);
+      const days = extractDays(searchableText);
+      if (isUnlimited) quickTags.push("unlimited");
       if (variant.isHot) quickTags.push("bestseller");
 
       return {
         id: variant.productVariantId,
         slug: variant.sku || variant.productVariantId,
-        name: variant.variantName || variant.variantShortName || "Gói eSIM",
+        name: variant.variantShortName || variant.variantName || "Gói eSIM",
         image: variant.thumbnailUrl || `https://picsum.photos/seed/${slug}/640/480`,
         productId: variant.productId,
         productVariantId: variant.productVariantId,
         esimPackageId: variant.productVariantId,
-        data: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? "∞" : "—",
-        dataUnit: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? "Không giới hạn" : "GB",
-        subtitle: variant.variantDescription || `${variant.variantShortName}`,
-        tag: variant.variantShortName || variant.variantName || "",
-        tagType: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? "unlimited" : undefined,
+        data: isUnlimited ? "∞" : dataInfo.amount,
+        dataUnit: isUnlimited ? "Không giới hạn" : dataInfo.unit,
+        subtitle: variant.variantShortName || variant.variantName || variant.variantDescription || "Gói eSIM",
+        tag: days > 0 ? `${days} NGÀY` : "",
+        tagType: isUnlimited ? "unlimited" : undefined,
         features,
         price,
         oldPrice,
         discount,
         featured: variant.isFeatured,
-        days: extractDays(variant.variantDescription || variant.sku || ""),
-        dataGB: nameL.includes("unlimited") || nameL.includes("không giới hạn") ? null : 0,
+        days,
+        dataGB: isUnlimited ? null : dataInfo.dataGB,
         quickTags,
         stock: 999,
         rating: 4.5,
@@ -270,6 +337,7 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
     });
 
     return {
+      productId: first.productId,
       slug,
       flag: first.thumbnailUrl || `https://flagcdn.com/w160/${(first.countryName || "").slice(0, 2).toLowerCase()}.png`,
       name: first.productName || `eSIM ${first.countryName}`,
@@ -299,7 +367,7 @@ interface ApiProductVariant {
   sku: string;
   variantName: string;
   variantShortName: string;
-  variantDescription: string;
+  variantDescription: string | null;
   categoryId: string;
   categoryName: string;
   countryId: string;
@@ -318,8 +386,24 @@ interface ApiProductVariant {
   features: { productVariantId: string; text: string; icon: string | null; sortOrder: number }[];
 }
 
+function extractDataInfo(text: string): { amount: string; unit: string; dataGB: number } {
+  const normalized = text.replace(",", ".").trim();
+  const match = normalized.match(/(\d+(?:\.\d+)?)\s*(GB|MB)\b/i);
+  if (!match) return { amount: "—", unit: "GB", dataGB: 0 };
+
+  const value = Number(match[1]);
+  const unit = match[2].toUpperCase();
+  if (!Number.isFinite(value)) return { amount: "—", unit: "GB", dataGB: 0 };
+
+  return {
+    amount: Number.isInteger(value) ? String(value) : String(value),
+    unit,
+    dataGB: unit === "MB" ? value / 1024 : value,
+  };
+}
+
 function extractDays(text: string): number {
-  const match = text.match(/(\d+)\s*(?:ngày|days?|d)/i);
+  const match = text.match(/(\d+)\s*(?:ngày|days?|d)\b/i);
   return match ? parseInt(match[1], 10) : 7;
 }
 

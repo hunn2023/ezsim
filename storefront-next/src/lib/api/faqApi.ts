@@ -1,8 +1,6 @@
 import type { Language } from "@/lib/i18n";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-/** Cache the build/SSR fetch for 5 minutes (ignored in static export, fetched once at build). */
-const REVALIDATE_SECONDS = 300;
 
 export interface FaqItem {
   id: string;
@@ -41,7 +39,7 @@ function mapFaq(faq: ApiContentFaq): FaqItem {
 export async function getFaqs(_language: Language = "vi"): Promise<FaqItem[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/content/faqs`, {
-      next: { revalidate: REVALIDATE_SECONDS },
+      cache: "no-store",
     });
     if (!response.ok) return [];
 

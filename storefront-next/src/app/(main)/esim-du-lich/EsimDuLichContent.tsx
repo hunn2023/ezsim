@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import CountrySearchBox from "@/components/common/CountrySearchBox";
 import { Breadcrumb } from "@/components/ui";
 import { useLanguage } from "@/hooks/useLanguage";
+import { removeDiacritics } from "@/lib/text";
 import type { EsimCountrySummary } from "@/types/esim";
 
 const COUNTRY_FLAG_CODES: Record<string, string> = {
@@ -49,14 +50,14 @@ function EsimDuLichContentInner({
   const { language } = useLanguage();
   const searchParams = useSearchParams();
   const keywordRaw = searchParams.get("q")?.trim() ?? "";
-  const keyword = keywordRaw.toLowerCase();
+  const keyword = removeDiacritics(keywordRaw);
   const selectedRegion = searchParams.get("region")?.trim() ?? "";
 
   const keywordFilteredDestinations = keyword
     ? destinations.filter(
         (destination) =>
-          destination.name.toLowerCase().includes(keyword) ||
-          destination.region.toLowerCase().includes(keyword)
+          removeDiacritics(destination.name).includes(keyword) ||
+          removeDiacritics(destination.region).includes(keyword)
       )
     : destinations;
 

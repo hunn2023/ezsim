@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
 import type { Language } from "@/lib/i18n";
+import { removeDiacritics } from "@/lib/text";
+import { getEsimCountries } from "@/lib/api/esimApi";
 
 type CountrySearchItem = {
   slug: string;
@@ -12,10 +14,7 @@ type CountrySearchItem = {
   flagUrl: string | null;
   region: string;
   priceFrom: number;
-  code: string;
 };
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 interface CountrySearchBoxProps {
   language: Language;
@@ -52,20 +51,14 @@ export default function CountrySearchBox({
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/catalog/countries/home?PageSize=50`);
-      if (!res.ok) return;
-      const json = await res.json();
-      const payload = json.data ?? json;
-      const items: { countryId: string; code: string; name: string; slug: string; flagUrl: string | null; region: string | null; priceFrom: number }[] =
-        Array.isArray(payload) ? payload : payload.items ?? [];
+      const summaries = await getEsimCountries();
       setCountries(
-        items.map((item) => ({
-          slug: item.slug.trim().replace(/\s+/g, "-"),
+        summaries.map((item) => ({
+          slug: item.slug,
           name: item.name,
-          flagUrl: item.flagUrl,
-          region: item.region ?? "Châu Á",
-          priceFrom: item.priceFrom ?? 0,
-          code: item.code?.toLowerCase() ?? "",
+          flagUrl: item.flag || null,
+          region: item.region,
+          priceFrom: item.startingPrice ?? 0,
         }))
       );
     } catch { /* ignore */ }
@@ -91,12 +84,11 @@ export default function CountrySearchBox({
   }, [open, onClose]);
 
   const filteredResults = useMemo(() => {
-    const normalizedKeyword = deferredKeyword.trim().toLowerCase();
+    const normalizedKeyword = removeDiacritics(deferredKeyword.trim());
     const baseList = normalizedKeyword
       ? countries.filter((country) =>
-          country.name.toLowerCase().includes(normalizedKeyword) ||
-          country.region.toLowerCase().includes(normalizedKeyword) ||
-          country.code.includes(normalizedKeyword)
+          removeDiacritics(country.name).includes(normalizedKeyword) ||
+          removeDiacritics(country.region).includes(normalizedKeyword)
         )
       : countries;
 
@@ -121,8 +113,9 @@ export default function CountrySearchBox({
       return;
     }
 
+    const normalizedSearch = removeDiacritics(search);
     const exactMatch = countries.find(
-      (country) => country.name.toLowerCase() === search.toLowerCase()
+      (country) => removeDiacritics(country.name) === normalizedSearch
     );
 
     if (exactMatch) {
@@ -135,11 +128,7 @@ export default function CountrySearchBox({
     onClose?.();
   };
 
-  const getFlagSrc = (country: CountrySearchItem) => {
-    if (country.flagUrl) return country.flagUrl;
-    if (country.code) return `https://flagcdn.com/w40/${country.code}.png`;
-    return null;
-  };
+  const getFlagSrc = (country: CountrySearchItem) => country.flagUrl;
 
   return (
     <div ref={rootRef} className="relative">

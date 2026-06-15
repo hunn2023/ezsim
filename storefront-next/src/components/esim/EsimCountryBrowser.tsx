@@ -11,6 +11,7 @@ import Sidebar from "./Sidebar";
 import QuickPills from "./QuickPills";
 import PackageCard from "./PackageCard";
 import InfoTabs from "./InfoTabs";
+import type { ProductContent, ProductFaq } from "@/types/productContent";
 
 const INITIAL_FILTERS: EsimPackageFilters = {
   days: [],
@@ -36,7 +37,13 @@ function getGbGroupKey(dataGB: number | null): GbGroupKey {
   return "20";
 }
 
-export default function EsimCountryBrowser({ country }: { country: EsimCountryDetail }) {
+interface EsimCountryBrowserProps {
+  country: EsimCountryDetail;
+  contents: ProductContent[];
+  faqs: ProductFaq[];
+}
+
+export default function EsimCountryBrowser({ country, contents, faqs }: EsimCountryBrowserProps) {
   const addToCart = useCartStore((state) => state.addToCart);
   const { triggerFlyToCart } = useCartAnimation();
   const { language } = useLanguage();
@@ -355,7 +362,7 @@ export default function EsimCountryBrowser({ country }: { country: EsimCountryDe
           </div>
         )}
 
-        <InfoTabs />
+        <InfoTabs contents={contents} faqs={faqs} />
       </main>
     </div>
   );

@@ -4,8 +4,6 @@ import type { BlogPost, BlogPostSummary } from "@/types/blog";
 export const BLOG_PAGE_SIZE = 6;
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-/** Cache the build/SSR fetch for 5 minutes (ignored in static export, fetched once at build). */
-const REVALIDATE_SECONDS = 300;
 
 export interface BlogListResult {
   posts: BlogPostSummary[];
@@ -80,7 +78,7 @@ function toSummary({ content: _content, ...summary }: BlogPost): BlogPostSummary
 async function fetchJson<T>(path: string): Promise<T | null> {
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
-      next: { revalidate: REVALIDATE_SECONDS },
+      cache: "no-store",
     });
     if (!response.ok) return null;
     return (await response.json()) as T;

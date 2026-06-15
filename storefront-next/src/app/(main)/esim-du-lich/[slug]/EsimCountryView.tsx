@@ -1,6 +1,7 @@
 import { Breadcrumb } from "@/components/ui";
 import { CountryHero, EsimCountryBrowser } from "@/components/esim";
 import type { EsimCountryDetail } from "@/types/esim";
+import type { ProductContent, ProductFaq } from "@/types/productContent";
 
 const COUNTRY_FLAG_CODES: Record<string, string> = {
   "nhat-ban": "jp",
@@ -10,7 +11,13 @@ const COUNTRY_FLAG_CODES: Record<string, string> = {
   "my": "us",
 };
 
-export default function EsimCountryView({ country }: { country: EsimCountryDetail }) {
+interface EsimCountryViewProps {
+  country: EsimCountryDetail;
+  contents: ProductContent[];
+  faqs: ProductFaq[];
+}
+
+export default function EsimCountryView({ country, contents, faqs }: EsimCountryViewProps) {
   const displayRegion = country.region;
   const displayCountry = country.name.replace(/^eSIM\s+/, "");
 
@@ -36,7 +43,7 @@ export default function EsimCountryView({ country }: { country: EsimCountryDetai
         tagBg={country.tagBg}
       />
 
-      <EsimCountryBrowser country={country} />
+      <EsimCountryBrowser country={country} contents={contents} faqs={faqs} />
     </>
   );
 }

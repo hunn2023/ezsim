@@ -9,11 +9,19 @@ export const metadata: Metadata = buildMetadata({
   canonicalPath: "/blog",
 });
 
-export default async function BlogPage() {
+interface BlogPageProps {
+  searchParams?: {
+    page?: string;
+  };
+}
+
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  const page = Math.max(1, Number(searchParams?.page) || 1);
+
   try {
     const [blogPageVi, blogPageEn] = await Promise.all([
-      getBlogPostsPage(1, BLOG_PAGE_SIZE, "vi"),
-      getBlogPostsPage(1, BLOG_PAGE_SIZE, "en"),
+      getBlogPostsPage(page, BLOG_PAGE_SIZE, "vi"),
+      getBlogPostsPage(page, BLOG_PAGE_SIZE, "en"),
     ]);
 
     return <BlogPageClient blogPageVi={blogPageVi} blogPageEn={blogPageEn} />;

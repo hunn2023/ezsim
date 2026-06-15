@@ -44,6 +44,7 @@ export interface EsimCountryStat {
 }
 
 export interface EsimCountryDetail {
+  productId?: string;
   slug: string;
   flag: string;
   name: string;
