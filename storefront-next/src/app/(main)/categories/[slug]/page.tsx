@@ -8,6 +8,8 @@ interface PageProps {
   params: { slug: string };
 }
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   return [
     { slug: "esim" },

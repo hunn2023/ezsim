@@ -5,6 +5,8 @@ import EsimCountryView from "./EsimCountryView";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
+export const revalidate = 60;
+
 export async function generateStaticParams() {
   // Only the product slug ("esim-nhat-ban") is canonical. We deliberately do NOT
   // emit country slugs ("nhat-ban") so each detail page exists at exactly one URL.

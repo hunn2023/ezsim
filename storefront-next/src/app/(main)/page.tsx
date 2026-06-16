@@ -10,6 +10,8 @@ import FAQSection from "@/components/home/FAQSection";
 import { BlogSection } from "@/components/blog";
 import { Suspense } from "react";
 
+export const revalidate = 60;
+
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata({
     absoluteTitle: `${SITE.name} - ${SITE.tagline} | eSIM du lịch 200+ quốc gia`,
