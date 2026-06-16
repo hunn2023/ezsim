@@ -108,9 +108,13 @@ export interface ApiCarrier {
 export interface ApiEsimPackage {
   id: string;
   productId: string;
+  productName?: string | null;
   productVariantId: string;
+  productVariantName?: string | null;
   providerId: string;
+  providerName?: string | null;
   countryId: string;
+  countryName?: string | null;
   name: string;
   slug: string;
   providerPackageCode: string | null;
@@ -155,6 +159,17 @@ export interface ApiProduct {
   isHot: boolean;
   sortOrder: number;
   isActive: boolean;
+  soldCount?: number;
+  minPrice?: number | null;
+  variantCount?: number;
+  attributes?: {
+    id: string;
+    productId: string | null;
+    key: string;
+    value: string;
+    sortOrder: number;
+    isVisible: boolean | null;
+  }[];
   // Relations
   category?: ApiCategory;
   country?: ApiCountry;

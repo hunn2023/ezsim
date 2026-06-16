@@ -10,9 +10,23 @@ interface PackageCardProps {
   onBuy?: (pkg: EsimPackage, quantity: number, triggerElement: HTMLElement | null) => void;
 }
 
+const BOOLEAN_FEATURE_ICONS: Record<string, string> = {
+  "Data không giới hạn": "∞",
+  "Hỗ trợ chia sẻ Hotspot": "📶",
+  "Hỗ trợ số điện thoại": "📞",
+  "Hỗ trợ SMS": "💬",
+  "Yêu cầu KYC": "🪪",
+  "Unlimited data": "∞",
+  "Hotspot supported": "📶",
+  "Phone number supported": "📞",
+  "SMS supported": "💬",
+  "KYC required": "🪪",
+};
+
 export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
   const [quantity, setQuantity] = useState(1);
   const { language } = useLanguage();
+
   const tagStyles: Record<NonNullable<EsimPackage["tagType"]>, { bg: string; color: string }> = {
     default:   { bg: "rgba(0,102,255,0.1)", color: "#0066FF" },
     unlimited: { bg: "#FEF3C7",              color: "#92400E" },
@@ -22,6 +36,7 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
   const maxQuantity = Math.max(1, Math.min(pkg.stock, 99));
   const totalPrice = pkg.price * quantity;
   const formatPrice = (value: number) => `${value.toLocaleString("vi-VN")}đ`;
+
   const text = {
     unitPrice: language === "vi" ? "Đơn giá" : "Unit price",
     quantity: language === "vi" ? "Số lượng" : "Quantity",
@@ -33,43 +48,35 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
 
   const translateText = (value: string) => {
     if (language === "vi") return value;
-
     const map: Record<string, string> = {
       "Tốc độ cao toàn thời gian": "High-speed data at all times",
-      "Phù hợp đi 7-10 ngày": "Ideal for 7-10 day trips",
+      "Phù hợp đi 7-10 ngày": "Ideal for 7–10 day trips",
       "2GB/ngày tốc độ cao": "2GB/day high-speed data",
-      "Đi ngắn ngày, công tác": "Short trips and business travel",
-      "Đi dài ngày, tour 2 tuần": "Long stays and 2-week tours",
-      "Du học, công tác dài hạn": "Study abroad and long-term business trips",
+      "Đi ngắn ngày, công tác": "Short trips & business travel",
+      "Đi dài ngày, tour 2 tuần": "Long stays & 2-week tours",
+      "Du học, công tác dài hạn": "Study abroad & long-term business",
       "Mạng 5G NTT Docomo": "NTT Docomo 5G network",
       "Hỗ trợ chia sẻ Hotspot": "Hotspot sharing supported",
       "Kích hoạt khi đặt chân Nhật": "Activates on arrival in Japan",
       "Không cần đăng ký giấy tờ": "No paperwork required",
       "Mạng 5G/4G LTE": "5G/4G LTE network",
       "Tự động chuyển mạng tốt nhất": "Auto-switch to best network",
-      "Hết 10GB giảm tốc vẫn dùng được": "After 10GB, speed reduced but still usable",
-      "2GB tốc độ cao mỗi ngày": "2GB high-speed each day",
-      "Sau đó vẫn dùng, giảm tốc": "Then unlimited at reduced speed",
-      "Phù hợp đi nhóm, gia đình": "Ideal for groups and families",
-      "Chia sẻ Hotspot thoải mái": "Freely share via hotspot",
       "Mạng SoftBank 4G LTE": "SoftBank 4G LTE network",
-      "Phù hợp dùng map, mạng xã hội": "Great for maps and social apps",
-      "Tốc độ 100Mbps+": "100Mbps+ speed",
       "Mạng 5G/4G+ chuẩn": "Stable 5G/4G+ connectivity",
-      "Đủ dùng livestream, video call": "Enough for livestream and video calls",
-      "Trung bình 1.3GB/ngày": "Average 1.3GB/day",
       "30GB tốc độ cao": "30GB high-speed data",
-      "Có số điện thoại gọi, nhắn tin": "Includes phone number for calls and SMS",
-      "Đăng ký được tài khoản dịch vụ Nhật": "Supports local service registration",
-      "Phù hợp ở 1 tháng+": "Ideal for stays over 1 month",
+      "Có số điện thoại gọi, nhắn tin": "Includes phone number",
       "7 NGÀY": "7 DAYS",
       "10 NGÀY": "10 DAYS",
       "5 NGÀY": "5 DAYS",
       "15 NGÀY": "15 DAYS",
       "⭐ UNLIMITED": "⭐ UNLIMITED",
-      "📞 CÓ SĐT": "📞 WITH PHONE NUMBER",
+      "📞 CÓ SĐT": "📞 WITH NUMBER",
+      "Kích hoạt khi cài đặt eSIM": "Activates on eSIM install",
+      "Kích hoạt khi sử dụng lần đầu": "Activates on first use",
+      "Kích hoạt ngay sau khi mua": "Activates immediately after purchase",
+      "Giao hàng: Qua email, ngay sau khi thanh toán, 24/7": "Delivery: Via email, right after payment, 24/7",
+      "Chức năng: Kết nối internet, nghe gọi, nhắn tin": "Features: Internet, calls, SMS",
     };
-
     return map[value] ?? value;
   };
 
@@ -77,13 +84,18 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
     setQuantity(Math.max(1, Math.min(next, maxQuantity)));
   };
 
+  // Split: booleanFeatures → chips, regular features → bullet list
+  const chips = (pkg.booleanFeatures ?? []);
+  const bullets = pkg.features ?? [];
+
   return (
     <div
       className="bg-white relative transition-all flex flex-col group hover:-translate-y-0.5"
       style={{
         borderRadius: "16px",
-        padding: "24px",
         border: pkg.featured ? "2px solid #0066FF" : "1.5px solid #E2E8F0",
+        boxShadow: pkg.featured ? "0 4px 20px rgba(0,102,255,0.08)" : "none",
+        overflow: "hidden",
       }}
     >
       {pkg.featuredLabel && (
@@ -102,54 +114,91 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
         </span>
       )}
 
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
+      {/* Header strip */}
+      <div
+        className="flex justify-between items-start"
+        style={{ padding: "20px 20px 16px" }}
+      >
         <div>
           <div
-            className="font-extrabold text-navy"
-            style={{ fontSize: "28px", letterSpacing: "-0.5px" }}
+            className="font-extrabold text-navy leading-none"
+            style={{ fontSize: "30px", letterSpacing: "-0.5px" }}
           >
-            {pkg.data}{" "}
-            <span className="text-gray-500 font-medium" style={{ fontSize: "14px" }}>
+            {pkg.data}
+            <span className="text-gray-400 font-medium ml-1.5" style={{ fontSize: "14px" }}>
               {pkg.dataUnit}
             </span>
           </div>
-          <div className="text-gray-500" style={{ fontSize: "13px", marginTop: "4px" }}>
+          <div className="text-gray-500 mt-1" style={{ fontSize: "12.5px" }}>
             {translateText(pkg.subtitle)}
           </div>
         </div>
         <span
-          className="font-bold"
+          className="font-bold shrink-0"
           style={{
             background: tagStyle.bg,
             color: tagStyle.color,
             padding: "4px 10px",
             borderRadius: "6px",
             fontSize: "11px",
+            whiteSpace: "nowrap",
           }}
         >
           {translateText(pkg.tag)}
         </span>
       </div>
 
-      {/* Features */}
-      <ul className="list-none flex-grow" style={{ margin: "16px 0" }}>
-        {pkg.features.map((f) => (
-          <li
-            key={f}
-            className="flex items-center gap-2 text-gray-700"
-            style={{ fontSize: "13px", padding: "4px 0" }}
-          >
-            <Icon icon="check-circle" className="text-primary" style={{ width: "16px" }} /> {translateText(f)}
-          </li>
-        ))}
-      </ul>
+      {/* Boolean feature chips */}
+      {chips.length > 0 && (
+        <div
+          className="flex flex-wrap gap-1.5 px-5"
+          style={{ paddingBottom: "12px" }}
+        >
+          {chips.map((chip) => (
+            <span
+              key={chip}
+              className="inline-flex items-center gap-1 font-medium"
+              style={{
+                background: "#F0F7FF",
+                color: "#0055CC",
+                fontSize: "11px",
+                padding: "3px 9px",
+                borderRadius: "20px",
+                border: "1px solid rgba(0,102,255,0.15)",
+              }}
+            >
+              {BOOLEAN_FEATURE_ICONS[translateText(chip)] ?? "✓"} {translateText(chip)}
+            </span>
+          ))}
+        </div>
+      )}
 
-      {/* Divider */}
-      <div style={{ borderTop: "1px solid #F1F5F9", margin: "16px 0" }} />
+      <div style={{ borderTop: "1px solid #F1F5F9", margin: "0 20px" }} />
 
-      {/* Footer */}
-      <div className="mt-1 flex flex-col gap-3">
+      {/* Feature bullet list */}
+      {bullets.length > 0 && (
+        <ul
+          className="list-none flex-grow"
+          style={{ margin: "12px 0", padding: "0 20px" }}
+        >
+          {bullets.map((f) => (
+            <li
+              key={f}
+              className="flex items-start gap-2 text-gray-600"
+              style={{ fontSize: "12.5px", padding: "4px 0", lineHeight: "1.45" }}
+            >
+              <span className="text-primary font-bold mt-px shrink-0">✓</span>
+              <span>{translateText(f)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div style={{ borderTop: "1px solid #F1F5F9", margin: "0 20px" }} />
+
+      {/* Price + quantity + buy */}
+      <div className="flex flex-col gap-3 p-5 pt-4">
+        {/* Price row */}
         <div className="relative rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
           {pkg.discount && (
             <span
@@ -169,20 +218,16 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
           )}
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{text.unitPrice}</p>
           {pkg.oldPrice && (
-            <div
-              className="line-through text-gray-500"
-              style={{ fontSize: "12px", marginBottom: "1px" }}
-            >
+            <div className="line-through text-gray-400" style={{ fontSize: "12px" }}>
               {formatPrice(pkg.oldPrice)}
             </div>
           )}
-          <div className="flex items-end justify-between gap-3">
-            <span className="font-extrabold text-navy" style={{ fontSize: "24px", letterSpacing: "-0.5px" }}>
-              {formatPrice(pkg.price)}
-            </span>
-          </div>
+          <span className="font-extrabold text-navy" style={{ fontSize: "24px", letterSpacing: "-0.5px" }}>
+            {formatPrice(pkg.price)}
+          </span>
         </div>
 
+        {/* Quantity row */}
         <div className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{text.quantity}</p>
@@ -211,13 +256,15 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
           </div>
         </div>
 
+        {/* Subtotal */}
         <div className="flex items-center justify-between rounded-xl border border-primary/25 bg-primary/5 px-3 py-2.5">
           <p className="text-xs font-semibold text-slate-600">
-            {formatPrice(pkg.price)} x {quantity}
+            {formatPrice(pkg.price)} × {quantity}
           </p>
           <p className="text-lg font-extrabold text-primary">{formatPrice(totalPrice)}</p>
         </div>
 
+        {/* Buy button */}
         <button
           type="button"
           onClick={(event) => onBuy?.(pkg, quantity, event.currentTarget)}
