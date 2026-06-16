@@ -158,9 +158,7 @@ function matchesProductSlug(productSlug: string | null | undefined, slug: string
 /** Featured eSIM products for the homepage "Điểm đến nổi bật" section. */
 export async function getHomeEsimProducts(): Promise<HomeEsimProduct[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`, {
-      cache: "no-store",
-    });
+    const response = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`);
     if (!response.ok) return [];
     const json = await response.json();
     const data = json?.data ?? json ?? [];
@@ -184,6 +182,31 @@ const MOCK_DESTINATIONS: EsimCountrySummary[] = [
 
 // Backend caps PageSize at 100; loop pages so every country is returned.
 const COUNTRIES_PAGE_SIZE = 100;
+
+/**
+ * Maps each countryId to its canonical product slug (e.g. "esim-nhat-ban").
+ * The variants catalog is the only endpoint that carries both countryId and
+ * productSlug, so it's the reliable join between countries/home and products.
+ */
+async function getProductSlugByCountryId(): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/catalog/products/variants?pageSize=500`);
+    if (!response.ok) return map;
+    const json = await response.json();
+    const payload = json?.data ?? json;
+    const items: ApiProductVariant[] = Array.isArray(payload) ? payload : payload?.items ?? [];
+    for (const item of items) {
+      const productSlug = item.productSlug?.trim();
+      if (item.countryId && productSlug && !map.has(item.countryId)) {
+        map.set(item.countryId, productSlug);
+      }
+    }
+  } catch {
+    /* ignore — countries without a resolved product are dropped by the caller */
+  }
+  return map;
+}
 
 export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
   try {
@@ -210,7 +233,17 @@ export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
     }
 
     if (all.length === 0) return MOCK_DESTINATIONS;
-    return all.map(mapApiCountryHomeToSummary);
+
+    // Listing links must use the canonical product slug ("esim-nhat-ban"), not the
+    // country slug ("nhat-ban"), so every card points at the one prerendered detail
+    // page. Countries with no resolved product have no detail page and are dropped.
+    const productSlugByCountryId = await getProductSlugByCountryId();
+    return all.reduce<EsimCountrySummary[]>((acc, country) => {
+      const productSlug = productSlugByCountryId.get(country.countryId);
+      if (!productSlug) return acc;
+      acc.push({ ...mapApiCountryHomeToSummary(country), slug: productSlug });
+      return acc;
+    }, []);
   } catch {
     return MOCK_DESTINATIONS;
   }
@@ -247,8 +280,7 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
     // returns every product's variants, so we fetch the full list (large page size)
     // and filter client-side by productSlug.
     const response = await fetch(
-      `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`,
-      { cache: "no-store" }
+      `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`
     );
     const json = response.ok ? await response.json() : null;
     if (json?.isSuccess === false) return buildEmptyEsimCountry(slug);

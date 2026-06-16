@@ -38,9 +38,7 @@ function mapFaq(faq: ApiContentFaq): FaqItem {
  */
 export async function getFaqs(_language: Language = "vi"): Promise<FaqItem[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/content/faqs`, {
-      cache: "no-store",
-    });
+    const response = await fetch(`${API_BASE_URL}/api/content/faqs`);
     if (!response.ok) return [];
 
     const json = (await response.json()) as ApiResult<ApiContentFaq[]>;

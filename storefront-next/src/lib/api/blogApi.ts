@@ -77,9 +77,7 @@ function toSummary({ content: _content, ...summary }: BlogPost): BlogPostSummary
 
 async function fetchJson<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      cache: "no-store",
-    });
+    const response = await fetch(`${API_BASE_URL}${path}`);
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {

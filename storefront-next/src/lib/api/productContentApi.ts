@@ -12,8 +12,7 @@ function unwrapItems<T>(json: unknown): T[] {
 export async function getProductContents(productId: string): Promise<ProductContent[]> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/public/product-contents/by-product/${productId}`,
-      { cache: "no-store" }
+      `${API_BASE_URL}/api/public/product-contents/by-product/${productId}`
     );
     if (!response.ok) return [];
     const items = unwrapItems<ProductContent>(await response.json());
@@ -31,8 +30,7 @@ export async function getProductContentsByType(
 ): Promise<ProductContent[]> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/public/product-contents/by-product/${productId}/type/${contentType}`,
-      { cache: "no-store" }
+      `${API_BASE_URL}/api/public/product-contents/by-product/${productId}/type/${contentType}`
     );
     if (!response.ok) return [];
     const items = unwrapItems<ProductContent>(await response.json());
@@ -47,8 +45,7 @@ export async function getProductContentsByType(
 export async function getProductFaqs(productId: string): Promise<ProductFaq[]> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/public/product-faqs/by-product/${productId}`,
-      { cache: "no-store" }
+      `${API_BASE_URL}/api/public/product-faqs/by-product/${productId}`
     );
     if (!response.ok) return [];
     const items = unwrapItems<ProductFaq>(await response.json());

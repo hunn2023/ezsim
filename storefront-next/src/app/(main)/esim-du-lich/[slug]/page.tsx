@@ -5,12 +5,11 @@ import EsimCountryView from "./EsimCountryView";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-export const dynamicParams = true;
-
 export async function generateStaticParams() {
+  // Only the product slug ("esim-nhat-ban") is canonical. We deliberately do NOT
+  // emit country slugs ("nhat-ban") so each detail page exists at exactly one URL.
   const slugSet = new Set<string>();
 
-  // Fetch product slugs (e.g., "esim-han-quoc")
   try {
     const res = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`);
     if (res.ok) {
@@ -20,26 +19,12 @@ export async function generateStaticParams() {
     }
   } catch { /* ignore */ }
 
-  // Fetch country slugs (e.g., "viet-nam")
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/catalog/countries/home`);
-    if (res.ok) {
-      const json = await res.json();
-      const payload = json.data ?? json;
-      const items: { slug: string }[] = Array.isArray(payload) ? payload : payload.items ?? [];
-      for (const item of items) slugSet.add(item.slug.trim().replace(/\s+/g, "-"));
-    }
-  } catch { /* ignore */ }
-
   if (slugSet.size > 0) {
     return Array.from(slugSet).map((slug) => ({ slug }));
   }
 
   // Fallback
-  return [
-    { slug: "esim-han-quoc" },
-    { slug: "viet-nam" },
-  ];
+  return [{ slug: "esim-han-quoc" }];
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
