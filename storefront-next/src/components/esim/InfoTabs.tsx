@@ -137,25 +137,72 @@ export default function InfoTabs({ contents, faqs }: InfoTabsProps) {
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {faqs.map((faq, i) => (
-            <div
-              key={faq.id}
-              className="bg-gray-50 rounded-xl px-5 py-4 cursor-pointer"
-              onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-            >
-              <div className="font-semibold text-sm flex justify-between items-center gap-4">
-                <span>{faq.question}</span>
-                <Icon
-                  icon="chevron-down"
-                  className={`shrink-0 transition-transform ${openFaq === i ? "rotate-180" : ""}`}
-                />
+        <div className="flex flex-col gap-2.5">
+          {faqs.map((faq, i) => {
+            const open = openFaq === i;
+            return (
+              <div
+                key={faq.id}
+                className="bg-white rounded-xl overflow-hidden cursor-pointer"
+                style={{
+                  border: open ? "1.5px solid #0066FF" : "1.5px solid #E2E8F0",
+                  boxShadow: open ? "0 2px 16px rgba(0,102,255,0.08)" : "none",
+                  transition: "border-color 0.2s, box-shadow 0.2s",
+                }}
+                onClick={() => setOpenFaq(open ? -1 : i)}
+              >
+                {/* Question row */}
+                <div
+                  className="flex items-start gap-3"
+                  style={{ padding: "14px 16px" }}
+                >
+                  <span
+                    className="shrink-0 font-bold text-xs leading-none flex items-center justify-center"
+                    style={{
+                      width: "26px",
+                      height: "26px",
+                      borderRadius: "7px",
+                      background: open ? "#0066FF" : "#F1F5F9",
+                      color: open ? "#fff" : "#94A3B8",
+                      transition: "background 0.2s, color 0.2s",
+                      marginTop: "1px",
+                    }}
+                    aria-hidden
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+
+                  <span className="flex-1 font-semibold text-sm text-navy leading-snug">
+                    {faq.question}
+                  </span>
+
+                  <span
+                    className="shrink-0"
+                    style={{
+                      transform: open ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                      marginTop: "2px",
+                    }}
+                  >
+                    <Icon
+                      icon="chevron-down"
+                      className={open ? "text-primary" : "text-slate-400"}
+                    />
+                  </span>
+                </div>
+
+                {/* Answer */}
+                {open && (
+                  <p
+                    className="text-[13px] text-gray-700 leading-7"
+                    style={{ padding: "0 16px 14px calc(16px + 26px + 12px)" }}
+                  >
+                    {faq.answer}
+                  </p>
+                )}
               </div>
-              {openFaq === i && (
-                <p className="mt-3 text-[13px] text-gray-700 leading-7">{faq.answer}</p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -19,7 +19,6 @@ const dataRangeLabels: Record<EsimDataRange, string> = {
 interface SidebarFilters {
   days: number[];
   dataRanges: EsimDataRange[];
-  featureTags: string[];
   minPrice?: number;
   maxPrice?: number;
 }
@@ -36,14 +35,12 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
   const [panelOpen, setPanelOpen] = useState(false);
   const [days, setDays] = useState<number[]>(appliedFilters.days);
   const [dataRanges, setDataRanges] = useState<EsimDataRange[]>(appliedFilters.dataRanges);
-  const [featureTags, setFeatureTags] = useState<string[]>(appliedFilters.featureTags);
   const [minPrice, setMinPrice] = useState(appliedFilters.minPrice?.toString() ?? "");
   const [maxPrice, setMaxPrice] = useState(appliedFilters.maxPrice?.toString() ?? "");
 
   useEffect(() => {
     setDays(appliedFilters.days);
     setDataRanges(appliedFilters.dataRanges);
-    setFeatureTags(appliedFilters.featureTags);
     setMinPrice(appliedFilters.minPrice?.toString() ?? "");
     setMaxPrice(appliedFilters.maxPrice?.toString() ?? "");
   }, [appliedFilters]);
@@ -67,16 +64,6 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
       .map((key) => ({ key, label: dataRangeLabels[key], count: counts[key] }));
   }, [packages]);
 
-  const featureOptions = useMemo(() => {
-    // Collect all unique feature strings from package data
-    const featureCount = new Map<string, number>();
-    for (const pkg of packages) {
-      for (const feat of pkg.features) {
-        featureCount.set(feat, (featureCount.get(feat) || 0) + 1);
-      }
-    }
-    return Array.from(featureCount.entries()).map(([label, count]) => ({ label, count }));
-  }, [packages]);
 
   const toggleArrayValue = <T,>(current: T[], value: T) =>
     current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
@@ -112,7 +99,6 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
     onApply({
       days,
       dataRanges,
-      featureTags,
       minPrice: minPrice ? Number(minPrice.replace(/\D/g, "")) : undefined,
       maxPrice: maxPrice ? Number(maxPrice.replace(/\D/g, "")) : undefined,
     });
@@ -122,7 +108,6 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
   const hasActiveFilters =
     days.length > 0 ||
     dataRanges.length > 0 ||
-    featureTags.length > 0 ||
     Boolean(minPrice.trim()) ||
     Boolean(maxPrice.trim());
 
@@ -199,26 +184,6 @@ export default function Sidebar({ packages, appliedFilters, onApply, onReset }: 
           />
         </div>
       </div>
-
-      {featureOptions.length > 0 && (
-        <div className="mb-4">
-          <div className="font-bold text-sm mb-3">{text.features}</div>
-          <div className="flex flex-col gap-2.5">
-            {featureOptions.map((opt) => (
-              <label key={opt.label} className="flex items-center gap-2.5 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={featureTags.includes(opt.label)}
-                  onChange={() => setFeatureTags((current) => toggleArrayValue(current, opt.label))}
-                  className="w-4 h-4 accent-primary"
-                />
-                {opt.label}
-                <span className="ml-auto text-gray-500 text-xs">{opt.count}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-col gap-2">
         <button
