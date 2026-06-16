@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eSIM Du lịch Nhật Bản - Kết nối ngay khi đặt chân | EZSIM</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #0A1628; background: #F8FAFC; line-height: 1.6;
+}
+:root {
+  --primary: #0066FF; --cyan: #00D4FF; --navy: #0A1628;
+  --gray-50: #F8FAFC; --gray-100: #F1F5F9; --gray-200: #E2E8F0;
+  --gray-500: #64748B; --gray-700: #334155;
+  --gradient: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+}
+
+/* HEADER giống trang chủ */
+.top-bar { background: var(--navy); color: #94A3B8; font-size: 13px; padding: 8px 0; }
+.top-bar-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; }
+.top-bar a { color: #94A3B8; text-decoration: none; margin-left: 20px; }
+
+.header { background: white; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 100; }
+.header-inner { max-width: 1280px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; gap: 32px; }
+.logo { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 800; letter-spacing: -1px; text-decoration: none; color: var(--navy); }
+.logo-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; }
+.logo .sim { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.search-bar { flex: 1; max-width: 480px; position: relative; }
+.search-bar input { width: 100%; padding: 12px 16px 12px 44px; border: 1.5px solid var(--gray-200); border-radius: 12px; font-size: 14px; font-family: inherit; outline: none; }
+.search-bar i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-500); }
+.nav { display: flex; gap: 24px; align-items: center; }
+.nav a { color: var(--gray-700); text-decoration: none; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.cart-btn { position: relative; width: 40px; height: 40px; border-radius: 10px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; color: var(--navy); }
+.cart-badge { position: absolute; top: -4px; right: -4px; background: #EF4444; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+.main-menu { background: white; border-bottom: 1px solid var(--gray-200); }
+.main-menu-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; gap: 32px; }
+.menu-item { padding: 14px 0; color: var(--gray-700); text-decoration: none; font-weight: 500; font-size: 14px; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 6px; }
+.menu-item.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ===== BREADCRUMB ===== */
+.breadcrumb {
+  background: white; padding: 16px 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+.breadcrumb-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--gray-500);
+}
+.breadcrumb a { color: var(--gray-500); text-decoration: none; }
+.breadcrumb a:hover { color: var(--primary); }
+.breadcrumb .current { color: var(--navy); font-weight: 600; }
+
+/* ===== COUNTRY HERO ===== */
+.country-hero {
+  background: linear-gradient(135deg, #FFE4E1 0%, #FFB6C1 100%);
+  padding: 48px 0;
+  position: relative; overflow: hidden;
+}
+.country-hero-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: grid; grid-template-columns: 2fr 1fr; gap: 48px;
+  align-items: center; position: relative;
+}
+.country-info { display: flex; gap: 24px; align-items: center; }
+.country-flag-big {
+  width: 100px; height: 100px; border-radius: 24px;
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+.country-name {
+  font-size: 36px; font-weight: 800; color: #7F1D1D;
+  margin-bottom: 4px; letter-spacing: -1px;
+}
+.country-name-en { font-size: 16px; color: #991B1B; font-weight: 500; }
+.country-tags { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.country-tag {
+  background: rgba(255,255,255,0.7); color: #7F1D1D;
+  padding: 4px 12px; border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+}
+
+.country-stats {
+  background: white; border-radius: 16px; padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+.country-stat-row {
+  display: flex; justify-content: space-between;
+  padding: 8px 0; font-size: 13px;
+}
+.country-stat-row + .country-stat-row { border-top: 1px solid var(--gray-100); }
+.country-stat-lbl { color: var(--gray-500); }
+.country-stat-val { font-weight: 700; color: var(--navy); }
+
+/* ===== CONTENT LAYOUT ===== */
+.content {
+  max-width: 1280px; margin: 0 auto; padding: 32px 24px;
+  display: grid; grid-template-columns: 280px 1fr; gap: 24px;
+}
+
+/* ===== SIDEBAR FILTER ===== */
+.sidebar {
+  background: white; border-radius: 16px; padding: 24px;
+  border: 1px solid var(--gray-200);
+  height: fit-content; position: sticky; top: 120px;
+}
+.filter-title {
+  font-size: 18px; font-weight: 700; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.filter-section { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--gray-100); }
+.filter-section:last-child { border: none; padding: 0; margin: 0; }
+.filter-label { font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+.filter-options { display: flex; flex-direction: column; gap: 10px; }
+.filter-option {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; cursor: pointer;
+}
+.filter-option input { width: 16px; height: 16px; accent-color: var(--primary); }
+.filter-option .count {
+  margin-left: auto; color: var(--gray-500); font-size: 12px;
+}
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-chip {
+  padding: 6px 12px; border: 1.5px solid var(--gray-200);
+  border-radius: 20px; font-size: 12px; cursor: pointer;
+  background: white; color: var(--gray-700); font-weight: 500;
+}
+.filter-chip.active {
+  background: var(--primary); color: white; border-color: var(--primary);
+}
+.price-range {
+  display: flex; gap: 8px; margin-top: 8px;
+}
+.price-range input {
+  flex: 1; padding: 8px 10px; border: 1.5px solid var(--gray-200);
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+}
+
+/* ===== MAIN ===== */
+.main-area {}
+.toolbar {
+  background: white; padding: 16px 20px;
+  border-radius: 12px; border: 1px solid var(--gray-200);
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+}
+.result-count { font-size: 14px; color: var(--gray-700); }
+.result-count b { color: var(--navy); }
+.sort-bar { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.sort-bar select {
+  padding: 8px 32px 8px 12px; border: 1.5px solid var(--gray-200);
+  border-radius: 8px; font-family: inherit; font-size: 14px;
+  background: white; cursor: pointer;
+}
+.view-toggle { display: flex; gap: 4px; }
+.view-toggle button {
+  width: 36px; height: 36px; border: 1.5px solid var(--gray-200);
+  background: white; border-radius: 8px; cursor: pointer;
+  color: var(--gray-500);
+}
+.view-toggle button.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* ===== QUICK FILTER PILLS ===== */
+.quick-pills {
+  display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.quick-pill {
+  background: white; border: 1.5px solid var(--gray-200);
+  padding: 8px 16px; border-radius: 24px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.quick-pill:hover { border-color: var(--primary); color: var(--primary); }
+.quick-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+.quick-pill .badge {
+  background: rgba(255,255,255,0.25); padding: 1px 6px;
+  border-radius: 4px; font-size: 11px;
+}
+.quick-pill:not(.active) .badge { background: var(--gray-100); color: var(--gray-700); }
+
+/* ===== PACKAGE CARDS ===== */
+.packages-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+}
+.package-card {
+  background: white; border-radius: 16px; padding: 24px;
+  border: 1.5px solid var(--gray-200);
+  position: relative; transition: all 0.2s;
+  display: flex; flex-direction: column;
+}
+.package-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0,102,255,0.08);
+}
+.package-card.featured {
+  border-color: var(--primary); border-width: 2px;
+}
+.featured-badge {
+  position: absolute; top: -12px; left: 24px;
+  background: var(--primary); color: white;
+  padding: 4px 12px; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+}
+.pkg-header {
+  display: flex; justify-content: space-between; align-items: start;
+  margin-bottom: 16px;
+}
+.pkg-data {
+  font-size: 28px; font-weight: 800; color: var(--navy);
+  letter-spacing: -0.5px;
+}
+.pkg-data-unit { font-size: 14px; color: var(--gray-500); font-weight: 500; }
+.pkg-tag {
+  background: rgba(0,102,255,0.1); color: var(--primary);
+  padding: 4px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+}
+.pkg-tag.unlimited { background: #FEF3C7; color: #92400E; }
+.pkg-tag.popular { background: #DCFCE7; color: #166534; }
+
+.pkg-features {
+  list-style: none; margin: 16px 0; flex-grow: 1;
+}
+.pkg-features li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--gray-700); padding: 4px 0;
+}
+.pkg-features li i { color: var(--primary); width: 16px; }
+
+.pkg-divider { border-top: 1px solid var(--gray-100); margin: 16px 0; }
+
+.pkg-footer {
+  display: flex; justify-content: space-between; align-items: end;
+  gap: 12px;
+}
+.pkg-price-old {
+  text-decoration: line-through; color: var(--gray-500);
+  font-size: 13px; margin-bottom: 2px;
+}
+.pkg-price {
+  font-size: 24px; font-weight: 800; color: var(--navy);
+  letter-spacing: -0.5px;
+}
+.pkg-price-currency { font-size: 14px; color: var(--gray-500); margin-left: 2px; }
+.pkg-discount {
+  background: #FEE2E2; color: #991B1B;
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; margin-left: 8px;
+}
+
+.btn-primary {
+  background: var(--gradient); color: white;
+  padding: 12px 20px; border: none; border-radius: 10px;
+  font-weight: 700; font-size: 14px; cursor: pointer;
+  font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+  text-decoration: none;
+}
+.btn-primary:hover { transform: scale(1.02); }
+
+/* ===== INFO TABS ===== */
+.info-section {
+  margin-top: 32px; background: white;
+  border-radius: 16px; padding: 32px;
+  border: 1px solid var(--gray-200);
+}
+.info-tabs {
+  display: flex; gap: 24px; border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 24px;
+}
+.info-tab {
+  padding: 12px 0; font-weight: 600; font-size: 14px;
+  color: var(--gray-500); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.info-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.info-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; margin-top: 20px; }
+.info-content h3:first-child { margin-top: 0; }
+.info-content p, .info-content li { font-size: 14px; color: var(--gray-700); line-height: 1.8; }
+.info-content ul { padding-left: 24px; margin: 8px 0; }
+
+/* ===== FAQ ===== */
+.faq-list { display: flex; flex-direction: column; gap: 12px; }
+.faq-item {
+  background: var(--gray-50); border-radius: 12px;
+  padding: 16px 20px; cursor: pointer;
+}
+.faq-q {
+  font-weight: 600; font-size: 14px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.faq-a {
+  margin-top: 12px; font-size: 13px; color: var(--gray-700); line-height: 1.7;
+  display: none;
+}
+.faq-item.open .faq-a { display: block; }
+.faq-item.open i { transform: rotate(180deg); }
+
+/* FOOTER (đơn giản) */
+.footer { background: var(--navy); color: #94A3B8; padding: 48px 0 24px; margin-top: 48px; }
+.footer-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; text-align: center; font-size: 13px; }
+.footer .logo { color: white; justify-content: center; margin-bottom: 16px; }
+.footer .logo .sim { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-inner">
+    <div><i class="fas fa-headset"></i> Hỗ trợ 24/7: 1900 1881</div>
+    <div>
+      <a href="#"><i class="fas fa-mobile-alt"></i> Tải app</a>
+      <a href="#"><i class="fas fa-globe"></i> VN</a>
+      <a href="#"><i class="fas fa-user"></i> Đăng nhập</a>
+    </div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+      ez<span class="sim">sim</span>
+    </a>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm quốc gia, gói data, thẻ game..." value="Nhật Bản">
+    </div>
+    <nav class="nav">
+      <a href="#"><i class="fas fa-headset"></i> Hỗ trợ</a>
+      <a href="#"><i class="fas fa-mobile-alt"></i> Kiểm tra thiết bị</a>
+      <a href="#" class="cart-btn"><i class="fas fa-shopping-cart"></i><span class="cart-badge">2</span></a>
+    </nav>
+  </div>
+</header>
+
+<div class="main-menu">
+  <div class="main-menu-inner">
+    <a href="#" class="menu-item"><i class="fas fa-home"></i> Trang chủ</a>
+    <a href="#" class="menu-item active"><i class="fas fa-globe-asia"></i> eSIM Du lịch</a>
+    <a href="#" class="menu-item"><i class="fas fa-sim-card"></i> Thẻ Viễn thông</a>
+    <a href="#" class="menu-item"><i class="fas fa-gamepad"></i> Thẻ Game</a>
+    <a href="#" class="menu-item"><i class="fas fa-wifi"></i> Data 4G/5G</a>
+    <a href="#" class="menu-item"><i class="fas fa-tag"></i> Khuyến mãi</a>
+  </div>
+</div>
+
+<div class="breadcrumb">
+  <div class="breadcrumb-inner">
+    <a href="/"><i class="fas fa-home"></i></a>
+    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+    <a href="#">eSIM Du lịch</a>
+    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+    <a href="#">Châu Á</a>
+    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+    <span class="current">Nhật Bản</span>
+  </div>
+</div>
+
+<section class="country-hero">
+  <div class="country-hero-inner">
+    <div class="country-info">
+      <div class="country-flag-big">🇯🇵</div>
+      <div>
+        <h1 class="country-name">eSIM Nhật Bản</h1>
+        <p class="country-name-en">Japan eSIM • Tokyo, Osaka, Kyoto, Hokkaido...</p>
+        <div class="country-tags">
+          <span class="country-tag">🔥 #1 Bán chạy</span>
+          <span class="country-tag">⚡ Kích hoạt 30s</span>
+          <span class="country-tag">📶 NTT Docomo & SoftBank</span>
+          <span class="country-tag">🎌 12 gói data</span>
+        </div>
+      </div>
+    </div>
+    <div class="country-stats">
+      <div class="country-stat-row"><span class="country-stat-lbl">Nhà mạng</span><span class="country-stat-val">Docomo / SoftBank</span></div>
+      <div class="country-stat-row"><span class="country-stat-lbl">Tốc độ</span><span class="country-stat-val">5G / 4G LTE</span></div>
+      <div class="country-stat-row"><span class="country-stat-lbl">Phủ sóng</span><span class="country-stat-val">99% diện tích</span></div>
+      <div class="country-stat-row"><span class="country-stat-lbl">Hotspot</span><span class="country-stat-val">✅ Hỗ trợ chia sẻ</span></div>
+      <div class="country-stat-row"><span class="country-stat-lbl">Đã bán</span><span class="country-stat-val">38.420 gói</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="content">
+
+  <aside class="sidebar">
+    <h3 class="filter-title"><i class="fas fa-filter"></i> Lọc gói</h3>
+
+    <div class="filter-section">
+      <div class="filter-label">Số ngày sử dụng</div>
+      <div class="filter-chips">
+        <span class="filter-chip">3 ngày</span>
+        <span class="filter-chip active">7 ngày</span>
+        <span class="filter-chip">10 ngày</span>
+        <span class="filter-chip">15 ngày</span>
+        <span class="filter-chip">30 ngày</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Dung lượng data</div>
+      <div class="filter-options">
+        <label class="filter-option"><input type="checkbox"> 1 - 3 GB <span class="count">3</span></label>
+        <label class="filter-option"><input type="checkbox" checked> 5 GB <span class="count">4</span></label>
+        <label class="filter-option"><input type="checkbox" checked> 10 GB <span class="count">3</span></label>
+        <label class="filter-option"><input type="checkbox"> 20 GB <span class="count">2</span></label>
+        <label class="filter-option"><input type="checkbox"> Không giới hạn <span class="count">2</span></label>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Khoảng giá (VNĐ)</div>
+      <div class="price-range">
+        <input type="text" placeholder="Từ" value="50.000">
+        <input type="text" placeholder="Đến" value="500.000">
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">Tính năng</div>
+      <div class="filter-options">
+        <label class="filter-option"><input type="checkbox" checked> Hỗ trợ Hotspot <span class="count">9</span></label>
+        <label class="filter-option"><input type="checkbox"> 5G <span class="count">6</span></label>
+        <label class="filter-option"><input type="checkbox"> Có SĐT gọi <span class="count">3</span></label>
+      </div>
+    </div>
+
+    <button class="btn-primary" style="width: 100%; justify-content: center;">
+      <i class="fas fa-check"></i> Áp dụng bộ lọc
+    </button>
+  </aside>
+
+  <main class="main-area">
+
+    <div class="quick-pills">
+      <span class="quick-pill active">⚡ Tất cả <span class="badge">12</span></span>
+      <span class="quick-pill">🔥 Bán chạy <span class="badge">4</span></span>
+      <span class="quick-pill">💰 Giá rẻ <span class="badge">3</span></span>
+      <span class="quick-pill">🚀 5G <span class="badge">6</span></span>
+      <span class="quick-pill">♾️ Không giới hạn <span class="badge">2</span></span>
+      <span class="quick-pill">📞 Có SĐT gọi <span class="badge">3</span></span>
+    </div>
+
+    <div class="toolbar">
+      <div class="result-count">Hiển thị <b>1-12</b> trong tổng số <b>12 gói</b> eSIM Nhật Bản</div>
+      <div class="sort-bar">
+        <span>Sắp xếp:</span>
+        <select>
+          <option>Phù hợp nhất</option>
+          <option>Giá thấp đến cao</option>
+          <option>Giá cao đến thấp</option>
+          <option>Bán chạy nhất</option>
+          <option>Đánh giá cao nhất</option>
+        </select>
+        <div class="view-toggle">
+          <button class="active"><i class="fas fa-th-large"></i></button>
+          <button><i class="fas fa-list"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="packages-grid">
+
+      <div class="package-card featured">
+        <span class="featured-badge">🔥 BÁN CHẠY #1</span>
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-data">5 <span class="pkg-data-unit">GB</span></div>
+            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">Tốc độ cao toàn thời gian</div>
+          </div>
+          <span class="pkg-tag">7 NGÀY</span>
+        </div>
+        <ul class="pkg-features">
+          <li><i class="fas fa-check-circle"></i> Mạng 5G NTT Docomo</li>
+          <li><i class="fas fa-check-circle"></i> Hỗ trợ chia sẻ Hotspot</li>
+          <li><i class="fas fa-check-circle"></i> Kích hoạt khi đặt chân Nhật</li>
+          <li><i class="fas fa-check-circle"></i> Không cần đăng ký giấy tờ</li>
+        </ul>
+        <div class="pkg-divider"></div>
+        <div class="pkg-footer">
+          <div>
+            <div class="pkg-price-old">120.000đ</div>
+            <div>
+              <span class="pkg-price">99.000<span class="pkg-price-currency">đ</span></span>
+              <span class="pkg-discount">-18%</span>
+            </div>
+          </div>
+          <a href="#" class="btn-primary">Mua ngay <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="package-card">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-data">10 <span class="pkg-data-unit">GB</span></div>
+            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">Phù hợp đi 7-10 ngày</div>
+          </div>
+          <span class="pkg-tag">10 NGÀY</span>
+        </div>
+        <ul class="pkg-features">
+          <li><i class="fas fa-check-circle"></i> Mạng 5G/4G LTE</li>
+          <li><i class="fas fa-check-circle"></i> Hỗ trợ chia sẻ Hotspot</li>
+          <li><i class="fas fa-check-circle"></i> Tự động chuyển mạng tốt nhất</li>
+          <li><i class="fas fa-check-circle"></i> Hết 10GB → giảm tốc, vẫn dùng được</li>
+        </ul>
+        <div class="pkg-divider"></div>
+        <div class="pkg-footer">
+          <div>
+            <div class="pkg-price-old">180.000đ</div>
+            <div><span class="pkg-price">149.000<span class="pkg-price-currency">đ</span></span></div>
+          </div>
+          <a href="#" class="btn-primary">Mua ngay <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="package-card">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-data">∞ <span class="pkg-data-unit">Không giới hạn</span></div>
+            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">2GB/ngày tốc độ cao</div>
+          </div>
+          <span class="pkg-tag unlimited">⭐ UNLIMITED</span>
+        </div>
+        <ul class="pkg-features">
+          <li><i class="fas fa-check-circle"></i> 2GB/ngày tốc độ tối đa</li>
+          <li><i class="fas fa-check-circle"></i> Sau đó vẫn dùng - giảm tốc</li>
+          <li><i class="fas fa-check-circle"></i> Phù hợp đi nhóm, gia đình</li>
+          <li><i class="fas fa-check-circle"></i> Chia sẻ Hotspot thoải mái</li>
+        </ul>
+        <div class="pkg-divider"></div>
+        <div class="pkg-footer">
+          <div>
+            <div class="pkg-price-old">350.000đ</div>
+            <div><span class="pkg-price">299.000<span class="pkg-price-currency">đ</span></span></div>
+          </div>
+          <a href="#" class="btn-primary">Mua ngay <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="package-card">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-data">3 <span class="pkg-data-unit">GB</span></div>
+            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">Đi ngắn ngày, công tác</div>
+          </div>
+          <span class="pkg-tag">5 NGÀY</span>
+        </div>
+        <ul class="pkg-features">
+          <li><i class="fas fa-check-circle"></i> Mạng SoftBank 4G LTE</li>
+          <li><i class="fas fa-check-circle"></i> Hỗ trợ Hotspot</li>
+          <li><i class="fas fa-check-circle"></i> Phù hợp dùng map, mạng XH</li>
+          <li><i class="fas fa-check-circle"></i> Tốc độ 100Mbps+</li>
+        </ul>
+        <div class="pkg-divider"></div>
+        <div class="pkg-footer">
+          <div><span class="pkg-price">79.000<span class="pkg-price-currency">đ</span></span></div>
+          <a href="#" class="btn-primary">Mua ngay <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="package-card">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-data">20 <span class="pkg-data-unit">GB</span></div>
+            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">Đi dài ngày, tour 2 tuần</div>
+          </div>
+          <span class="pkg-tag">15 NGÀY</span>
+        </div>
+        <ul class="pkg-features">
+          <li><i class="fas fa-check-circle"></i> Mạng 5G/4G+ chuẩn</li>
+          <li><i class="fas fa-check-circle"></i> Hỗ trợ Hotspot</li>
+          <li><i class="fas fa-check-circle"></i> Đủ dùng livestream, video call</li>
+          <li><i class="fas fa-check-circle"></i> Trung bình 1.3GB/ngày</li>
+        </ul>
+        <div class="pkg-divider"></div>
+        <div class="pkg-footer">
+          <div>
+            <div class="pkg-price-old">280.000đ</div>
+            <div><span class="pkg-price">229.000<span class="pkg-price-currency">đ</span></span></div>
+          </div>
+          <a href="#" class="btn-primary">Mua ngay <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="package-card">
+        <div class="pkg-header">
+          <div>
+            <div class="pkg-data">30 <span class="pkg-data-unit">GB</span></div>
+            <div style="font-size: 13px; color: var(--gray-500); margin-top: 4px;">Du học, công tác dài hạn</div>
+          </div>
+          <span class="pkg-tag popular">📞 CÓ SĐT</span>
+        </div>
+        <ul class="pkg-features">
+          <li><i class="fas fa-check-circle"></i> 30GB tốc độ cao</li>
+          <li><i class="fas fa-check-circle"></i> Có số điện thoại gọi/nhắn tin</li>
+          <li><i class="fas fa-check-circle"></i> Đăng ký được tài khoản dịch vụ Nhật</li>
+          <li><i class="fas fa-check-circle"></i> Phù hợp ở 1 tháng+</li>
+        </ul>
+        <div class="pkg-divider"></div>
+        <div class="pkg-footer">
+          <div><span class="pkg-price">449.000<span class="pkg-price-currency">đ</span></span></div>
+          <a href="#" class="btn-primary">Mua ngay <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; margin-top: 32px;">
+      <button class="btn-primary" style="margin: 0 auto;">
+        <i class="fas fa-plus"></i> Xem thêm 6 gói
+      </button>
+    </div>
+
+    <div class="info-section">
+      <div class="info-tabs">
+        <div class="info-tab active">Giới thiệu</div>
+        <div class="info-tab">Hướng dẫn cài đặt</div>
+        <div class="info-tab">Thiết bị tương thích</div>
+        <div class="info-tab">Câu hỏi thường gặp</div>
+      </div>
+      <div class="info-content">
+        <h3>eSIM Nhật Bản - Kết nối 5G ngay khi đặt chân</h3>
+        <p>EZSIM hợp tác trực tiếp với 2 nhà mạng lớn nhất Nhật Bản là <b>NTT Docomo</b> và <b>SoftBank</b> để mang đến cho bạn trải nghiệm kết nối ổn định trên toàn lãnh thổ Nhật, từ Tokyo, Osaka, Kyoto đến những vùng xa như Hokkaido, Okinawa.</p>
+        
+        <h3>Vì sao chọn eSIM Nhật của EZSIM?</h3>
+        <ul>
+          <li><b>Kích hoạt nhanh:</b> Quét QR là dùng được - không cần đăng ký giấy tờ tại Nhật</li>
+          <li><b>Tiết kiệm:</b> Chỉ từ 79.000đ/gói - rẻ hơn 80% so với roaming Viettel/Vinaphone</li>
+          <li><b>Linh hoạt:</b> 12 gói từ 3 ngày đến 30 ngày, từ 1GB đến không giới hạn</li>
+          <li><b>Hỗ trợ Hotspot:</b> Chia sẻ mạng cho cả gia đình/nhóm</li>
+          <li><b>Hỗ trợ tiếng Việt 24/7:</b> Có vấn đề chat với chúng tôi qua Zalo, Messenger</li>
+        </ul>
+
+        <h3>Hướng dẫn 3 bước siêu đơn giản</h3>
+        <ul>
+          <li><b>Bước 1:</b> Chọn gói phù hợp số ngày & lượng data dự kiến dùng</li>
+          <li><b>Bước 2:</b> Thanh toán qua Momo/ZaloPay/VNPay/Banking</li>
+          <li><b>Bước 3:</b> Nhận QR code qua email - quét tại Nhật là kết nối ngay</li>
+        </ul>
+
+        <h3>Câu hỏi thường gặp</h3>
+        <div class="faq-list">
+          <div class="faq-item open">
+            <div class="faq-q">Tôi nên cài eSIM trước hay sau khi đến Nhật? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-a">Bạn nên cài đặt eSIM TRƯỚC khi bay (khi còn ở Việt Nam) nhưng <b>chưa kích hoạt</b>. Đến Nhật, bật roaming là eSIM tự động kết nối với nhà mạng Nhật.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Điện thoại tôi có dùng được eSIM không? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-a">iPhone từ XS trở lên, Samsung từ S20+, hầu hết Pixel, Oppo Find X3+, Xiaomi Mi 13+ đều hỗ trợ eSIM. Bấm "Kiểm tra thiết bị" trên menu để check chính xác.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Hết data trước hạn thì sao? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-a">Bạn có thể nạp thêm data trong app EZSIM với giá ưu đãi, hoặc mua 1 gói eSIM mới. Một số gói "Unlimited" sẽ giảm tốc nhưng vẫn dùng được khi vượt mức.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+      ez<span class="sim">sim</span>
+    </a>
+    <p>© 2026 EZSIM Vietnam — Kết nối dễ như chớp mắt</p>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.addEventListener('click', () => item.classList.toggle('open'));
+});
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => chip.classList.toggle('active'));
+});
+document.querySelectorAll('.quick-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.quick-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mua thẻ Viễn thông & Thẻ Game online - Chiết khấu cao | EZSIM</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Be Vietnam Pro', sans-serif; color: #0A1628; background: #F8FAFC; line-height: 1.6; }
+:root {
+  --primary: #0066FF; --cyan: #00D4FF; --navy: #0A1628;
+  --gray-50: #F8FAFC; --gray-100: #F1F5F9; --gray-200: #E2E8F0;
+  --gray-500: #64748B; --gray-700: #334155;
+  --gradient: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+}
+
+/* HEADER */
+.top-bar { background: var(--navy); color: #94A3B8; font-size: 13px; padding: 8px 0; }
+.top-bar-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; }
+.top-bar a { color: #94A3B8; text-decoration: none; margin-left: 20px; }
+.header { background: white; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 100; }
+.header-inner { max-width: 1280px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; gap: 32px; }
+.logo { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 800; letter-spacing: -1px; text-decoration: none; color: var(--navy); }
+.logo-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; }
+.logo .sim { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.search-bar { flex: 1; max-width: 480px; position: relative; }
+.search-bar input { width: 100%; padding: 12px 16px 12px 44px; border: 1.5px solid var(--gray-200); border-radius: 12px; font-size: 14px; font-family: inherit; outline: none; }
+.search-bar i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-500); }
+.nav { display: flex; gap: 24px; align-items: center; }
+.nav a { color: var(--gray-700); text-decoration: none; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.cart-btn { position: relative; width: 40px; height: 40px; border-radius: 10px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; color: var(--navy); }
+.cart-badge { position: absolute; top: -4px; right: -4px; background: #EF4444; color: white; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.main-menu { background: white; border-bottom: 1px solid var(--gray-200); }
+.main-menu-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; gap: 32px; }
+.menu-item { padding: 14px 0; color: var(--gray-700); text-decoration: none; font-weight: 500; font-size: 14px; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 6px; }
+.menu-item.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.breadcrumb { background: white; padding: 16px 0; border-bottom: 1px solid var(--gray-200); }
+.breadcrumb-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-500); }
+.breadcrumb a { color: var(--gray-500); text-decoration: none; }
+.breadcrumb .current { color: var(--navy); font-weight: 600; }
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  background: linear-gradient(135deg, #1E1B4B 0%, #4338CA 50%, #7C3AED 100%);
+  padding: 48px 0 32px;
+  color: white; position: relative; overflow: hidden;
+}
+.page-header::before {
+  content: ''; position: absolute; top: -50%; right: -10%;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(168,85,247,0.4), transparent 70%);
+  border-radius: 50%;
+}
+.page-header-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; position: relative; }
+.page-title {
+  font-size: 36px; font-weight: 800; margin-bottom: 8px;
+  letter-spacing: -1px;
+  display: flex; align-items: center; gap: 16px;
+}
+.page-title-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+}
+.page-subtitle { font-size: 16px; color: rgba(255,255,255,0.85); max-width: 700px; }
+.page-stats {
+  display: flex; gap: 24px; margin-top: 24px;
+}
+.page-stat {
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+  border-radius: 12px; padding: 12px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.page-stat i { font-size: 20px; color: #FFE66D; }
+.page-stat-text { font-size: 13px; }
+.page-stat-text b { display: block; font-size: 16px; }
+
+/* ===== TAB SWITCHER ===== */
+.tab-switcher {
+  background: white; border-bottom: 1px solid var(--gray-200);
+  position: sticky; top: 64px; z-index: 50;
+}
+.tab-switcher-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: flex; gap: 4px;
+}
+.cat-tab {
+  padding: 16px 24px; font-weight: 600; font-size: 14px;
+  color: var(--gray-500); cursor: pointer;
+  border-bottom: 3px solid transparent; margin-bottom: -1px;
+  display: flex; align-items: center; gap: 8px;
+  text-decoration: none;
+}
+.cat-tab:hover { color: var(--primary); }
+.cat-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.cat-tab .count {
+  background: var(--gray-100); color: var(--gray-700);
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+}
+.cat-tab.active .count { background: var(--primary); color: white; }
+
+/* ===== CONTENT ===== */
+.content { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+
+/* ===== PROVIDER GRID ===== */
+.section-title-bar {
+  display: flex; justify-content: space-between; align-items: end;
+  margin-bottom: 20px;
+}
+.section-h2 {
+  font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-h2 .icon-bar {
+  width: 4px; height: 24px; background: var(--gradient);
+  border-radius: 2px;
+}
+
+.provider-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 40px;
+}
+.provider-card {
+  background: white; border-radius: 16px;
+  border: 2px solid var(--gray-200);
+  padding: 24px; text-align: center;
+  cursor: pointer; text-decoration: none; color: inherit;
+  transition: all 0.2s; position: relative;
+}
+.provider-card:hover {
+  border-color: var(--primary); transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0,102,255,0.08);
+}
+.provider-card.selected {
+  border-color: var(--primary); background: rgba(0,102,255,0.04);
+}
+.provider-card.selected::after {
+  content: '✓'; position: absolute; top: 12px; right: 12px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+}
+.provider-logo {
+  width: 64px; height: 64px; border-radius: 16px;
+  margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 800; color: white;
+}
+.provider-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.provider-discount { color: #DC2626; font-size: 12px; font-weight: 700; }
+
+/* Telecom colors */
+.bg-viettel { background: #ED1C24; }
+.bg-vina { background: #0066B2; }
+.bg-mobi { background: #E40520; }
+.bg-vnm { background: #FFA500; }
+
+/* Game colors */
+.bg-garena { background: #FF7700; }
+.bg-zing { background: #006FE6; }
+.bg-vcoin { background: #DC2626; }
+.bg-gate { background: #00A651; }
+.bg-steam { background: #1B2838; }
+.bg-riot { background: #D13639; }
+.bg-mycard { background: #F5C518; color: #000 !important; }
+.bg-bit { background: #7C3AED; }
+
+/* ===== DENOMINATION SELECTOR ===== */
+.denomination-section {
+  background: white; border-radius: 20px;
+  padding: 28px; border: 1px solid var(--gray-200);
+  margin-bottom: 24px;
+}
+.denom-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 20px;
+}
+.denom-title {
+  font-size: 18px; font-weight: 700;
+  display: flex; align-items: center; gap: 12px;
+}
+.denom-title .provider-mini {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 14px;
+}
+.discount-badge {
+  background: #FEE2E2; color: #991B1B;
+  padding: 6px 14px; border-radius: 8px;
+  font-weight: 700; font-size: 13px;
+}
+
+.denom-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.denom-card {
+  background: white; border: 2px solid var(--gray-200);
+  border-radius: 12px; padding: 16px;
+  text-align: center; cursor: pointer;
+  transition: all 0.2s;
+}
+.denom-card:hover { border-color: var(--primary); }
+.denom-card.selected {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(0,102,255,0.05), rgba(0,212,255,0.05));
+}
+.denom-face { font-size: 11px; color: var(--gray-500); margin-bottom: 4px; }
+.denom-amount { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 4px; letter-spacing: -0.5px; }
+.denom-pay {
+  background: #DCFCE7; color: #166534;
+  padding: 4px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; display: inline-block;
+}
+
+/* ===== QUANTITY & CHECKOUT ===== */
+.checkout-section {
+  background: white; border-radius: 20px;
+  padding: 28px; border: 2px solid var(--primary);
+  margin-bottom: 32px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+}
+.checkout-form { display: flex; flex-direction: column; gap: 16px; }
+.form-group { }
+.form-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+.form-input, .form-select {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 10px; font-family: inherit; font-size: 14px;
+  outline: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--primary); }
+
+.qty-control {
+  display: flex; align-items: center; gap: 12px;
+}
+.qty-btn {
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 1.5px solid var(--gray-200); background: white;
+  font-size: 18px; cursor: pointer; font-weight: 600;
+}
+.qty-input {
+  width: 60px; text-align: center; padding: 8px;
+  border: 1.5px solid var(--gray-200); border-radius: 8px;
+  font-family: inherit; font-size: 16px; font-weight: 700;
+}
+
+.payment-methods {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.payment-method {
+  padding: 10px; border: 1.5px solid var(--gray-200);
+  border-radius: 8px; cursor: pointer; text-align: center;
+  font-size: 12px; font-weight: 600;
+}
+.payment-method.selected { border-color: var(--primary); background: rgba(0,102,255,0.05); }
+.payment-method i { font-size: 20px; display: block; margin-bottom: 4px; color: var(--primary); }
+
+/* Order summary */
+.order-summary { background: var(--gray-50); border-radius: 16px; padding: 24px; }
+.summary-row {
+  display: flex; justify-content: space-between;
+  padding: 8px 0; font-size: 14px;
+}
+.summary-row.divider { border-top: 1px dashed var(--gray-200); margin-top: 8px; padding-top: 16px; }
+.summary-row.total {
+  border-top: 2px solid var(--gray-200); margin-top: 12px; padding-top: 16px;
+  font-size: 18px; font-weight: 800;
+}
+.summary-row.total .price { color: var(--primary); font-size: 24px; }
+.summary-row .label { color: var(--gray-700); }
+.summary-row .price { font-weight: 600; }
+.summary-row .discount { color: #DC2626; }
+
+.btn-checkout {
+  background: var(--gradient); color: white;
+  width: 100%; padding: 16px; border: none; border-radius: 12px;
+  font-weight: 700; font-size: 16px; cursor: pointer;
+  font-family: inherit; margin-top: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+/* ===== INFO BOX ===== */
+.info-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  margin: 32px 0;
+}
+.info-box {
+  background: white; border-radius: 16px; padding: 24px;
+  border: 1px solid var(--gray-200);
+  display: flex; gap: 16px; align-items: start;
+}
+.info-box-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(0,102,255,0.1); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.info-box h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.info-box p { font-size: 13px; color: var(--gray-500); line-height: 1.6; }
+
+/* ===== HOW TO BUY ===== */
+.howto {
+  background: white; border-radius: 20px; padding: 32px;
+  border: 1px solid var(--gray-200); margin-bottom: 32px;
+}
+.howto-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+}
+.howto-step {
+  text-align: center;
+}
+.howto-num {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--gradient); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 22px; margin: 0 auto 12px;
+}
+.howto-step h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.howto-step p { font-size: 12px; color: var(--gray-500); }
+
+/* FOOTER */
+.footer { background: var(--navy); color: #94A3B8; padding: 48px 0 24px; }
+.footer-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; text-align: center; font-size: 13px; }
+.footer .logo { color: white; justify-content: center; margin-bottom: 16px; }
+.footer .logo .sim { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-inner">
+    <div><i class="fas fa-headset"></i> Hỗ trợ 24/7: 1900 1881</div>
+    <div>
+      <a href="#"><i class="fas fa-mobile-alt"></i> Tải app</a>
+      <a href="#"><i class="fas fa-globe"></i> VN</a>
+      <a href="#"><i class="fas fa-user"></i> Đăng nhập</a>
+    </div>
+  </div>
+</div>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+      ez<span class="sim">sim</span>
+    </a>
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm thẻ Viettel, Garena, Vcoin...">
+    </div>
+    <nav class="nav">
+      <a href="#"><i class="fas fa-headset"></i> Hỗ trợ</a>
+      <a href="#" class="cart-btn"><i class="fas fa-shopping-cart"></i><span class="cart-badge">2</span></a>
+    </nav>
+  </div>
+</header>
+
+<div class="main-menu">
+  <div class="main-menu-inner">
+    <a href="#" class="menu-item"><i class="fas fa-home"></i> Trang chủ</a>
+    <a href="#" class="menu-item"><i class="fas fa-globe-asia"></i> eSIM Du lịch</a>
+    <a href="#" class="menu-item active"><i class="fas fa-sim-card"></i> Thẻ Viễn thông</a>
+    <a href="#" class="menu-item active"><i class="fas fa-gamepad"></i> Thẻ Game</a>
+    <a href="#" class="menu-item"><i class="fas fa-wifi"></i> Data 4G/5G</a>
+    <a href="#" class="menu-item"><i class="fas fa-tag"></i> Khuyến mãi</a>
+  </div>
+</div>
+
+<div class="breadcrumb">
+  <div class="breadcrumb-inner">
+    <a href="/"><i class="fas fa-home"></i></a>
+    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+    <span class="current">Mua thẻ Viễn thông & Thẻ Game</span>
+  </div>
+</div>
+
+<section class="page-header">
+  <div class="page-header-inner">
+    <h1 class="page-title">
+      <div class="page-title-icon"><i class="fas fa-credit-card"></i></div>
+      Mua thẻ điện thoại & thẻ game online
+    </h1>
+    <p class="page-subtitle">Nạp tiền điện thoại tất cả nhà mạng, mua thẻ game Garena, Zing, Steam, Vcoin... Chiết khấu cao - Nhận mã trong 30 giây.</p>
+    <div class="page-stats">
+      <div class="page-stat">
+        <i class="fas fa-percentage"></i>
+        <div class="page-stat-text">Chiết khấu<b>Lên đến 15%</b></div>
+      </div>
+      <div class="page-stat">
+        <i class="fas fa-bolt"></i>
+        <div class="page-stat-text">Nhận mã<b>30 giây</b></div>
+      </div>
+      <div class="page-stat">
+        <i class="fas fa-shield-alt"></i>
+        <div class="page-stat-text">Bảo hành<b>100% mã thẻ</b></div>
+      </div>
+      <div class="page-stat">
+        <i class="fas fa-headset"></i>
+        <div class="page-stat-text">Hỗ trợ<b>24/7</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="tab-switcher">
+  <div class="tab-switcher-inner">
+    <a href="#" class="cat-tab active">
+      <i class="fas fa-sim-card"></i> Thẻ Viễn thông <span class="count">4</span>
+    </a>
+    <a href="#" class="cat-tab">
+      <i class="fas fa-gamepad"></i> Thẻ Game <span class="count">8</span>
+    </a>
+    <a href="#" class="cat-tab">
+      <i class="fas fa-wifi"></i> Data 4G/5G <span class="count">12</span>
+    </a>
+    <a href="#" class="cat-tab">
+      <i class="fas fa-fire"></i> Khuyến mãi <span class="count">5</span>
+    </a>
+  </div>
+</div>
+
+<div class="content">
+
+  <h2 class="section-h2"><div class="icon-bar"></div>Bước 1: Chọn nhà mạng / nhà cung cấp</h2>
+  <p style="color: var(--gray-500); font-size: 14px; margin-bottom: 20px;">Tất cả nhà mạng & game hot tại Việt Nam đều có ở đây</p>
+
+  <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--gray-700);">📱 Nhà mạng viễn thông</h3>
+  <div class="provider-grid">
+    <a href="#" class="provider-card selected">
+      <div class="provider-logo bg-viettel">V</div>
+      <div class="provider-name">Viettel</div>
+      <div class="provider-discount">Chiết khấu 8%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-vina">V</div>
+      <div class="provider-name">Vinaphone</div>
+      <div class="provider-discount">Chiết khấu 7%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-mobi">M</div>
+      <div class="provider-name">Mobifone</div>
+      <div class="provider-discount">Chiết khấu 7%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-vnm">V</div>
+      <div class="provider-name">Vietnamobile</div>
+      <div class="provider-discount">Chiết khấu 10%</div>
+    </a>
+  </div>
+
+  <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--gray-700);">🎮 Thẻ game phổ biến</h3>
+  <div class="provider-grid">
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-garena">G</div>
+      <div class="provider-name">Garena</div>
+      <div class="provider-discount">Chiết khấu 10%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-zing">Z</div>
+      <div class="provider-name">Zing</div>
+      <div class="provider-discount">Chiết khấu 12%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-vcoin">V</div>
+      <div class="provider-name">Vcoin (VTC)</div>
+      <div class="provider-discount">Chiết khấu 10%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-gate">G</div>
+      <div class="provider-name">Gate</div>
+      <div class="provider-discount">Chiết khấu 11%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-steam">S</div>
+      <div class="provider-name">Steam Wallet</div>
+      <div class="provider-discount">Chiết khấu 5%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-riot">R</div>
+      <div class="provider-name">Riot (LoL)</div>
+      <div class="provider-discount">Chiết khấu 7%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-mycard">M</div>
+      <div class="provider-name">MyCard</div>
+      <div class="provider-discount">Chiết khấu 8%</div>
+    </a>
+    <a href="#" class="provider-card">
+      <div class="provider-logo bg-bit">B</div>
+      <div class="provider-name">BIT</div>
+      <div class="provider-discount">Chiết khấu 13%</div>
+    </a>
+  </div>
+
+  <h2 class="section-h2" style="margin-top: 40px;"><div class="icon-bar"></div>Bước 2: Chọn mệnh giá thẻ Viettel</h2>
+  <p style="color: var(--gray-500); font-size: 14px; margin-bottom: 20px;">Bạn được giảm giá ngay khi mua - giá thanh toán đã bao gồm chiết khấu 8%</p>
+
+  <div class="denomination-section">
+    <div class="denom-header">
+      <div class="denom-title">
+        <div class="provider-mini bg-viettel">V</div>
+        Mệnh giá thẻ Viettel
+      </div>
+      <span class="discount-badge">Giảm 8% đồng giá</span>
+    </div>
+    <div class="denom-grid">
+      <div class="denom-card">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">10.000đ</div>
+        <span class="denom-pay">Trả: 9.200đ</span>
+      </div>
+      <div class="denom-card">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">20.000đ</div>
+        <span class="denom-pay">Trả: 18.400đ</span>
+      </div>
+      <div class="denom-card">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">30.000đ</div>
+        <span class="denom-pay">Trả: 27.600đ</span>
+      </div>
+      <div class="denom-card">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">50.000đ</div>
+        <span class="denom-pay">Trả: 46.000đ</span>
+      </div>
+      <div class="denom-card selected">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">100.000đ</div>
+        <span class="denom-pay">Trả: 92.000đ</span>
+      </div>
+      <div class="denom-card">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">200.000đ</div>
+        <span class="denom-pay">Trả: 184.000đ</span>
+      </div>
+      <div class="denom-card">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">300.000đ</div>
+        <span class="denom-pay">Trả: 276.000đ</span>
+      </div>
+      <div class="denom-card">
+        <div class="denom-face">Mệnh giá</div>
+        <div class="denom-amount">500.000đ</div>
+        <span class="denom-pay">Trả: 460.000đ</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-h2"><div class="icon-bar"></div>Bước 3: Hoàn tất đơn hàng</h2>
+  <div class="checkout-section">
+    <div class="checkout-form">
+      <div class="form-group">
+        <label class="form-label">Số lượng thẻ</label>
+        <div class="qty-control">
+          <button class="qty-btn">−</button>
+          <input type="text" class="qty-input" value="2">
+          <button class="qty-btn">+</button>
+          <span style="font-size: 13px; color: var(--gray-500);">(tối đa 50 thẻ/đơn)</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email nhận mã thẻ <span style="color: #DC2626;">*</span></label>
+        <input type="email" class="form-input" placeholder="ban@example.com" value="khachhang@gmail.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Số điện thoại (gửi SMS dự phòng)</label>
+        <input type="tel" class="form-input" placeholder="0901 234 567">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phương thức thanh toán</label>
+        <div class="payment-methods">
+          <div class="payment-method selected">
+            <i class="fas fa-mobile-alt"></i>
+            Momo
+          </div>
+          <div class="payment-method">
+            <i class="fas fa-wallet"></i>
+            ZaloPay
+          </div>
+          <div class="payment-method">
+            <i class="fas fa-credit-card"></i>
+            VNPay
+          </div>
+          <div class="payment-method">
+            <i class="fas fa-university"></i>
+            Banking
+          </div>
+          <div class="payment-method">
+            <i class="fas fa-qrcode"></i>
+            QR Code
+          </div>
+          <div class="payment-method">
+            <i class="fas fa-coins"></i>
+            Số dư EZSIM
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="order-summary">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">📋 Tóm tắt đơn hàng</h3>
+      <div class="summary-row">
+        <span class="label">Sản phẩm</span>
+        <span class="price">Thẻ Viettel</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Mệnh giá</span>
+        <span class="price">100.000đ</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Số lượng</span>
+        <span class="price">2 thẻ</span>
+      </div>
+      <div class="summary-row divider">
+        <span class="label">Tạm tính</span>
+        <span class="price">200.000đ</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Chiết khấu (8%)</span>
+        <span class="discount">−16.000đ</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Phí giao dịch</span>
+        <span class="price" style="color: #16A34A;">Miễn phí</span>
+      </div>
+      <div class="summary-row total">
+        <span>Tổng cộng</span>
+        <span class="price">184.000đ</span>
+      </div>
+      <button class="btn-checkout">
+        <i class="fas fa-bolt"></i> Thanh toán & nhận mã ngay
+      </button>
+      <p style="text-align: center; font-size: 12px; color: var(--gray-500); margin-top: 12px;">
+        🔒 Giao dịch an toàn - Mã thẻ gửi ngay sau khi thanh toán
+      </p>
+    </div>
+  </div>
+
+  <div class="info-row">
+    <div class="info-box">
+      <div class="info-box-icon"><i class="fas fa-bolt"></i></div>
+      <div>
+        <h4>Nhận mã trong 30 giây</h4>
+        <p>Mã thẻ tự động gửi qua email + lưu trong tài khoản EZSIM ngay sau khi thanh toán thành công.</p>
+      </div>
+    </div>
+    <div class="info-box">
+      <div class="info-box-icon"><i class="fas fa-shield-alt"></i></div>
+      <div>
+        <h4>Bảo hành 100% mã thẻ</h4>
+        <p>Cam kết mã thẻ chính hãng, sử dụng được. Nếu lỗi → hoàn tiền hoặc đổi thẻ mới ngay lập tức.</p>
+      </div>
+    </div>
+    <div class="info-box">
+      <div class="info-box-icon"><i class="fas fa-percent"></i></div>
+      <div>
+        <h4>Tích điểm thưởng</h4>
+        <p>Mỗi 10.000đ chi tiêu = 1 điểm. Tích điểm đổi thẻ free, giảm giá đơn sau, nâng hạng VIP.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="howto">
+    <h2 class="section-h2" style="margin-bottom: 20px;"><div class="icon-bar"></div>Mua thẻ online tại EZSIM siêu dễ</h2>
+    <div class="howto-grid">
+      <div class="howto-step">
+        <div class="howto-num">1</div>
+        <h4>Chọn nhà cung cấp</h4>
+        <p>Click vào logo Viettel, Garena, Zing... muốn mua</p>
+      </div>
+      <div class="howto-step">
+        <div class="howto-num">2</div>
+        <h4>Chọn mệnh giá</h4>
+        <p>10K đến 1 triệu - thấy giá sau chiết khấu ngay lập tức</p>
+      </div>
+      <div class="howto-step">
+        <div class="howto-num">3</div>
+        <h4>Thanh toán</h4>
+        <p>Momo, ZaloPay, VNPay, Banking, QR — chọn cách bạn thích</p>
+      </div>
+      <div class="howto-step">
+        <div class="howto-num">4</div>
+        <h4>Nhận mã thẻ</h4>
+        <p>Mã gửi qua email trong 30 giây, copy & nạp ngay</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <a href="/" class="logo">
+      <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+      ez<span class="sim">sim</span>
+    </a>
+    <p>© 2026 EZSIM Vietnam — Kết nối dễ như chớp mắt</p>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.provider-card').forEach(card => {
+  card.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+document.querySelectorAll('.denom-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.denom-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+document.querySelectorAll('.payment-method').forEach(pm => {
+  pm.addEventListener('click', () => {
+    document.querySelectorAll('.payment-method').forEach(p => p.classList.remove('selected'));
+    pm.classList.add('selected');
+  });
+});
+</script>
+
+</body>
+</html>

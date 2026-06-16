@@ -5,11 +5,11 @@ type PageMetaDataProps = {
 }
 
 const defaultPageMetaData: PageMetaDataProps = {
-  title: 'Inspinia React',
+  title: 'EZSIM Admin',
   description:
-    'Inspinia is the #1 best-selling admin dashboard template on WrapBootstrap. Perfect for building CRM, CMS, project management tools, and custom web apps with clean UI, responsive design, and powerful features.',
+    'Hệ thống quản trị EZSIM — quản lý sản phẩm, đơn hàng, khách hàng và cấu hình website.',
   keywords:
-    'Inspinia, admin dashboard, WrapBootstrap, HTML template, Bootstrap admin, CRM template, CMS template, responsive admin, web app UI, admin theme, best admin template',
+    'EZSIM, admin, quản trị, esim, thẻ cào, đơn hàng, khách hàng',
 }
 
 const PageMetaData = ({ title, description = defaultPageMetaData.description, keywords = defaultPageMetaData.keywords }: PageMetaDataProps) => {

@@ -1,29 +1,27 @@
-import { Link } from 'react-router'
 import { Card, CardBody, CardHeader, CardTitle } from 'react-bootstrap'
-import { shippingTimeline } from '@/views/ecommerce/orders/[orderId]/data.ts'
+import { shippingTimeline, type TimelineEvent } from '../data'
 
 const ShippingActivity = () => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle as="h4">Shipping Activity</CardTitle>
+    <Card className="border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+      <CardHeader className="border-bottom bg-white p-4">
+        <CardTitle as="h5" className="fw-bold text-dark mb-0">Lịch Sử Xử Lý & Giao Vận (Timeline)</CardTitle>
       </CardHeader>
       <CardBody className="p-4">
         <div className="timeline">
-          {shippingTimeline.map((item, idx) => (
+          {shippingTimeline.map((item: TimelineEvent, idx: number) => (
             <div key={idx} className="timeline-item d-flex align-items-stretch">
-              <div className="timeline-time pe-3 text-muted">{item.time ?? ''}</div>
-              <div className={`timeline-dot bg-${item.variant}`} />
-              <div className={`timeline-content ps-3 ${idx != shippingTimeline.length - 1 ? 'pb-5' : ''}`}>
-                <h5 className="mb-1">{item.title}</h5>
-                <p className="mb-1 text-muted">{item.description}</p>
-                <p className="mb-1 text-muted fs-xxs">
-                  Tracking No:{' '}
-                  <Link to="" className="link-primary fw-semibold text-decoration-underline">
-                    {item.trackingNo}
-                  </Link>
-                </p>
-                <span className="fw-semibold fs-xxs">By {item.by}</span>
+              <div className="timeline-time pe-3 text-muted fs-xs fw-medium" style={{ minWidth: '135px' }}>{item.time ?? ''}</div>
+              <div className={`timeline-dot bg-${item.variant} shadow-sm`} />
+              <div className={`timeline-content ps-3 ${idx !== shippingTimeline.length - 1 ? 'pb-4' : ''}`}>
+                <h6 className="mb-1 fw-bold text-dark">{item.title}</h6>
+                <p className="mb-1 text-muted fs-sm">{item.description}</p>
+                <div className="d-flex align-items-center justify-content-between mt-2 pt-1 border-top border-light-subtle">
+                  <span className="text-muted fs-xs">
+                    Mã vận đơn / QR ID: <span className="text-primary fw-semibold font-monospace">{item.trackingNo}</span>
+                  </span>
+                  <span className="badge bg-light text-dark border border-light-subtle fs-xxs px-2 py-1">Bởi: {item.by}</span>
+                </div>
               </div>
             </div>
           ))}

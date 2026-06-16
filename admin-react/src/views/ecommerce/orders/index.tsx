@@ -7,7 +7,7 @@ import OrdersStats from '@/views/ecommerce/orders/components/OrdersStats.tsx'
 const Page = () => {
   return (
     <Container fluid>
-      <PageBreadcrumb title="Orders" subtitle="Ecommerce" />
+      <PageBreadcrumb title="Quản Lý Đơn Hàng" subtitle="Hệ thống Giao dịch" />
 
       <OrdersStats />
 
