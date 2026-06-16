@@ -12,7 +12,7 @@ type CountrySearchItem = {
   slug: string;
   name: string;
   flagUrl: string | null;
-  region: string;
+  region: string | null;
   priceFrom: number;
 };
 
@@ -88,7 +88,7 @@ export default function CountrySearchBox({
     const baseList = normalizedKeyword
       ? countries.filter((country) =>
           removeDiacritics(country.name).includes(normalizedKeyword) ||
-          removeDiacritics(country.region).includes(normalizedKeyword)
+          removeDiacritics(country.region ?? "").includes(normalizedKeyword)
         )
       : countries;
 

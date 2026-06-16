@@ -1,12 +1,13 @@
 import type {
   EsimCountryDetail,
+  EsimCountryStat,
   EsimCountrySummary,
   EsimDataRange,
   EsimPackage,
   EsimPackageFilters,
   PackageQuickTag,
 } from "@/types/esim";
-import type { ApiCountryHome, ApiEsimPackage } from "@/types/api";
+import type { ApiCountryHome, ApiEsimPackage, ApiProduct } from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -30,18 +31,71 @@ function mapApiCountryHomeToSummary(country: ApiCountryHome): EsimCountrySummary
 }
 
 function mapRegion(region: string | null): EsimCountryDetail["region"] {
-  if (!region) return "Châu Á";
+  if (!region) return null;
   const r = region.toLowerCase();
+  if (r.includes("á") || r.includes("asia")) return "Châu Á";
   if (r.includes("âu") || r.includes("europe")) return "Châu Âu";
   if (r.includes("mỹ") || r.includes("america")) return "Châu Mỹ";
   if (r.includes("đại dương") || r.includes("oceania")) return "Châu Đại Dương";
-  return "Châu Á";
+  return null;
+}
+
+function formatDataAmount(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "0";
+  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function getTrueBooleanFeatureLabels(pkg: ApiEsimPackage): string[] {
+  const labels: string[] = [];
+  if (pkg.isUnlimited) labels.push("Data không giới hạn");
+  if (pkg.hotspotSupported) labels.push("Hỗ trợ chia sẻ Hotspot");
+  if (pkg.phoneNumberSupported) labels.push("Hỗ trợ số điện thoại");
+  if (pkg.smsSupported) labels.push("Hỗ trợ SMS");
+  if (pkg.kycRequired) labels.push("Yêu cầu KYC");
+  return labels;
+}
+
+function translateActivationPolicy(value: string | null): string | null {
+  if (!value) return null;
+  const labels: Record<string, string> = {
+    ActivateWhenInstalled: "Kích hoạt khi cài đặt eSIM",
+    ActivateOnFirstUse: "Kích hoạt khi sử dụng lần đầu",
+    ActivateImmediately: "Kích hoạt ngay sau khi mua",
+  };
+  return labels[value] ?? value;
+}
+
+function getProductAttributeStats(
+  product: ApiProduct | null | undefined,
+  fallbackPackageCount?: number,
+  fallbackPriceFrom?: number | null
+): EsimCountryStat[] {
+  const attributes = (product?.attributes ?? [])
+    .filter((item) => item.isVisible !== false && item.key && item.value)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((item) => ({ label: item.key, value: item.value }));
+
+  if (attributes.length > 0) return attributes;
+
+  const stats: EsimCountryStat[] = [];
+  if (fallbackPackageCount !== undefined) {
+    stats.push({ label: "Số gói", value: String(fallbackPackageCount) });
+  }
+  if (fallbackPriceFrom !== undefined && fallbackPriceFrom !== null) {
+    stats.push({ label: "Giá từ", value: fallbackPriceFrom > 0 ? `${fallbackPriceFrom.toLocaleString("vi-VN")}đ` : "—" });
+  }
+  return stats;
 }
 
 function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
-  const dataGB = pkg.isUnlimited ? null : (pkg.dataAmount ?? 0);
+  const normalizedDataAmount =
+    pkg.dataUnit?.toUpperCase() === "MB" && pkg.dataAmount
+      ? pkg.dataAmount / 1024
+      : pkg.dataAmount ?? 0;
+  const dataGB = pkg.isUnlimited ? null : normalizedDataAmount;
   const dataStr = pkg.isUnlimited ? "∞" : String(pkg.dataAmount ?? 0);
   const dataUnitStr = pkg.isUnlimited ? "Không giới hạn" : (pkg.dataUnit || "GB");
+  const displayDataUnit = !pkg.isUnlimited && pkg.dataUnit?.toUpperCase() === "MB" ? "GB" : dataUnitStr;
 
   const quickTags: PackageQuickTag[] = [];
   if (pkg.isUnlimited) quickTags.push("unlimited");
@@ -49,10 +103,14 @@ function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
   if (pkg.phoneNumberSupported) quickTags.push("phone");
   if (pkg.salePrice && pkg.price && pkg.salePrice < pkg.price * 0.85) quickTags.push("cheap");
 
+  // Bullet-list features: descriptive text (activation/speed policy).
   const features: string[] = [];
-  if (pkg.coverageDescription) features.push(pkg.coverageDescription);
-  if (pkg.activationPolicy) features.push(pkg.activationPolicy);
+  const activationPolicy = translateActivationPolicy(pkg.activationPolicy);
+  if (activationPolicy) features.push(activationPolicy);
   if (pkg.speedPolicy) features.push(pkg.speedPolicy);
+
+  // Capability pills: only the boolean flags that are true.
+  const booleanFeatures = getTrueBooleanFeatureLabels(pkg);
 
   const price = pkg.salePrice ?? pkg.price ?? 0;
   const oldPrice = pkg.originalPrice ?? pkg.price ?? undefined;
@@ -68,12 +126,13 @@ function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
     productId: pkg.productId,
     productVariantId: pkg.productVariantId,
     esimPackageId: pkg.id,
-    data: dataStr,
-    dataUnit: dataUnitStr,
+    data: pkg.isUnlimited ? dataStr : formatDataAmount(normalizedDataAmount),
+    dataUnit: displayDataUnit,
     subtitle: pkg.coverageType || `${pkg.validityDays} ngày`,
     tag: pkg.isUnlimited ? "UNLIMITED" : `${pkg.validityDays} NGÀY`,
     tagType: pkg.isUnlimited ? "unlimited" : undefined,
     features,
+    booleanFeatures,
     price,
     oldPrice: oldPrice !== price ? oldPrice : undefined,
     discount,
@@ -145,6 +204,94 @@ export interface HomeEsimProduct {
   packageCount?: number;
 }
 
+const ESIM_PACKAGES_PAGE_SIZE = 500;
+
+function unwrapItems<T>(json: unknown): { items: T[]; hasNext: boolean; totalPages: number } {
+  const root = json as { data?: unknown; totalPages?: number; hasNextPage?: boolean } | null;
+  const payload = (root?.data ?? root) as {
+    items?: T[];
+    totalPages?: number;
+    hasNextPage?: boolean;
+  } | T[] | null;
+  const items = Array.isArray(payload) ? payload : payload?.items ?? [];
+  return {
+    items,
+    hasNext: Array.isArray(payload)
+      ? items.length === ESIM_PACKAGES_PAGE_SIZE
+      : Boolean(payload?.hasNextPage),
+    totalPages: Array.isArray(payload) ? 1 : payload?.totalPages ?? 1,
+  };
+}
+
+async function getCatalogVariants(): Promise<ApiProductVariant[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/catalog/products/variants?pageSize=500`);
+    if (!response.ok) return [];
+    const json = await response.json();
+    const payload = json?.data ?? json;
+    return Array.isArray(payload) ? payload : payload?.items ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function getCatalogEsimPackages(): Promise<ApiEsimPackage[]> {
+  const all: ApiEsimPackage[] = [];
+  let pageIndex = 1;
+
+  while (true) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/catalog/esim-packages?PageIndex=${pageIndex}&PageSize=${ESIM_PACKAGES_PAGE_SIZE}`
+      );
+      if (!response.ok) break;
+      const json = await response.json();
+      if (json?.isSuccess === false) break;
+      const { items, hasNext, totalPages } = unwrapItems<ApiEsimPackage>(json);
+      all.push(...items);
+      if (!hasNext || pageIndex >= totalPages || items.length === 0) break;
+      pageIndex += 1;
+    } catch {
+      break;
+    }
+  }
+
+  return all.filter((pkg) => pkg.isActive);
+}
+
+async function getCatalogEsimPackageBySlug(slug: string): Promise<ApiEsimPackage | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/catalog/esim-packages/${encodeURIComponent(slug)}`);
+    if (!response.ok) return null;
+    const json = await response.json();
+    if (json?.isSuccess === false) return null;
+    return (json?.data ?? json) as ApiEsimPackage;
+  } catch {
+    return null;
+  }
+}
+
+async function getCatalogProductBySlug(slug: string): Promise<ApiProduct | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/catalog/products/${encodeURIComponent(slug)}`);
+    if (!response.ok) return null;
+    const json = await response.json();
+    if (json?.isSuccess === false) return null;
+    return (json?.data ?? json) as ApiProduct | null;
+  } catch {
+    return null;
+  }
+}
+
+async function getDetailedEsimPackages(packages: ApiEsimPackage[]): Promise<ApiEsimPackage[]> {
+  return Promise.all(
+    packages.map(async (pkg) => {
+      const detail = await getCatalogEsimPackageBySlug(pkg.slug);
+      return detail ?? pkg;
+    })
+  );
+}
+
 function matchesProductSlug(productSlug: string | null | undefined, slug: string): boolean {
   const normalizedProductSlug = productSlug?.trim().toLowerCase();
   const normalizedRouteSlug = slug.trim().toLowerCase();
@@ -210,26 +357,42 @@ async function getProductSlugByCountryId(): Promise<Map<string, string>> {
 
 export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
   try {
+    const homeProducts = await getHomeEsimProducts();
+    if (homeProducts.length > 0) {
+      return homeProducts.map((product) => ({
+        slug: product.slug,
+        flag: product.flagUrl || product.thumbnailUrl || "",
+        name: product.name,
+        region: mapRegion(null),
+        startingPrice: product.priceFrom ?? 0,
+        bestseller: product.isHot,
+        packageCount: product.packageCount ?? 0,
+      }));
+    }
+
     const all: ApiCountryHome[] = [];
     let pageIndex = 1;
 
     while (true) {
-      const response = await fetch(
-        `${API_BASE_URL}/api/catalog/countries/home?PageIndex=${pageIndex}&PageSize=${COUNTRIES_PAGE_SIZE}`
-      );
-      if (!response.ok) break;
-      const json = await response.json();
-      // Unwrap { isSuccess, data: { items, totalPages, hasNextPage } } wrapper
-      const payload = json.data ?? json;
-      const items: ApiCountryHome[] =
-        Array.isArray(payload) ? payload : payload.items ?? [];
-      all.push(...items);
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/catalog/countries/home?PageIndex=${pageIndex}&PageSize=${COUNTRIES_PAGE_SIZE}`
+        );
+        if (!response.ok) break;
+        const json = await response.json();
+        const payload = json.data ?? json;
+        const items: ApiCountryHome[] =
+          Array.isArray(payload) ? payload : payload.items ?? [];
+        all.push(...items);
 
-      const hasNext = Array.isArray(payload)
-        ? items.length === COUNTRIES_PAGE_SIZE
-        : payload.hasNextPage ?? pageIndex < (payload.totalPages ?? 1);
-      if (!hasNext || items.length === 0) break;
-      pageIndex += 1;
+        const hasNext = Array.isArray(payload)
+          ? items.length === COUNTRIES_PAGE_SIZE
+          : payload.hasNextPage ?? pageIndex < (payload.totalPages ?? 1);
+        if (!hasNext || items.length === 0) break;
+        pageIndex += 1;
+      } catch {
+        break;
+      }
     }
 
     if (all.length === 0) return MOCK_DESTINATIONS;
@@ -266,123 +429,111 @@ function buildEmptyEsimCountry(slug: string): EsimCountryDetail {
     textColor: "text-white",
     tagBg: "bg-white/20",
     tags: [],
-    stats: [
-      { label: "Số gói", value: "0" },
-      { label: "Giá từ", value: "—" },
-    ],
+    stats: [],
+    features: [],
     packages: [],
   };
 }
 
 export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail> {
   try {
-    // NOTE: the backend currently ignores the ProductSlug/CountrySlug filters and
-    // returns every product's variants, so we fetch the full list (large page size)
-    // and filter client-side by productSlug.
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`
-    );
-    const json = response.ok ? await response.json() : null;
-    if (json?.isSuccess === false) return buildEmptyEsimCountry(slug);
-    const payload = json?.data ?? json;
-    const allItems: ApiProductVariant[] = Array.isArray(payload) ? payload : payload?.items ?? [];
+    const [allVariants, esimPackages] = await Promise.all([
+      getCatalogVariants(),
+      getCatalogEsimPackages(),
+    ]);
+    const items = allVariants.filter((v) => matchesProductSlug(v.productSlug, slug));
+    const variantsById = new Map(allVariants.map((v) => [v.productVariantId, v]));
+    const [productDetail, product] = await Promise.all([
+      getCatalogProductBySlug(slug),
+      getHomeEsimProductBySlug(slug),
+    ]);
+    const productId = items[0]?.productId || esimPackages[0]?.productId || productDetail?.id || "";
 
-    // Match the route slug against the product slug. Country-style slugs
-    // (e.g. "han-quoc") map to their product slug ("esim-han-quoc").
-    let items = allItems.filter((v) => matchesProductSlug(v.productSlug, slug));
-
-    // No matching product: still show the page, just without packages.
-    if (items.length === 0) {
-      const product = await getHomeEsimProductBySlug(slug);
+    if (esimPackages.length === 0) {
       if (!product) return buildEmptyEsimCountry(slug);
-
       return {
         productId: product.id,
-        slug: product.slug,
-        flag: product.flagUrl || product.thumbnailUrl || "",
-        name: product.name,
-        nameEn: product.slug,
+        slug,
+        flag: productDetail?.thumbnailUrl || product.flagUrl || product.thumbnailUrl || "",
+        name: productDetail?.name || product.name,
+        nameEn: productDetail?.code || product.slug || slug,
         region: mapRegion(null),
         gradient: "from-blue-500 to-purple-600",
         textColor: "text-white",
         tagBg: "bg-white/20",
-        tags: [product.locationText].filter(Boolean) as string[],
-        stats: [
-          { label: "Số gói", value: String(product.packageCount ?? 0) },
-          { label: "Giá từ", value: product.priceFrom ? `${product.priceFrom.toLocaleString("vi-VN")}đ` : "—" },
-        ],
+        tags: [productDetail?.locationText, product.locationText].filter(Boolean) as string[],
+        stats: getProductAttributeStats(productDetail, product.packageCount, product.priceFrom),
+        description: productDetail?.description || productDetail?.shortDescription || null,
+        features: [],
         packages: [],
       };
     }
 
-    // Use the first item for product-level info
     const first = items[0];
+    const firstPackage = esimPackages[0];
+    const countryFeatures = Array.from(
+      new Set(
+        items
+          .flatMap((v) => v.features || [])
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((f) => f.text)
+      )
+    );
 
-    const packages: EsimPackage[] = items.map((variant) => {
-      const price = variant.salePrice ?? variant.originalPrice ?? 0;
-      const oldPrice = variant.originalPrice && variant.originalPrice > price ? variant.originalPrice : undefined;
+    const packages: EsimPackage[] = esimPackages.map((apiPackage) => {
+      const variant = variantsById.get(apiPackage.productVariantId);
+      const price = variant?.salePrice ?? variant?.originalPrice ?? apiPackage.salePrice ?? apiPackage.price ?? 0;
+      const oldPrice =
+        variant?.originalPrice && variant.originalPrice > price
+          ? variant.originalPrice
+          : apiPackage.originalPrice && apiPackage.originalPrice > price
+            ? apiPackage.originalPrice
+            : undefined;
       const discount = oldPrice ? `-${Math.round((1 - price / oldPrice) * 100)}%` : undefined;
-
-      const features: string[] = (variant.features || [])
+      const mapped = mapApiPackageToEsim({ ...apiPackage, price, originalPrice: oldPrice });
+      const variantFeatures = (variant?.features || [])
         .sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder)
         .map((f: { text: string }) => f.text);
 
-      const quickTags: PackageQuickTag[] = [];
-      const searchableText = [
-        variant.variantName,
-        variant.variantShortName,
-        variant.variantDescription,
-        variant.sku,
-      ].filter(Boolean).join(" ");
-      const nameL = searchableText.toLowerCase();
-      const isUnlimited = nameL.includes("unlimited") || nameL.includes("không giới hạn") || nameL.includes("vô hạn");
-      const dataInfo = extractDataInfo(searchableText);
-      const days = extractDays(searchableText);
-      if (isUnlimited) quickTags.push("unlimited");
-      if (variant.isHot) quickTags.push("bestseller");
-
       return {
-        id: variant.productVariantId,
-        slug: variant.sku || variant.productVariantId,
-        name: variant.variantShortName || variant.variantName || "Gói eSIM",
-        image: variant.thumbnailUrl || `https://picsum.photos/seed/${slug}/640/480`,
-        productId: variant.productId,
-        productVariantId: variant.productVariantId,
-        esimPackageId: variant.productVariantId,
-        data: isUnlimited ? "∞" : dataInfo.amount,
-        dataUnit: isUnlimited ? "Không giới hạn" : dataInfo.unit,
-        subtitle: variant.variantShortName || variant.variantName || variant.variantDescription || "Gói eSIM",
-        tag: days > 0 ? `${days} NGÀY` : "",
-        tagType: isUnlimited ? "unlimited" : undefined,
-        features,
+        ...mapped,
+        name: apiPackage.name || apiPackage.productVariantName || variant?.variantShortName || variant?.variantName || mapped.name,
+        image: variant?.thumbnailUrl || `https://picsum.photos/seed/${apiPackage.slug}/640/480`,
+        productId: apiPackage.productId,
+        productVariantId: apiPackage.productVariantId,
+        esimPackageId: apiPackage.id,
+        subtitle:
+          apiPackage.productVariantName ||
+          variant?.variantShortName ||
+          variant?.variantName ||
+          apiPackage.coverageType ||
+          mapped.subtitle,
         price,
         oldPrice,
         discount,
-        featured: variant.isFeatured,
-        days,
-        dataGB: isUnlimited ? null : dataInfo.dataGB,
-        quickTags,
-        stock: 999,
-        rating: 4.5,
-        salesCount: variant.soldCount ?? 0,
+        featured: Boolean(variant?.isFeatured) || mapped.featured,
+        quickTags: variant?.isHot
+          ? Array.from(new Set([...(mapped.quickTags ?? []), "bestseller" as PackageQuickTag]))
+          : mapped.quickTags,
+        features: Array.from(new Set([...variantFeatures, ...mapped.features])),
+        salesCount: variant?.soldCount ?? mapped.salesCount,
       };
     });
 
     return {
-      productId: first.productId,
+      productId,
       slug,
-      flag: first.thumbnailUrl || `https://flagcdn.com/w160/${(first.countryName || "").slice(0, 2).toLowerCase()}.png`,
-      name: first.productName || `eSIM ${first.countryName}`,
-      nameEn: first.productCode || first.productSlug || slug,
+      flag: productDetail?.thumbnailUrl || first?.thumbnailUrl || product?.flagUrl || product?.thumbnailUrl || "",
+      name: productDetail?.name || first?.productName || firstPackage?.productName || product?.name || `eSIM ${firstPackage?.countryName ?? ""}`.trim(),
+      nameEn: productDetail?.code || first?.productCode || first?.productSlug || product?.slug || slug,
       region: mapRegion(null),
       gradient: "from-blue-500 to-purple-600",
       textColor: "text-white",
       tagBg: "bg-white/20",
-      tags: [first.locationText, first.categoryName].filter(Boolean) as string[],
-      stats: [
-        { label: "Số gói", value: String(packages.length) },
-        { label: "Giá từ", value: packages.length > 0 ? `${Math.min(...packages.map(p => p.price)).toLocaleString("vi-VN")}đ` : "—" },
-      ],
+      tags: [productDetail?.locationText, product?.locationText].filter(Boolean) as string[],
+      stats: getProductAttributeStats(productDetail, packages.length, packages.length > 0 ? Math.min(...packages.map((p) => p.price)) : product?.priceFrom),
+      description: productDetail?.description || productDetail?.shortDescription || null,
+      features: countryFeatures,
       packages,
     };
   } catch {
@@ -416,27 +567,6 @@ interface ApiProductVariant {
   productSortOrder: number;
   variantSortOrder: number;
   features: { productVariantId: string; text: string; icon: string | null; sortOrder: number }[];
-}
-
-function extractDataInfo(text: string): { amount: string; unit: string; dataGB: number } {
-  const normalized = text.replace(",", ".").trim();
-  const match = normalized.match(/(\d+(?:\.\d+)?)\s*(GB|MB)\b/i);
-  if (!match) return { amount: "—", unit: "GB", dataGB: 0 };
-
-  const value = Number(match[1]);
-  const unit = match[2].toUpperCase();
-  if (!Number.isFinite(value)) return { amount: "—", unit: "GB", dataGB: 0 };
-
-  return {
-    amount: Number.isInteger(value) ? String(value) : String(value),
-    unit,
-    dataGB: unit === "MB" ? value / 1024 : value,
-  };
-}
-
-function extractDays(text: string): number {
-  const match = text.match(/(\d+)\s*(?:ngày|days?|d)\b/i);
-  return match ? parseInt(match[1], 10) : 7;
 }
 
 // ─── Pure Utilities (no API call) ─────────────────────────────────────────────
@@ -499,3 +629,4 @@ export function filterEsimPackages(packages: EsimPackage[], filters: EsimPackage
       });
   }
 }
+

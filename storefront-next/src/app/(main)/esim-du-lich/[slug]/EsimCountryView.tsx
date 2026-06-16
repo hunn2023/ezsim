@@ -18,7 +18,6 @@ interface EsimCountryViewProps {
 }
 
 export default function EsimCountryView({ country, contents, faqs }: EsimCountryViewProps) {
-  const displayRegion = country.region;
   const displayCountry = country.name.replace(/^eSIM\s+/, "");
 
   return (
@@ -26,16 +25,20 @@ export default function EsimCountryView({ country, contents, faqs }: EsimCountry
       <Breadcrumb
         items={[
           { label: "eSIM Du lịch", href: "/esim-du-lich" },
-          { label: displayRegion, href: `/esim-du-lich?region=${encodeURIComponent(country.region)}` },
+          ...(country.region
+            ? [{ label: country.region, href: `/esim-du-lich?region=${encodeURIComponent(country.region)}` }]
+            : []),
           { label: displayCountry },
         ]}
       />
 
       <CountryHero
+        slug={country.slug}
         flag={country.flag}
         flagCode={COUNTRY_FLAG_CODES[country.slug]}
         name={country.name}
         nameEn={country.nameEn}
+        description={country.description}
         tags={country.tags}
         stats={country.stats}
         gradient={country.gradient}

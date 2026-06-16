@@ -18,14 +18,16 @@ const COUNTRY_FLAG_CODES: Record<string, string> = {
   "my": "us",
 };
 
-const REGION_BADGES: Record<EsimCountrySummary["region"], string> = {
+type EsimRegion = NonNullable<EsimCountrySummary["region"]>;
+
+const REGION_BADGES: Record<EsimRegion, string> = {
   "Châu Á": "🌏",
   "Châu Âu": "",
   "Châu Mỹ": "🌎",
   "Châu Đại Dương": "🌊",
 };
 
-const REGION_FLAG_CODES: Partial<Record<EsimCountrySummary["region"], string>> = {
+const REGION_FLAG_CODES: Partial<Record<EsimRegion, string>> = {
   "Châu Âu": "eu",
 };
 
@@ -57,11 +59,11 @@ function EsimDuLichContentInner({
     ? destinations.filter(
         (destination) =>
           removeDiacritics(destination.name).includes(keyword) ||
-          removeDiacritics(destination.region).includes(keyword)
+          removeDiacritics(destination.region ?? "").includes(keyword)
       )
     : destinations;
 
-  const regionOrder: EsimCountrySummary["region"][] = [
+  const regionOrder: EsimRegion[] = [
     "Châu Á",
     "Châu Âu",
     "Châu Mỹ",
@@ -69,6 +71,7 @@ function EsimDuLichContentInner({
   ];
 
   const regionCounts = keywordFilteredDestinations.reduce<Record<string, number>>((acc, destination) => {
+    if (!destination.region) return acc;
     acc[destination.region] = (acc[destination.region] ?? 0) + 1;
     return acc;
   }, {});
@@ -111,10 +114,10 @@ function EsimDuLichContentInner({
     return map[destination.slug] ?? destination.name;
   };
 
-  const displayRegionName = (region: EsimCountrySummary["region"]) => {
+  const displayRegionName = (region: EsimRegion) => {
     if (language === "vi") return region;
 
-    const map: Record<EsimCountrySummary["region"], string> = {
+    const map: Record<EsimRegion, string> = {
       "Châu Á": "Asia",
       "Châu Âu": "Europe",
       "Châu Mỹ": "Americas",
@@ -151,13 +154,19 @@ function EsimDuLichContentInner({
   };
 
   const byRegion = visibleDestinations.reduce<Record<string, EsimCountrySummary[]>>((acc, d) => {
+    if (!d.region) return acc;
     (acc[d.region] ??= []).push(d);
     return acc;
   }, {});
 
-  const orderedByRegionEntries = regionOrder
-    .map((region) => [region, byRegion[region] ?? []] as const)
-    .filter(([, list]) => list.length > 0);
+  const noRegionDestinations = visibleDestinations.filter((d) => !d.region);
+
+  const orderedByRegionEntries = [
+    ...regionOrder
+      .map((region) => [region, byRegion[region] ?? []] as const)
+      .filter(([, list]) => list.length > 0),
+    ...(noRegionDestinations.length > 0 ? [[null, noRegionDestinations] as const] : []),
+  ];
 
   return (
     <>
@@ -265,8 +274,8 @@ function EsimDuLichContentInner({
 
         <main>
           {orderedByRegionEntries.map(([region, list]) => (
-            <section key={region} style={{ marginBottom: "48px" }}>
-              <h2 className="section-title mb-6">{displayRegionName(region)}</h2>
+            <section key={region ?? "__no-region__"} style={{ marginBottom: "48px" }}>
+              {region && <h2 className="section-title mb-6">{displayRegionName(region)}</h2>}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
                 {list.map((d) => {
                   const flagUrl = getFlagUrl(d);

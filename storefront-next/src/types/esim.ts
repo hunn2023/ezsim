@@ -21,6 +21,7 @@ export interface EsimPackage {
   tag: string;
   tagType?: EsimPackageTagType;
   features: string[];
+  booleanFeatures?: string[];
   price: number;
   oldPrice?: number;
   discount?: string;
@@ -49,12 +50,14 @@ export interface EsimCountryDetail {
   flag: string;
   name: string;
   nameEn: string;
-  region: "Châu Á" | "Châu Âu" | "Châu Mỹ" | "Châu Đại Dương";
+  description?: string | null;
+  region: "Châu Á" | "Châu Âu" | "Châu Mỹ" | "Châu Đại Dương" | null;
   gradient: string;
   textColor: string;
   tagBg: string;
   tags: string[];
   stats: EsimCountryStat[];
+  features: string[];
   packages: EsimPackage[];
 }
 
