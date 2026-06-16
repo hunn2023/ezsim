@@ -70,19 +70,23 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
     return GB_GROUP_ORDER.map((key) => ({ key, packages: grouped[key] }));
   }, [filteredPackages]);
 
-  // Auto-select first non-empty group
+  // If the selected GB group becomes empty (e.g. after a filter change), reset to "all"
   useEffect(() => {
-    const firstNonEmpty = gbGroups.find((g) => g.packages.length > 0);
-    if (!firstNonEmpty) { setActiveGbGroup(null); return; }
-    if (!activeGbGroup || !gbGroups.find((g) => g.key === activeGbGroup && g.packages.length > 0)) {
-      setActiveGbGroup(firstNonEmpty.key);
-      setVisibleCount(6);
+    if (activeGbGroup !== null) {
+      const hasPackages = gbGroups.some((g) => g.key === activeGbGroup && g.packages.length > 0);
+      if (!hasPackages) {
+        setActiveGbGroup(null);
+        setVisibleCount(6);
+      }
     }
   }, [gbGroups, activeGbGroup]);
 
+  // null = show all packages; GbGroupKey = show only that group
   const activeGroupPackages = useMemo(
-    () => gbGroups.find((g) => g.key === activeGbGroup)?.packages ?? [],
-    [activeGbGroup, gbGroups]
+    () => activeGbGroup === null
+      ? filteredPackages
+      : gbGroups.find((g) => g.key === activeGbGroup)?.packages ?? [],
+    [activeGbGroup, gbGroups, filteredPackages]
   );
 
   const activeGroupDays = useMemo(
@@ -92,7 +96,7 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
 
   const visiblePackages = activeGroupPackages.slice(0, visibleCount);
 
-  const handleGbGroupChange = (key: GbGroupKey) => {
+  const handleGbGroupChange = (key: GbGroupKey | null) => {
     if (key === activeGbGroup) return;
     setIsTransitioning(true);
     setTimeout(() => {
@@ -108,14 +112,15 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
   };
 
   const handleSidebarApply = (
-    nextFilters: Pick<EsimPackageFilters, "days" | "dataRanges" | "featureTags" | "minPrice" | "maxPrice">
+    nextFilters: Pick<EsimPackageFilters, "days" | "dataRanges" | "minPrice" | "maxPrice">
   ) => {
-    setFilters((current) => ({ ...current, ...nextFilters }));
+    setFilters((current) => ({ ...current, ...nextFilters, featureTags: [] }));
     setVisibleCount(6);
   };
 
   const handleReset = () => {
     setFilters(INITIAL_FILTERS);
+    setActiveGbGroup(null);
     setVisibleCount(6);
   };
 
@@ -162,6 +167,7 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
     showMore: language === "vi" ? "Xem thêm" : "Show more",
     packageSuffix: language === "vi" ? "gói" : "packages",
     gbGroupBy: language === "vi" ? "Chọn dung lượng" : "Select data",
+    allPackages: language === "vi" ? "Tất cả" : "All",
     unlimitedLabel: language === "vi" ? "Vô hạn" : "Unlimited",
     daysList: language === "vi" ? "Số ngày khả dụng" : "Available days",
     daysSuffix: language === "vi" ? "ngày" : "days",
@@ -177,7 +183,6 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
         appliedFilters={{
           days: filters.days,
           dataRanges: filters.dataRanges,
-          featureTags: filters.featureTags,
           minPrice: filters.minPrice,
           maxPrice: filters.maxPrice,
         }}
@@ -210,6 +215,19 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
                 className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory hide-scrollbar"
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
+                {/* "Tất cả" — show all packages */}
+                <button
+                  type="button"
+                  onClick={() => handleGbGroupChange(null)}
+                  className={`snap-start shrink-0 whitespace-nowrap px-4 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                    activeGbGroup === null
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-slate-50 text-slate-700 border border-slate-200 active:scale-95"
+                  }`}
+                >
+                  {text.allPackages}
+                </button>
+
                 {gbGroups.map((group) => {
                   const isActive = group.key === activeGbGroup;
                   const isEmpty = group.packages.length === 0;
