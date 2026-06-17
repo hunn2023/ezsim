@@ -93,7 +93,7 @@ function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
       ? pkg.dataAmount / 1024
       : pkg.dataAmount ?? 0;
   const dataGB = pkg.isUnlimited ? null : normalizedDataAmount;
-  const dataStr = pkg.isUnlimited ? "∞" : String(pkg.dataAmount ?? 0);
+  const dataStr = pkg.isUnlimited ? "∞" : formatDataAmount(normalizedDataAmount);
   const dataUnitStr = pkg.isUnlimited ? "Không giới hạn" : (pkg.dataUnit || "GB");
   const displayDataUnit = !pkg.isUnlimited && pkg.dataUnit?.toUpperCase() === "MB" ? "GB" : dataUnitStr;
 
@@ -259,15 +259,17 @@ async function getCatalogEsimPackages(): Promise<ApiEsimPackage[]> {
   return all.filter((pkg) => pkg.isActive);
 }
 
-async function getCatalogEsimPackageBySlug(slug: string): Promise<ApiEsimPackage | null> {
+async function getCatalogEsimPackagesBySlug(slug: string): Promise<ApiEsimPackage[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/catalog/esim-packages/${encodeURIComponent(slug)}`);
-    if (!response.ok) return null;
+    if (!response.ok) return [];
     const json = await response.json();
-    if (json?.isSuccess === false) return null;
-    return (json?.data ?? json) as ApiEsimPackage;
+    if (json?.isSuccess === false) return [];
+    const data = json?.data ?? json;
+    const items = Array.isArray(data) ? data : data ? [data] : [];
+    return (items as ApiEsimPackage[]).filter((pkg) => pkg.isActive);
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -281,15 +283,6 @@ async function getCatalogProductBySlug(slug: string): Promise<ApiProduct | null>
   } catch {
     return null;
   }
-}
-
-async function getDetailedEsimPackages(packages: ApiEsimPackage[]): Promise<ApiEsimPackage[]> {
-  return Promise.all(
-    packages.map(async (pkg) => {
-      const detail = await getCatalogEsimPackageBySlug(pkg.slug);
-      return detail ?? pkg;
-    })
-  );
 }
 
 function matchesProductSlug(productSlug: string | null | undefined, slug: string): boolean {
@@ -437,31 +430,25 @@ function buildEmptyEsimCountry(slug: string): EsimCountryDetail {
 
 export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail> {
   try {
-    const [allVariants, allEsimPackages, routePackage] = await Promise.all([
+    const [allVariants, routePackages] = await Promise.all([
       getCatalogVariants(),
-      getCatalogEsimPackages(),
-      getCatalogEsimPackageBySlug(slug),
+      getCatalogEsimPackagesBySlug(slug),
     ]);
     const variantsById = new Map(allVariants.map((v) => [v.productVariantId, v]));
-    const routePackageVariant = routePackage ? variantsById.get(routePackage.productVariantId) : undefined;
-    const productSlug = routePackageVariant?.productSlug || slug;
-    const items = routePackage
-      ? allVariants.filter((v) => v.productVariantId === routePackage.productVariantId)
-      : allVariants.filter((v) => matchesProductSlug(v.productSlug, slug));
-    const [productDetail, product] = await Promise.all([
-      getCatalogProductBySlug(productSlug),
-      getHomeEsimProductBySlug(productSlug),
-    ]);
-    const matchingVariantIds = new Set(items.map((item) => item.productVariantId));
-    const matchingProductIds = new Set(
-      [routePackage?.productId, productDetail?.id, product?.id, ...items.map((item) => item.productId)].filter(Boolean) as string[]
+    const routePackageVariantIds = new Set(routePackages.map((pkg) => pkg.productVariantId));
+    const routePackageProductIds = new Set(routePackages.map((pkg) => pkg.productId));
+    const items = allVariants.filter(
+      (v) =>
+        matchesProductSlug(v.productSlug, slug) ||
+        routePackageVariantIds.has(v.productVariantId) ||
+        routePackageProductIds.has(v.productId)
     );
-    const esimPackages = routePackage
-      ? [routePackage].filter((pkg) => pkg.isActive)
-      : allEsimPackages.filter(
-          (pkg) => matchingVariantIds.has(pkg.productVariantId) || matchingProductIds.has(pkg.productId)
-        );
-    const productId = routePackage?.productId || items[0]?.productId || productDetail?.id || product?.id || "";
+    const [productDetail, product] = await Promise.all([
+      getCatalogProductBySlug(slug),
+      getHomeEsimProductBySlug(slug),
+    ]);
+    const esimPackages = routePackages;
+    const productId = routePackages[0]?.productId || items[0]?.productId || productDetail?.id || product?.id || "";
 
     if (esimPackages.length === 0) {
       if (!product) return buildEmptyEsimCountry(slug);
@@ -487,8 +474,10 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
     const firstPackage = esimPackages[0];
     const countryFeatures = Array.from(
       new Set(
-        items
-          .flatMap((v) => v.features || [])
+        [
+          ...items.flatMap((v) => v.features || []),
+          ...esimPackages.flatMap((pkg) => pkg.productVariantFeatures || []),
+        ]
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .map((f) => f.text)
       )
@@ -505,7 +494,7 @@ export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDet
             : undefined;
       const discount = oldPrice ? `-${Math.round((1 - price / oldPrice) * 100)}%` : undefined;
       const mapped = mapApiPackageToEsim({ ...apiPackage, price, originalPrice: oldPrice });
-      const variantFeatures = (variant?.features || [])
+      const variantFeatures = [...(variant?.features || []), ...(apiPackage.productVariantFeatures || [])]
         .sort((a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder)
         .map((f: { text: string }) => f.text);
 
