@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { sendChatbotMessage } from "@/lib/api/chatbotApi";
 import type { ChatbotProductSuggestion } from "@/lib/api/chatbotApi";
 
@@ -44,7 +45,13 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
-function SuggestionCard({ suggestion }: { suggestion: ChatbotProductSuggestion }) {
+function SuggestionCard({
+  suggestion,
+  onNavigate,
+}: {
+  suggestion: ChatbotProductSuggestion;
+  onNavigate: () => void;
+}) {
   const dataLabel = suggestion.isUnlimited
     ? "Không giới hạn"
     : [suggestion.dataAmount, suggestion.dataUnit].filter(Boolean).join(" ");
@@ -52,6 +59,7 @@ function SuggestionCard({ suggestion }: { suggestion: ChatbotProductSuggestion }
   return (
     <Link
       href={getSuggestionHref(suggestion)}
+      onClick={onNavigate}
       className="block rounded-lg border border-blue-100 bg-blue-50/70 p-2.5 text-left transition hover:border-primary hover:bg-blue-50"
     >
       <div className="flex items-start gap-2">
@@ -81,6 +89,7 @@ function SuggestionCard({ suggestion }: { suggestion: ChatbotProductSuggestion }
 }
 
 export default function ChatbotWidget() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
@@ -91,6 +100,7 @@ export default function ChatbotWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const previousPathnameRef = useRef(pathname);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (
@@ -144,6 +154,13 @@ export default function ChatbotWidget() {
       inputRef.current.focus();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (previousPathnameRef.current !== pathname) {
+      setOpen(false);
+      previousPathnameRef.current = pathname;
+    }
+  }, [pathname]);
 
   const appendBotMessage = useCallback((text: string, suggestions?: ChatbotProductSuggestion[]) => {
     const botMsg: Message = {
@@ -265,6 +282,7 @@ export default function ChatbotWidget() {
                         <SuggestionCard
                           key={`${suggestion.esimPackageId}-${suggestion.productVariantId}`}
                           suggestion={suggestion}
+                          onNavigate={() => setOpen(false)}
                         />
                       ))}
                     </div>
