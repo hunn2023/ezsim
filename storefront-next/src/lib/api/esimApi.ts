@@ -197,6 +197,7 @@ export interface HomeEsimProduct {
   locationText: string | null;
   thumbnailUrl: string | null;
   flagUrl: string | null;
+  region?: string | null;
   priceFrom: number;
   currency: string;
   isHot: boolean;
@@ -356,7 +357,7 @@ export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
         slug: product.slug,
         flag: product.flagUrl || product.thumbnailUrl || "",
         name: product.name,
-        region: mapRegion(null),
+        region: mapRegion(product.region ?? null),
         startingPrice: product.priceFrom ?? 0,
         bestseller: product.isHot,
         packageCount: product.packageCount ?? 0,
