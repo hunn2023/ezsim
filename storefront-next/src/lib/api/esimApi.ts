@@ -437,17 +437,31 @@ function buildEmptyEsimCountry(slug: string): EsimCountryDetail {
 
 export async function getEsimCountryBySlug(slug: string): Promise<EsimCountryDetail> {
   try {
-    const [allVariants, esimPackages] = await Promise.all([
+    const [allVariants, allEsimPackages, routePackage] = await Promise.all([
       getCatalogVariants(),
       getCatalogEsimPackages(),
+      getCatalogEsimPackageBySlug(slug),
     ]);
-    const items = allVariants.filter((v) => matchesProductSlug(v.productSlug, slug));
     const variantsById = new Map(allVariants.map((v) => [v.productVariantId, v]));
+    const routePackageVariant = routePackage ? variantsById.get(routePackage.productVariantId) : undefined;
+    const productSlug = routePackageVariant?.productSlug || slug;
+    const items = routePackage
+      ? allVariants.filter((v) => v.productVariantId === routePackage.productVariantId)
+      : allVariants.filter((v) => matchesProductSlug(v.productSlug, slug));
     const [productDetail, product] = await Promise.all([
-      getCatalogProductBySlug(slug),
-      getHomeEsimProductBySlug(slug),
+      getCatalogProductBySlug(productSlug),
+      getHomeEsimProductBySlug(productSlug),
     ]);
-    const productId = items[0]?.productId || esimPackages[0]?.productId || productDetail?.id || "";
+    const matchingVariantIds = new Set(items.map((item) => item.productVariantId));
+    const matchingProductIds = new Set(
+      [routePackage?.productId, productDetail?.id, product?.id, ...items.map((item) => item.productId)].filter(Boolean) as string[]
+    );
+    const esimPackages = routePackage
+      ? [routePackage].filter((pkg) => pkg.isActive)
+      : allEsimPackages.filter(
+          (pkg) => matchingVariantIds.has(pkg.productVariantId) || matchingProductIds.has(pkg.productId)
+        );
+    const productId = routePackage?.productId || items[0]?.productId || productDetail?.id || product?.id || "";
 
     if (esimPackages.length === 0) {
       if (!product) return buildEmptyEsimCountry(slug);

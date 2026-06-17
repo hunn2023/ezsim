@@ -2,33 +2,91 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { sendChatbotMessage } from "@/lib/api/chatbotApi";
+import type { ChatbotProductSuggestion } from "@/lib/api/chatbotApi";
 
 interface Message {
   id: number;
   text: string;
   sender: "bot" | "user";
   time: string;
+  suggestions?: ChatbotProductSuggestion[];
+}
+
+const CHATBOT_SESSION_STORAGE_KEY = "ezsim_chatbot_session_id";
+const CHATBOT_MESSAGES_STORAGE_KEY = "ezsim_chatbot_messages";
+
+function getCurrentTime(): string {
+  return new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatPrice(value: number, currency: string | null): string {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: currency || "VND",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function getSuggestionHref(suggestion: ChatbotProductSuggestion): string {
+  if (suggestion.buyUrl) return suggestion.buyUrl;
+  if (suggestion.productSlug) return `/esim-du-lich/${suggestion.productSlug}`;
+  return "/esim-du-lich";
 }
 
 const INITIAL_MESSAGES: Message[] = [
   {
     id: 1,
-    text: "Xin chào! 👋 Mình là trợ lý AI của EZSIM.",
+    text: "Xin chào! Mình là trợ lý AI của EZSIM. Bạn muốn tìm eSIM cho quốc gia nào, đi bao nhiêu ngày và nhu cầu data ra sao?",
     sender: "bot",
-    time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-  },
-  {
-    id: 2,
-    text: "Tính năng chat AI sẽ sớm được ra mắt. Hiện tại bạn có thể liên hệ qua Zalo hoặc Hotline để được hỗ trợ nhanh nhất nhé! 🚀",
-    sender: "bot",
-    time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+    time: getCurrentTime(),
   },
 ];
+
+function SuggestionCard({ suggestion }: { suggestion: ChatbotProductSuggestion }) {
+  const dataLabel = suggestion.isUnlimited
+    ? "Không giới hạn"
+    : [suggestion.dataAmount, suggestion.dataUnit].filter(Boolean).join(" ");
+
+  return (
+    <Link
+      href={getSuggestionHref(suggestion)}
+      className="block rounded-lg border border-blue-100 bg-blue-50/70 p-2.5 text-left transition hover:border-primary hover:bg-blue-50"
+    >
+      <div className="flex items-start gap-2">
+        {suggestion.flagUrl && (
+          <Image
+            src={suggestion.flagUrl}
+            alt={suggestion.countryName || "Quốc gia"}
+            width={22}
+            height={16}
+            className="mt-0.5 rounded-sm object-cover"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-xs font-semibold text-slate-800">
+            {suggestion.packageName || suggestion.productName || "Gói eSIM phù hợp"}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {dataLabel || "Data linh hoạt"} · {suggestion.validityDays} ngày
+          </p>
+          <p className="mt-1 text-xs font-bold text-primary">
+            {formatPrice(suggestion.salePrice, suggestion.currency)}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export default function ChatbotWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [hasLoadedStoredMessages, setHasLoadedStoredMessages] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
@@ -46,6 +104,29 @@ export default function ChatbotWidget() {
   }, []);
 
   useEffect(() => {
+    sessionIdRef.current = window.localStorage.getItem(CHATBOT_SESSION_STORAGE_KEY);
+    const storedMessages = window.localStorage.getItem(CHATBOT_MESSAGES_STORAGE_KEY);
+
+    if (storedMessages) {
+      try {
+        const parsedMessages = JSON.parse(storedMessages) as Message[];
+        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+          setMessages(parsedMessages);
+        }
+      } catch {
+        window.localStorage.removeItem(CHATBOT_MESSAGES_STORAGE_KEY);
+      }
+    }
+
+    setHasLoadedStoredMessages(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedStoredMessages) return;
+    window.localStorage.setItem(CHATBOT_MESSAGES_STORAGE_KEY, JSON.stringify(messages));
+  }, [hasLoadedStoredMessages, messages]);
+
+  useEffect(() => {
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -56,7 +137,7 @@ export default function ChatbotWidget() {
     if (open && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, open]);
+  }, [messages, isSending, open]);
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -64,30 +145,54 @@ export default function ChatbotWidget() {
     }
   }, [open]);
 
-  const handleSend = () => {
-    const text = input.trim();
-    if (!text) return;
+  const appendBotMessage = useCallback((text: string, suggestions?: ChatbotProductSuggestion[]) => {
+    const botMsg: Message = {
+      id: Date.now() + Math.random(),
+      text,
+      sender: "bot",
+      time: getCurrentTime(),
+      suggestions,
+    };
+    setMessages((prev) => [...prev, botMsg]);
+  }, []);
 
-    const now = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-    const userMsg: Message = { id: Date.now(), text, sender: "user", time: now };
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || isSending) return;
+
+    const userMsg: Message = { id: Date.now(), text, sender: "user", time: getCurrentTime() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setIsSending(true);
 
-    // Mock bot reply after a short delay
-    setTimeout(() => {
-      const botMsg: Message = {
-        id: Date.now() + 1,
-        text: "Cảm ơn bạn đã nhắn tin! Tính năng AI chatbot đang được phát triển. Vui lòng liên hệ Zalo/Hotline để được hỗ trợ ngay nhé! 😊",
-        sender: "bot",
-        time: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, botMsg]);
-    }, 800);
+    try {
+      const response = await sendChatbotMessage({
+        sessionId: sessionIdRef.current,
+        message: text,
+      });
+
+      if (response.sessionId) {
+        sessionIdRef.current = response.sessionId;
+        window.localStorage.setItem(CHATBOT_SESSION_STORAGE_KEY, response.sessionId);
+      }
+
+      appendBotMessage(
+        response.message || "Mình chưa có câu trả lời phù hợp. Bạn có thể nói rõ hơn nhu cầu eSIM của mình không?",
+        response.suggestions ?? undefined
+      );
+    } catch (error) {
+      appendBotMessage(
+        error instanceof Error
+          ? error.message
+          : "Chatbot đang bận. Vui lòng thử lại sau hoặc liên hệ Zalo/Hotline để được hỗ trợ nhanh."
+      );
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
     <>
-      {/* Chat bubble button */}
       <div className="relative">
         <span
           aria-hidden
@@ -109,14 +214,12 @@ export default function ChatbotWidget() {
         </button>
       </div>
 
-      {/* Chat window */}
       {open && (
         <div
           ref={chatWindowRef}
           className="fixed right-4 bottom-20 md:right-6 md:bottom-24 z-50 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200"
           style={{ height: "460px" }}
         >
-          {/* Header */}
           <div className="gradient-primary px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
               <Image
@@ -145,40 +248,48 @@ export default function ChatbotWidget() {
             </button>
           </div>
 
-          {/* Messages area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
             {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-              >
+              <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.sender === "user"
                       ? "bg-primary text-white rounded-br-md"
                       : "bg-white text-gray-700 border border-gray-100 shadow-sm rounded-bl-md"
                   }`}
                 >
                   <p>{msg.text}</p>
-                  <p
-                    className={`text-[10px] mt-1 ${
-                      msg.sender === "user" ? "text-white/60" : "text-gray-400"
-                    }`}
-                  >
+                  {msg.suggestions && msg.suggestions.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {msg.suggestions.slice(0, 3).map((suggestion) => (
+                        <SuggestionCard
+                          key={`${suggestion.esimPackageId}-${suggestion.productVariantId}`}
+                          suggestion={suggestion}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <p className={`text-[10px] mt-1 ${msg.sender === "user" ? "text-white/60" : "text-gray-400"}`}>
                     {msg.time}
                   </p>
                 </div>
               </div>
             ))}
+            {isSending && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl rounded-bl-md border border-gray-100 bg-white px-3.5 py-2.5 text-sm text-gray-500 shadow-sm">
+                  Đang trả lời...
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input area */}
           <div className="flex-shrink-0 border-t border-gray-100 bg-white p-3">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleSend();
+                void handleSend();
               }}
               className="flex items-center gap-2"
             >
@@ -188,11 +299,12 @@ export default function ChatbotWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Nhập tin nhắn..."
-                className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm outline-none focus:border-primary transition bg-gray-50 focus:bg-white"
+                disabled={isSending}
+                className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm outline-none focus:border-primary transition bg-gray-50 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               />
               <button
                 type="submit"
-                disabled={!input.trim()}
+                disabled={!input.trim() || isSending}
                 className="h-9 w-9 rounded-full gradient-primary text-white flex items-center justify-center disabled:opacity-40 transition hover:scale-105 active:scale-95 flex-shrink-0"
                 aria-label="Gửi tin nhắn"
               >
