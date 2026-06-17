@@ -137,10 +137,17 @@ export interface ApiEsimPackage {
   price?: number;
   salePrice?: number;
   originalPrice?: number;
+  costPrice?: number;
   currency?: string;
   // Relations
   country?: ApiCountry;
   carriers?: ApiCarrier[];
+  productVariantFeatures?: {
+    productVariantId?: string;
+    text: string;
+    icon: string | null;
+    sortOrder: number;
+  }[];
 }
 
 // ─── Catalog: Product ─────────────────────────────────────────────────────────
