@@ -8,7 +8,7 @@ const SUPPORT_LINKS = {
 
 export default function FloatingSupportButtons() {
   return (
-    <div className="fixed right-4 bottom-5 md:right-6 md:bottom-8 z-40 flex flex-col items-end gap-3 select-none">
+    <div className="fixed right-4 bottom-5 md:right-6 md:bottom-8 z-[100] flex flex-col items-end gap-3 select-none">
       <div className="hidden md:block rounded-full bg-white/95 backdrop-blur border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm animate-pulse">
         Bạn cần hỗ trợ?
       </div>

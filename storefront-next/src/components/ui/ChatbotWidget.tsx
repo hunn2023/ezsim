@@ -234,8 +234,8 @@ export default function ChatbotWidget() {
       {open && (
         <div
           ref={chatWindowRef}
-          className="fixed right-4 bottom-20 md:right-6 md:bottom-24 z-50 w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200"
-          style={{ height: "460px" }}
+          className="fixed right-4 bottom-20 md:right-6 md:bottom-24 z-[110] w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200"
+          style={{ height: "min(460px, calc(100dvh - 7rem))" }}
         >
           <div className="gradient-primary px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
@@ -318,7 +318,7 @@ export default function ChatbotWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Nhập tin nhắn..."
                 disabled={isSending}
-                className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm outline-none focus:border-primary transition bg-gray-50 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-[16px] outline-none focus:border-primary transition bg-gray-50 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               />
               <button
                 type="submit"

@@ -198,8 +198,10 @@ export default function CountrySearchBox({
 
       {open && (
         <div
-          className="absolute left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg p-2 max-h-[320px] overflow-y-auto"
-          style={{ top: "calc(100% + 8px)", zIndex: 140 }}
+          className={`absolute left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg p-2 max-h-[320px] overflow-y-auto ${
+            variant === "header" ? "z-10" : "z-30"
+          }`}
+          style={{ top: "calc(100% + 8px)" }}
         >
           {filteredResults.length > 0 ? (
             filteredResults.map((country) => {
