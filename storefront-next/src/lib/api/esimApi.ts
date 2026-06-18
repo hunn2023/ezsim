@@ -88,14 +88,13 @@ function getProductAttributeStats(
 }
 
 function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
-  const normalizedDataAmount =
-    pkg.dataUnit?.toUpperCase() === "MB" && pkg.dataAmount
+  const dataGB = pkg.isUnlimited
+    ? null
+    : pkg.dataUnit?.toUpperCase() === "MB" && pkg.dataAmount
       ? pkg.dataAmount / 1024
       : pkg.dataAmount ?? 0;
-  const dataGB = pkg.isUnlimited ? null : normalizedDataAmount;
-  const dataStr = pkg.isUnlimited ? "∞" : formatDataAmount(normalizedDataAmount);
-  const dataUnitStr = pkg.isUnlimited ? "Không giới hạn" : (pkg.dataUnit || "GB");
-  const displayDataUnit = !pkg.isUnlimited && pkg.dataUnit?.toUpperCase() === "MB" ? "GB" : dataUnitStr;
+  const dataStr = pkg.isUnlimited ? "∞" : formatDataAmount(pkg.dataAmount ?? 0);
+  const displayDataUnit = pkg.isUnlimited ? "Không giới hạn" : (pkg.dataUnit || "GB");
 
   const quickTags: PackageQuickTag[] = [];
   if (pkg.isUnlimited) quickTags.push("unlimited");
@@ -126,10 +125,10 @@ function mapApiPackageToEsim(pkg: ApiEsimPackage): EsimPackage {
     productId: pkg.productId,
     productVariantId: pkg.productVariantId,
     esimPackageId: pkg.id,
-    data: pkg.isUnlimited ? dataStr : formatDataAmount(normalizedDataAmount),
+    data: dataStr,
     dataUnit: displayDataUnit,
-    subtitle: pkg.coverageType || `${pkg.validityDays} ngày`,
-    tag: pkg.isUnlimited ? "UNLIMITED" : `${pkg.validityDays} NGÀY`,
+    subtitle: pkg.coverageType || "",
+    tag: `${pkg.validityDays} NGÀY`,
     tagType: pkg.isUnlimited ? "unlimited" : undefined,
     features,
     booleanFeatures,

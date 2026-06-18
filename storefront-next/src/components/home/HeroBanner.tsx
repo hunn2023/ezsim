@@ -79,7 +79,7 @@ export default function HeroBanner() {
             </div>
 
             {/* Hero search */}
-            <div className="relative max-w-[600px] z-[120]" style={{ overflow: "visible" }}>
+            <div className="relative max-w-[600px]" style={{ overflow: "visible" }}>
               <CountrySearchBox
                 language={language}
                 placeholder={text.searchPlaceholder}
