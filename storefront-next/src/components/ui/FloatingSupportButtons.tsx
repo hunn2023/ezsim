@@ -13,19 +13,7 @@ export default function FloatingSupportButtons() {
         Bạn cần hỗ trợ?
       </div>
 
-      <div className="relative">
-        <span
-          aria-hidden
-          className="absolute inset-0 rounded-full bg-[#0068FF]/35 animate-ping [animation-duration:2s]"
-        />
-        <a
-          href={SUPPORT_LINKS.zalo}
-          aria-label="Liên hệ Zalo"
-          className="group relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#0068FF] text-white shadow-[0_10px_30px_rgba(0,104,255,0.32)] transition-all duration-300 hover:-translate-y-0.5 hover:scale-110 hover:shadow-[0_14px_36px_rgba(0,104,255,0.42)] active:scale-95"
-        >
-          <span className="text-[11px] font-extrabold tracking-[0.2px]">Zalo</span>
-        </a>
-      </div>
+      <ChatbotWidget />
 
       <div className="relative">
         <span
@@ -41,7 +29,19 @@ export default function FloatingSupportButtons() {
         </a>
       </div>
 
-      <ChatbotWidget />
+      <div className="relative">
+        <span
+          aria-hidden
+          className="absolute inset-0 rounded-full bg-[#0068FF]/35 animate-ping [animation-duration:2s]"
+        />
+        <a
+          href={SUPPORT_LINKS.zalo}
+          aria-label="Liên hệ Zalo"
+          className="group relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#0068FF] text-white shadow-[0_10px_30px_rgba(0,104,255,0.32)] transition-all duration-300 hover:-translate-y-0.5 hover:scale-110 hover:shadow-[0_14px_36px_rgba(0,104,255,0.42)] active:scale-95"
+        >
+          <span className="text-[11px] font-extrabold tracking-[0.2px]">Zalo</span>
+        </a>
+      </div>
     </div>
   );
 }
