@@ -97,6 +97,7 @@ export default function ChatbotWidget() {
   const [hasLoadedStoredMessages, setHasLoadedStoredMessages] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -137,6 +138,35 @@ export default function ChatbotWidget() {
   }, [hasLoadedStoredMessages, messages]);
 
   useEffect(() => {
+    if (!open) return;
+
+    const scrollY = window.scrollY;
+    const { body, documentElement } = document;
+    const previous = {
+      bodyOverflow: body.style.overflow,
+      bodyPosition: body.style.position,
+      bodyTop: body.style.top,
+      bodyWidth: body.style.width,
+      htmlOverflow: documentElement.style.overflow,
+    };
+
+    body.style.overflow = "hidden";
+    documentElement.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+
+    return () => {
+      body.style.overflow = previous.bodyOverflow;
+      body.style.position = previous.bodyPosition;
+      body.style.top = previous.bodyTop;
+      body.style.width = previous.bodyWidth;
+      documentElement.style.overflow = previous.htmlOverflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -144,9 +174,13 @@ export default function ChatbotWidget() {
   }, [open, handleClickOutside]);
 
   useEffect(() => {
-    if (open && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    if (!open) return;
+    const scrollContainer = messagesScrollRef.current;
+    if (!scrollContainer) return;
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages, isSending, open]);
 
   useEffect(() => {
@@ -234,8 +268,9 @@ export default function ChatbotWidget() {
       {open && (
         <div
           ref={chatWindowRef}
-          className="fixed right-4 bottom-20 md:right-6 md:bottom-24 z-[110] w-[340px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200"
+          className="fixed right-4 bottom-20 md:right-6 md:bottom-24 z-[110] w-[340px] max-w-[calc(100dvw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200"
           style={{ height: "min(460px, calc(100dvh - 7rem))" }}
+          onTouchMove={(event) => event.stopPropagation()}
         >
           <div className="gradient-primary px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
@@ -265,7 +300,11 @@ export default function ChatbotWidget() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
+          <div
+            ref={messagesScrollRef}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y p-4 space-y-3 bg-gray-50/50"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
                 <div

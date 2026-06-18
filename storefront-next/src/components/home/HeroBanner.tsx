@@ -35,15 +35,11 @@ export default function HeroBanner() {
   };
 
   return (
-    <section className="gradient-primary text-white relative overflow-visible" style={{ padding: "64px 0" }}>
+    <section className="gradient-primary text-white relative overflow-hidden" style={{ padding: "64px 0" }}>
       {/* Decorative radial circle - mockup exact */}
       <div
-        className="absolute pointer-events-none"
+        className="absolute pointer-events-none w-[280px] h-[280px] -top-[35%] -right-[15%] md:w-[600px] md:h-[600px] md:-top-[50%] md:-right-[10%]"
         style={{
-          top: "-50%",
-          right: "-10%",
-          width: "600px",
-          height: "600px",
           background: "radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%)",
           borderRadius: "50%",
         }}
@@ -63,7 +59,7 @@ export default function HeroBanner() {
             </p>
 
             {/* Stats */}
-            <div className="flex gap-8 mb-8">
+            <div className="flex flex-wrap gap-4 sm:gap-8 mb-8">
               <div>
                 <div className="text-white font-extrabold leading-none" style={{ fontSize: "32px" }}>200+</div>
                 <div className="text-white/85" style={{ fontSize: "13px" }}>{text.statCountry}</div>
@@ -79,7 +75,7 @@ export default function HeroBanner() {
             </div>
 
             {/* Hero search */}
-            <div className="relative max-w-[600px]" style={{ overflow: "visible" }}>
+            <div className="relative max-w-[600px]">
               <CountrySearchBox
                 language={language}
                 placeholder={text.searchPlaceholder}
