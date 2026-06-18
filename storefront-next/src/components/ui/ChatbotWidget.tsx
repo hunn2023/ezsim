@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
@@ -96,20 +96,39 @@ export default function ChatbotWidget() {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [hasLoadedStoredMessages, setHasLoadedStoredMessages] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [expandOrigin, setExpandOrigin] = useState("100% 100%");
   const sessionIdRef = useRef<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const previousPathnameRef = useRef(pathname);
-  const [mounted, setMounted] = useState(false);
+
+  const closeChat = useCallback(() => setOpen(false), []);
+
+  const openChat = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setExpandOrigin(`${rect.left + rect.width / 2}px ${rect.top + rect.height / 2}px`);
+    }
+    setOpen(true);
+  }, []);
+
+  const toggleChat = useCallback(() => {
+    if (open) {
+      setOpen(false);
+    } else {
+      openChat();
+    }
+  }, [open, openChat]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (window.innerWidth < 768) return;
     if (
       chatWindowRef.current &&
       !chatWindowRef.current.contains(e.target as Node) &&
@@ -146,63 +165,11 @@ export default function ChatbotWidget() {
   useEffect(() => {
     if (!open) return;
 
-    const { body, documentElement } = document;
-    const previous = {
-      bodyOverflow: body.style.overflow,
-      htmlOverflow: documentElement.style.overflow,
-    };
-
-    body.style.overflow = "hidden";
-    documentElement.style.overflow = "hidden";
-
-    const preventBackgroundScroll = (event: TouchEvent) => {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (chatWindowRef.current?.contains(target)) return;
-      if (buttonRef.current?.contains(target)) return;
-      event.preventDefault();
-    };
-
-    document.addEventListener("touchmove", preventBackgroundScroll, { passive: false });
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     return () => {
-      body.style.overflow = previous.bodyOverflow;
-      documentElement.style.overflow = previous.htmlOverflow;
-      document.removeEventListener("touchmove", preventBackgroundScroll);
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const scrollContainer = messagesScrollRef.current;
-    if (!scrollContainer) return;
-
-    let startY = 0;
-
-    const onTouchStart = (event: TouchEvent) => {
-      startY = event.touches[0]?.clientY ?? 0;
-    };
-
-    const onTouchMove = (event: TouchEvent) => {
-      const currentY = event.touches[0]?.clientY;
-      if (currentY === undefined) return;
-
-      const deltaY = startY - currentY;
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-      const atTop = scrollTop <= 0;
-      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
-
-      if ((deltaY < 0 && atTop) || (deltaY > 0 && atBottom)) {
-        event.preventDefault();
-      }
-    };
-
-    scrollContainer.addEventListener("touchstart", onTouchStart, { passive: true });
-    scrollContainer.addEventListener("touchmove", onTouchMove, { passive: false });
-
-    return () => {
-      scrollContainer.removeEventListener("touchstart", onTouchStart);
-      scrollContainer.removeEventListener("touchmove", onTouchMove);
+      document.body.style.overflow = previousOverflow;
     };
   }, [open]);
 
@@ -217,14 +184,11 @@ export default function ChatbotWidget() {
     if (!open) return;
     const scrollContainer = messagesScrollRef.current;
     if (!scrollContainer) return;
-    scrollContainer.scrollTo({
-      top: scrollContainer.scrollHeight,
-      behavior: "smooth",
-    });
+    scrollContainer.scrollTop = scrollContainer.scrollHeight;
   }, [messages, isSending, open]);
 
   useEffect(() => {
-    if (open && inputRef.current) {
+    if (open && inputRef.current && window.matchMedia("(min-width: 768px)").matches) {
       inputRef.current.focus();
     }
   }, [open]);
@@ -282,143 +246,144 @@ export default function ChatbotWidget() {
     }
   };
 
-  const chatPanelStyle = {
-    "--chat-safe-top": "max(0.75rem, env(safe-area-inset-top, 0px))",
-    "--chat-mobile-bottom": "calc(11rem + env(safe-area-inset-bottom, 0px))",
-  } as CSSProperties;
-
-  const chatPanel = open ? (
-    <div
-      ref={chatWindowRef}
-      className="fixed z-[110] bg-white rounded-2xl shadow-2xl border border-gray-200 grid grid-rows-[auto_1fr_auto] overflow-hidden animate-in slide-in-from-bottom-4 fade-in duration-200 max-md:inset-x-4 max-md:w-auto max-md:bottom-[var(--chat-mobile-bottom)] max-md:h-[min(75dvh,calc(100dvh-var(--chat-safe-top)-var(--chat-mobile-bottom)))] max-md:max-h-[calc(100dvh-var(--chat-safe-top)-var(--chat-mobile-bottom))] md:right-6 md:bottom-24 md:w-[340px] md:max-w-[calc(100dvw-2rem)] md:h-[min(460px,calc(100dvh-6rem))]"
-      style={chatPanelStyle}
-    >
-      <div className="gradient-primary px-4 py-3 flex items-center gap-3 shrink-0">
-        <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/30">
-          <Image
-            src="/logo_chatbot.jpg"
-            alt="EZSIM Bot"
-            width={36}
-            height={36}
-            className="h-full w-full object-cover rounded-full"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-white font-bold text-sm leading-tight">EZSIM Assistant</p>
-          <p className="text-white/70 text-xs flex items-center gap-1">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
-            Trực tuyến
-          </p>
-        </div>
-        <button
-          onClick={() => setOpen(false)}
-          className="text-white/70 hover:text-white transition h-7 w-7 flex items-center justify-center rounded-full hover:bg-white/10"
-          aria-label="Đóng chat"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
-
+  const chatPanel =
+    open && mounted ? (
       <div
-        ref={messagesScrollRef}
-        className="min-h-0 overflow-y-auto overscroll-y-contain p-4 space-y-3 bg-gray-50/50"
-        style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+        ref={chatWindowRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="EZSIM Assistant"
+        className="chatbot-panel-enter fixed z-[350] flex min-h-0 flex-col overflow-hidden bg-white max-md:inset-0 max-md:rounded-none md:right-6 md:bottom-24 md:left-auto md:top-auto md:w-[340px] md:max-w-[calc(100dvw-2rem)] md:rounded-2xl md:border md:border-gray-200 md:shadow-2xl md:h-[min(460px,calc(100dvh-6rem))]"
+        style={{ transformOrigin: expandOrigin }}
       >
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                msg.sender === "user"
-                  ? "bg-primary text-white rounded-br-md"
-                  : "bg-white text-gray-700 border border-gray-100 shadow-sm rounded-bl-md"
-              }`}
-            >
-              <p>{msg.text}</p>
-              {msg.suggestions && msg.suggestions.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  {msg.suggestions.slice(0, 3).map((suggestion) => (
-                    <SuggestionCard
-                      key={`${suggestion.esimPackageId}-${suggestion.productVariantId}`}
-                      suggestion={suggestion}
-                      onNavigate={() => setOpen(false)}
-                    />
-                  ))}
-                </div>
-              )}
-              <p className={`text-[10px] mt-1 ${msg.sender === "user" ? "text-white/60" : "text-gray-400"}`}>
-                {msg.time}
-              </p>
-            </div>
+        <div className="gradient-primary flex shrink-0 items-center gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] md:py-3">
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-white/20">
+            <Image
+              src="/logo_chatbot.jpg"
+              alt="EZSIM Bot"
+              width={36}
+              height={36}
+              className="h-full w-full rounded-full object-cover"
+            />
           </div>
-        ))}
-        {isSending && (
-          <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-md border border-gray-100 bg-white px-3.5 py-2.5 text-sm text-gray-500 shadow-sm">
-              Đang trả lời...
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold leading-tight text-white">EZSIM Assistant</p>
+            <p className="flex items-center gap-1 text-xs text-white/70">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
+              Trực tuyến
+            </p>
           </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="border-t border-gray-100 bg-white p-3 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void handleSend();
-          }}
-          className="flex items-center gap-2"
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Nhập tin nhắn..."
-            disabled={isSending}
-            className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-[16px] outline-none focus:border-primary transition bg-gray-50 focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-          />
           <button
-            type="submit"
-            disabled={!input.trim() || isSending}
-            className="h-9 w-9 rounded-full gradient-primary text-white flex items-center justify-center disabled:opacity-40 transition hover:scale-105 active:scale-95 flex-shrink-0"
-            aria-label="Gửi tin nhắn"
+            type="button"
+            onClick={closeChat}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white"
+            aria-label="Đóng chat"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
-        </form>
+        </div>
+
+        <div
+          ref={messagesScrollRef}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-gray-50/50 p-4 space-y-3"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {messages.map((msg) => (
+            <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
+              <div
+                className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  msg.sender === "user"
+                    ? "rounded-br-md bg-primary text-white"
+                    : "rounded-bl-md border border-gray-100 bg-white text-gray-700 shadow-sm"
+                }`}
+              >
+                <p>{msg.text}</p>
+                {msg.suggestions && msg.suggestions.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {msg.suggestions.slice(0, 3).map((suggestion) => (
+                      <SuggestionCard
+                        key={`${suggestion.esimPackageId}-${suggestion.productVariantId}`}
+                        suggestion={suggestion}
+                        onNavigate={closeChat}
+                      />
+                    ))}
+                  </div>
+                )}
+                <p className={`mt-1 text-[10px] ${msg.sender === "user" ? "text-white/60" : "text-gray-400"}`}>
+                  {msg.time}
+                </p>
+              </div>
+            </div>
+          ))}
+          {isSending && (
+            <div className="flex justify-start">
+              <div className="rounded-2xl rounded-bl-md border border-gray-100 bg-white px-3.5 py-2.5 text-sm text-gray-500 shadow-sm">
+                Đang trả lời...
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="shrink-0 border-t border-gray-100 bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSend();
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Nhập tin nhắn..."
+              disabled={isSending}
+              className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-4 py-2.5 text-[16px] outline-none transition focus:border-primary focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isSending}
+              className="gradient-primary flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white transition hover:scale-105 active:scale-95 disabled:opacity-40"
+              aria-label="Gửi tin nhắn"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  ) : null;
+    ) : null;
 
   return (
     <>
       <div className="relative">
         <span
           aria-hidden
-          className="absolute inset-0 rounded-full bg-primary/30 animate-ping [animation-duration:2.4s] [animation-delay:400ms]"
+          className="absolute inset-0 animate-ping rounded-full bg-primary/30 [animation-delay:400ms] [animation-duration:2.4s]"
         />
         <button
           ref={buttonRef}
-          onClick={() => setOpen(!open)}
+          type="button"
+          onClick={toggleChat}
           aria-label="Mở chatbot hỗ trợ"
-          className="group relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)] border border-gray-200 transition-all duration-300 hover:-translate-y-0.5 hover:scale-110 hover:shadow-[0_14px_36px_rgba(0,0,0,0.2)] active:scale-95 overflow-hidden"
+          aria-expanded={open}
+          className="group relative inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-0.5 hover:scale-110 hover:shadow-[0_14px_36px_rgba(0,0,0,0.2)] active:scale-95"
         >
           <Image
             src="/logo_chatbot.jpg"
             alt="AI Chatbot"
             width={44}
             height={44}
-            className="h-full w-full object-cover rounded-full"
+            className="h-full w-full rounded-full object-cover"
           />
         </button>
       </div>
 
-      {mounted && chatPanel ? createPortal(chatPanel, document.body) : null}
+      {chatPanel ? createPortal(chatPanel, document.body) : null}
     </>
   );
 }
