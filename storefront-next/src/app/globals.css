@@ -10,6 +10,10 @@
   html,
   body {
     overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -25,13 +29,13 @@
 
   /* Mockup exact typography */
   h1 {
-    font-size: 48px;
+    font-size: clamp(28px, 8vw, 48px);
     font-weight: 800;
     line-height: 1.15;
     letter-spacing: -1px;
   }
   h2 {
-    font-size: 32px;
+    font-size: clamp(24px, 6vw, 32px);
     font-weight: 800;
     letter-spacing: -0.5px;
   }
@@ -139,7 +143,7 @@
     padding: 0 24px;
   }
   .section-title {
-    font-size: 32px;
+    font-size: clamp(24px, 6vw, 32px);
     font-weight: 800;
     letter-spacing: -0.5px;
   }
@@ -204,4 +208,13 @@ a, button {
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* iOS Safari auto-zooms inputs with font-size < 16px */
+@media screen and (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

@@ -8,7 +8,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <Suspense fallback={<div className="h-[129px] bg-white border-b border-gray-200" />}>
         <Header />
       </Suspense>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 overflow-x-hidden">{children}</main>
       <CartFlyAnimations />
       <Footer />
     </CartAnimationProvider>
