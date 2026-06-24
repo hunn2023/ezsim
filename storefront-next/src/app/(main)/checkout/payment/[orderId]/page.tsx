@@ -1,8 +1,22 @@
 "use client";
 
 import { HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel } from "@microsoft/signalr";
+import {
+  faCheck,
+  faCheckCircle,
+  faClock,
+  faCopy,
+  faExclamationTriangle,
+  faFileAlt,
+  faHeadset,
+  faLock,
+  faShoppingCart,
+  faUniversity,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { useCartStore } from "@/lib/cartStore";
 import {
@@ -30,13 +44,66 @@ type PaymentPaidEvent = {
 
 type PaymentSuccessSource = "signalr" | "poll";
 
-const REDIRECT_DELAY_MS = 1500;
 const PAYMENT_POLL_INTERVAL_MS = 4000;
 const SIGNALR_START_RETRIES = 4;
 
 function getQrImageUrl(data: PaymentQrData | null): string {
   if (!data) return "";
-  return data.qrCodeUrl || data.qrDataUrl || data.qrCode || data.qrUrl || data.qrImageUrl || "";
+  return data.qrImageUrl || data.qrCode || data.qrCodeUrl || data.qrDataUrl || data.qrUrl || data.paymentUrl || "";
+}
+
+function getOrderCode(data: PaymentQrData | null, fallbackOrderId: string): string {
+  return data?.orderCode || fallbackOrderId;
+}
+
+function getBankCode(data: PaymentQrData | null): string {
+  return data?.bankCode || data?.bankName || "";
+}
+
+function getBankAccountNo(data: PaymentQrData | null): string {
+  return data?.bankAccountNo || data?.accountNumber || "";
+}
+
+function getBankAccountName(data: PaymentQrData | null): string {
+  return data?.bankAccountName || data?.accountName || "";
+}
+
+function getTransferContent(data: PaymentQrData | null): string {
+  return data?.transferContent || data?.content || data?.description || "";
+}
+
+function getExpiredAt(data: PaymentQrData | null): string | undefined {
+  return data?.expiredAt || data?.expiresAt;
+}
+
+function getCountdownSeconds(expiredAt: string | undefined): number | null {
+  if (!expiredAt) return null;
+  const expiresMs = new Date(expiredAt).getTime();
+  if (Number.isNaN(expiresMs)) return null;
+  return Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
+}
+
+function getProviderTransactionId(data: PaymentQrData | null): string {
+  return data?.providerTransactionId || data?.transactionId || "";
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function formatCountdown(secondsLeft: number): string {
+  const minutes = Math.floor(secondsLeft / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (secondsLeft % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
 }
 
 function getEventOrderId(data: PaymentPaidEvent): string | undefined {
@@ -101,12 +168,58 @@ async function startConnectionWithRetry(
   throw lastError;
 }
 
+function CopyRow({
+  label,
+  value,
+  highlight = false,
+  copyable = true,
+  valueClassName = "text-navy",
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+  copyable?: boolean;
+  valueClassName?: string;
+}) {
+  const copyValue = async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success("Đã sao chép");
+    } catch {
+      toast.error("Không thể sao chép");
+    }
+  };
+
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 text-sm ${
+        highlight ? "bg-primary-light/60" : ""
+      }`}
+    >
+      <span className="flex-shrink-0 text-gray-500">{label}</span>
+      <div className="flex min-w-0 items-center justify-end gap-2 text-right">
+        <span className={`break-all font-semibold ${valueClassName}`}>{value}</span>
+        {copyable && value && (
+          <button
+            type="button"
+            aria-label={`Sao chép ${label}`}
+            onClick={() => void copyValue()}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-primary transition hover:bg-primary-light"
+          >
+            <FontAwesomeIcon icon={faCopy} className="text-sm" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function PaymentPage({ params }: PaymentPageProps) {
   const router = useRouter();
   const orderId = params.orderId;
   const clearCart = useCartStore((state) => state.clearCart);
   const connectionRef = useRef<HubConnection | null>(null);
-  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const paymentHandledRef = useRef(false);
   const realtimeSessionRef = useRef(0);
   const pollCountRef = useRef(0);
@@ -114,32 +227,29 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   const [qrData, setQrData] = useState<PaymentQrData | null>(null);
   const [isLoadingQr, setIsLoadingQr] = useState(true);
   const [qrError, setQrError] = useState("");
-  const [realtimeWarning, setRealtimeWarning] = useState("");
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [paidAt, setPaidAt] = useState<string | null>(null);
+  const [successSource, setSuccessSource] = useState<PaymentSuccessSource | null>(null);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(0);
 
-  const handlePaymentSuccess = useCallback((source: PaymentSuccessSource) => {
-    if (paymentHandledRef.current) {
-      paymentFlowLog("payment.success.skipped_already_handled", { orderId, source });
-      return;
-    }
+  const handlePaymentSuccess = useCallback(
+    (source: PaymentSuccessSource, confirmedAt?: string) => {
+      if (paymentHandledRef.current) {
+        paymentFlowLog("payment.success.skipped_already_handled", { orderId, source });
+        return;
+      }
 
-    paymentHandledRef.current = true;
-    paymentFlowLog("payment.success", {
-      orderId,
-      source,
-      redirectDelayMs: REDIRECT_DELAY_MS,
-      redirectTo: `/account/orders/${orderId}`,
-    });
+      paymentHandledRef.current = true;
+      paymentFlowLog("payment.success", { orderId, source });
 
-    setRealtimeWarning("");
-    setShowSuccessPopup(true);
-    clearCart();
-
-    redirectTimerRef.current = setTimeout(() => {
-      paymentFlowLog("payment.redirect", { orderId, source });
-      router.push(`/account/orders/${orderId}`);
-    }, REDIRECT_DELAY_MS);
-  }, [clearCart, orderId, router]);
+      setIsPaid(true);
+      setSuccessSource(source);
+      setPaidAt(confirmedAt || new Date().toISOString());
+      clearCart();
+    },
+    [clearCart, orderId]
+  );
 
   const loadPaymentQr = useCallback(async () => {
     paymentFlowLog("qr.load.start", { orderId });
@@ -152,9 +262,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         orderId,
         hasQrImage: Boolean(getQrImageUrl(data)),
         amount: data.amount ?? null,
-        bankName: data.bankName ?? null,
-        accountNumber: data.accountNumber ?? null,
-        transferContent: data.content || data.description || null,
+        orderCode: data.orderCode ?? null,
       });
       setQrData(data);
     } catch (error) {
@@ -169,6 +277,23 @@ export default function PaymentPage({ params }: PaymentPageProps) {
     }
   }, [orderId]);
 
+  const handleManualCheck = useCallback(async () => {
+    setIsCheckingPayment(true);
+    try {
+      const status = await getPaymentStatus(orderId);
+      if (isPaymentPaid(status)) {
+        handlePaymentSuccess("poll", status.paidAt);
+      } else {
+        toast.info("Chưa nhận được thanh toán. Vui lòng thử lại sau vài giây.");
+      }
+    } catch (error) {
+      paymentFlowError("payment.manual_check.failed", error, { orderId });
+      toast.error("Không thể kiểm tra trạng thái thanh toán.");
+    } finally {
+      setIsCheckingPayment(false);
+    }
+  }, [handlePaymentSuccess, orderId]);
+
   useEffect(() => {
     paymentFlowLog("page.mount", {
       orderId,
@@ -177,6 +302,23 @@ export default function PaymentPage({ params }: PaymentPageProps) {
     });
     void loadPaymentQr();
   }, [loadPaymentQr, orderId]);
+
+  useEffect(() => {
+    const expiredAt = getExpiredAt(qrData);
+    if (!expiredAt || isPaid) {
+      setSecondsLeft(0);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const remaining = getCountdownSeconds(expiredAt);
+      setSecondsLeft(remaining ?? 0);
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, [isPaid, qrData]);
 
   useEffect(() => {
     paymentHandledRef.current = false;
@@ -219,7 +361,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         });
 
         if (paid) {
-          handlePaymentSuccess("poll");
+          handlePaymentSuccess("poll", status.paidAt);
         }
       } catch (error) {
         paymentFlowError("poll.failed", error, { sessionId, orderId, pollNo });
@@ -233,10 +375,9 @@ export default function PaymentPage({ params }: PaymentPageProps) {
     void pollPaymentStatus();
 
     const connectSignalR = async () => {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_SIGNALR_URL || process.env.NEXT_PUBLIC_API_URL;
       if (!apiUrl) {
         paymentFlowLog("signalr.config.missing_api_url", { sessionId, orderId }, "warn");
-        setRealtimeWarning("Thiếu cấu hình API. Hệ thống vẫn đang kiểm tra thanh toán định kỳ.");
         return;
       }
 
@@ -271,32 +412,44 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         });
 
         if (!eventOrderId || eventOrderId.toLowerCase() !== orderId.toLowerCase()) {
-          paymentFlowLog("signalr.event.PaymentPaid.ignored_order_mismatch", {
-            sessionId,
-            expectedOrderId: orderId,
-            eventOrderId,
-          }, "warn");
+          paymentFlowLog(
+            "signalr.event.PaymentPaid.ignored_order_mismatch",
+            {
+              sessionId,
+              expectedOrderId: orderId,
+              eventOrderId,
+            },
+            "warn"
+          );
           return;
         }
 
-        handlePaymentSuccess("signalr");
+        handlePaymentSuccess("signalr", data.paidAt);
       });
 
       connection.on("PaymentFailed", (data) => {
-        paymentFlowLog("signalr.event.PaymentFailed", {
-          sessionId,
-          orderId,
-          payload: data,
-        }, "warn");
+        paymentFlowLog(
+          "signalr.event.PaymentFailed",
+          {
+            sessionId,
+            orderId,
+            payload: data,
+          },
+          "warn"
+        );
       });
 
       connection.onreconnecting((error) => {
-        paymentFlowLog("signalr.reconnecting", {
-          sessionId,
-          orderId,
-          ...getConnectionSnapshot(connection),
-          error: error ? String(error) : null,
-        }, "warn");
+        paymentFlowLog(
+          "signalr.reconnecting",
+          {
+            sessionId,
+            orderId,
+            ...getConnectionSnapshot(connection),
+            error: error ? String(error) : null,
+          },
+          "warn"
+        );
       });
 
       connection.onreconnected(async () => {
@@ -307,10 +460,14 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         });
 
         if (cancelled || sessionId !== realtimeSessionRef.current) {
-          paymentFlowLog("signalr.reconnected.skipped_stale_session", {
-            sessionId,
-            activeSessionId: realtimeSessionRef.current,
-          }, "warn");
+          paymentFlowLog(
+            "signalr.reconnected.skipped_stale_session",
+            {
+              sessionId,
+              activeSessionId: realtimeSessionRef.current,
+            },
+            "warn"
+          );
           return;
         }
 
@@ -324,22 +481,30 @@ export default function PaymentPage({ params }: PaymentPageProps) {
       });
 
       connection.onclose((error) => {
-        paymentFlowLog("signalr.closed", {
-          sessionId,
-          orderId,
-          ...getConnectionSnapshot(connection),
-          error: error ? String(error) : null,
-        }, error ? "warn" : "info");
+        paymentFlowLog(
+          "signalr.closed",
+          {
+            sessionId,
+            orderId,
+            ...getConnectionSnapshot(connection),
+            error: error ? String(error) : null,
+          },
+          error ? "warn" : "info"
+        );
       });
 
       await startConnectionWithRetry(connection, sessionId);
 
       if (cancelled || sessionId !== realtimeSessionRef.current) {
-        paymentFlowLog("signalr.start.aborted_stale_session", {
-          sessionId,
-          activeSessionId: realtimeSessionRef.current,
-          cancelled,
-        }, "warn");
+        paymentFlowLog(
+          "signalr.start.aborted_stale_session",
+          {
+            sessionId,
+            activeSessionId: realtimeSessionRef.current,
+            cancelled,
+          },
+          "warn"
+        );
         await connection.stop();
         return;
       }
@@ -356,7 +521,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
           orderId,
           ...getConnectionSnapshot(connection),
         });
-        setRealtimeWarning("");
       } catch (error) {
         paymentFlowError("signalr.join_group.failed", error, {
           sessionId,
@@ -369,11 +533,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
 
     connectSignalR().catch((error) => {
       paymentFlowError("signalr.setup.failed", error, { sessionId, orderId });
-      if (!cancelled && sessionId === realtimeSessionRef.current) {
-        setRealtimeWarning(
-          "Kết nối realtime chưa ổn định. Hệ thống vẫn đang kiểm tra thanh toán định kỳ."
-        );
-      }
     });
 
     return () => {
@@ -387,11 +546,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         paymentHandled: paymentHandledRef.current,
         ...getConnectionSnapshot(connectionRef.current),
       });
-
-      if (redirectTimerRef.current) {
-        clearTimeout(redirectTimerRef.current);
-        redirectTimerRef.current = null;
-      }
 
       const connection = connectionRef.current;
       if (!connection) return;
@@ -411,91 +565,248 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   }, [handlePaymentSuccess, orderId]);
 
   const qrImageUrl = getQrImageUrl(qrData);
-  const transferContent = qrData?.content || qrData?.description || "";
+  const orderCode = getOrderCode(qrData, orderId);
+  const bankCode = getBankCode(qrData);
+  const bankAccountNo = getBankAccountNo(qrData);
+  const bankAccountName = getBankAccountName(qrData);
+  const transferContent = getTransferContent(qrData);
+  const providerTransactionId = getProviderTransactionId(qrData);
+  const expiredAt = getExpiredAt(qrData);
+  const showCountdown = getCountdownSeconds(expiredAt) !== null && secondsLeft > 0;
+  const paidAtText = paidAt ? formatDateTime(paidAt) : "";
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-8 md:px-6 md:py-12">
+    <section className="mx-auto max-w-5xl px-4 py-8 md:px-6 md:py-12">
       <div className="rounded-2xl bg-white p-5 shadow-card md:p-8">
-        <h1 className="text-center text-2xl font-bold text-navy">Thanh toán đơn hàng</h1>
-        <p className="mt-2 break-all text-center text-sm text-gray-500">Mã đơn hàng: {orderId}</p>
+        <div className="text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary">
+            <FontAwesomeIcon icon={faLock} className="text-[10px]" />
+            Thanh toán đơn hàng
+          </span>
 
-        <div className="mt-6 rounded-xl border border-primary/20 bg-gray-50 p-5 text-center">
-          {isLoadingQr ? (
-            <div className="flex h-72 items-center justify-center text-gray-500">Đang tạo mã QR...</div>
-          ) : qrError ? (
-            <div className="flex h-72 flex-col items-center justify-center gap-4">
-              <p className="text-danger">{qrError}</p>
-              <button type="button" className="btn-primary px-5 py-2" onClick={() => void loadPaymentQr()}>
-                Thử lại
-              </button>
-            </div>
-          ) : qrImageUrl ? (
-            <img
-              src={qrImageUrl}
-              alt="Mã QR thanh toán"
-              className="mx-auto h-72 w-72 max-w-full rounded-xl bg-white object-contain"
-            />
+          {isPaid ? (
+            <>
+              <h1 className="mt-4 flex items-center justify-center gap-2 text-2xl font-bold text-navy md:text-3xl">
+                <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" />
+                Thanh toán thành công
+              </h1>
+              <p className="mt-2 text-sm text-gray-500">
+                Mã đơn hàng: <span className="font-semibold text-primary">{orderCode}</span>
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                  <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
+                  Đã thanh toán
+                </span>
+                {successSource === "signalr" && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                    Xác nhận tự động qua SignalR
+                  </span>
+                )}
+              </div>
+              {paidAtText && (
+                <p className="mt-2 text-xs text-gray-400">
+                  Thanh toán được xác nhận lúc {paidAtText}
+                </p>
+              )}
+            </>
           ) : (
-            <div className="flex h-72 items-center justify-center text-danger">
-              API không trả về ảnh QR hợp lệ.
-            </div>
-          )}
-
-          {qrData && (
-            <div className="mt-5 space-y-2 text-sm text-gray-600">
-              {qrData.bankName && (
-                <p>
-                  Ngân hàng: <strong>{qrData.bankName}</strong>
-                </p>
-              )}
-              {qrData.accountNumber && (
-                <p>
-                  Số tài khoản: <strong>{qrData.accountNumber}</strong>
-                </p>
-              )}
-              {qrData.accountName && (
-                <p>
-                  Chủ tài khoản: <strong>{qrData.accountName}</strong>
-                </p>
-              )}
-              {qrData.amount != null && (
-                <p>
-                  Số tiền: <strong className="text-primary">{formatPrice(qrData.amount)}</strong>
-                </p>
-              )}
-              {transferContent && (
-                <p>
-                  Nội dung chuyển khoản: <strong>{transferContent}</strong>
-                </p>
-              )}
-            </div>
+            <>
+              <h1 className="mt-4 text-2xl font-bold text-navy md:text-3xl">
+                Quét mã QR để hoàn tất thanh toán
+              </h1>
+              <p className="mt-2 text-sm text-gray-500">
+                Mã đơn hàng: <span className="font-semibold text-primary">{orderCode}</span>
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                  <FontAwesomeIcon icon={faClock} className="text-[10px]" />
+                  Đang chờ thanh toán
+                </span>
+                {showCountdown && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-light px-3 py-1 text-xs font-semibold text-primary">
+                    <FontAwesomeIcon icon={faClock} className="text-[10px]" />
+                    Còn lại {formatCountdown(secondsLeft)}
+                  </span>
+                )}
+              </div>
+            </>
           )}
         </div>
 
-        <p className="mt-5 text-center text-sm text-gray-600">
-          Quét mã QR và hoàn tất chuyển khoản. Hệ thống sẽ tự động xác nhận thanh toán.
+        {isLoadingQr ? (
+          <div className="mt-8 flex h-80 items-center justify-center text-gray-500">
+            Đang tạo mã QR...
+          </div>
+        ) : qrError ? (
+          <div className="mt-8 flex h-80 flex-col items-center justify-center gap-4">
+            <p className="text-danger">{qrError}</p>
+            <button type="button" className="btn btn-secondary px-5 py-2" onClick={() => void loadPaymentQr()}>
+              Thử lại
+            </button>
+          </div>
+        ) : (
+          <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-stretch">
+            <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5">
+              {isPaid ? (
+                <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
+                  <div className="flex h-28 w-28 items-center justify-center rounded-full bg-green-500 text-white shadow-lg">
+                    <FontAwesomeIcon icon={faCheck} className="text-4xl" />
+                  </div>
+                  <p className="mt-5 text-sm text-gray-500">Số tiền đã thanh toán</p>
+                  {qrData?.amount != null && (
+                    <p className="mt-1 text-3xl font-bold text-green-600">
+                      {formatPrice(qrData.amount)}
+                    </p>
+                  )}
+                  <div className="mt-5 w-full border-t border-gray-100 pt-4">
+                    <p className="text-sm text-gray-600">
+                      Hệ thống đã nhận được thanh toán của bạn và đang xử lý đơn hàng eSIM.
+                    </p>
+                  </div>
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">
+                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                    Trạng thái đã được cập nhật tức thời
+                  </div>
+                </div>
+              ) : qrImageUrl ? (
+                <div className="flex flex-1 flex-col items-center justify-center">
+                  <img
+                    src={qrImageUrl}
+                    alt="Mã QR thanh toán"
+                    className="h-80 w-80 max-w-full rounded-xl bg-white object-contain"
+                  />
+                  <p className="mt-5 text-sm text-gray-500">Số tiền cần thanh toán</p>
+                  {qrData?.amount != null && (
+                    <p className="mt-1 text-3xl font-bold text-primary">
+                      {formatPrice(qrData.amount)}
+                    </p>
+                  )}
+                  <div className="mt-5 w-full border-t border-gray-100 pt-4">
+                    <p className="flex items-start gap-2 text-left text-xs leading-relaxed text-gray-500">
+                      <FontAwesomeIcon icon={faUniversity} className="mt-0.5 text-primary" />
+                      Mở ứng dụng ngân hàng, quét QR và giữ nguyên nội dung chuyển khoản. Hệ thống
+                      sẽ tự động xác nhận sau khi nhận tiền.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-64 items-center justify-center text-danger">
+                  API không trả về ảnh QR hợp lệ.
+                </div>
+              )}
+            </div>
+
+            <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-navy">
+                <FontAwesomeIcon icon={faUniversity} className="text-primary" />
+                {isPaid ? "Thông tin thanh toán" : "Thông tin chuyển khoản"}
+              </h2>
+
+              <div className="mt-3 flex-1 space-y-1">
+                {bankCode && <CopyRow label="Ngân hàng" value={bankCode} />}
+                {bankAccountNo && <CopyRow label="Số tài khoản" value={bankAccountNo} />}
+                {bankAccountName && <CopyRow label="Tên tài khoản" value={bankAccountName} />}
+                {transferContent && (
+                  <CopyRow label="Nội dung chuyển khoản" value={transferContent} highlight />
+                )}
+                {providerTransactionId && (
+                  <CopyRow label="Mã giao dịch" value={providerTransactionId} />
+                )}
+                {isPaid ? (
+                  <div className="flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 text-sm">
+                    <span className="flex-shrink-0 text-gray-500">Trạng thái</span>
+                    <span className="flex items-center justify-end gap-2 font-semibold text-green-600">
+                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                      Thành công
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+
+              {isPaid ? (
+                <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+                  <p className="flex items-start gap-2 text-sm font-semibold text-green-800">
+                    <FontAwesomeIcon icon={faCheckCircle} className="mt-0.5 text-green-600" />
+                    Thanh toán đã được xác nhận
+                  </p>
+                  <p className="mt-2 pl-6 text-xs leading-relaxed text-green-700">
+                    Bạn không cần tải lại trang. SignalR đã tự động cập nhật trạng thái thanh toán
+                    theo thời gian thực.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <p className="flex items-start gap-2 text-sm font-semibold text-amber-800">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="mt-0.5 text-amber-600" />
+                    Lưu ý quan trọng
+                  </p>
+                  <p className="mt-2 pl-6 text-xs leading-relaxed text-amber-700">
+                    Vui lòng chuyển đúng số tiền và đúng nội dung chuyển khoản như hướng dẫn để hệ
+                    thống tự động đối soát và xác nhận thanh toán.
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-auto space-y-3 pt-5">
+                {isPaid ? (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-secondary w-full py-3"
+                      onClick={() => router.push(`/account/orders/${orderId}`)}
+                    >
+                      <FontAwesomeIcon icon={faFileAlt} />
+                      Xem đơn hàng
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline w-full py-3"
+                      onClick={() => router.push("/esim")}
+                    >
+                      <FontAwesomeIcon icon={faShoppingCart} />
+                      Tiếp tục mua eSIM
+                    </button>
+                    <button
+                      type="button"
+                      className="mx-auto flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-primary"
+                    >
+                      <FontAwesomeIcon icon={faHeadset} />
+                      Cần hỗ trợ?
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-secondary w-full py-3 disabled:opacity-60"
+                      disabled={isCheckingPayment}
+                      onClick={() => void handleManualCheck()}
+                    >
+                      <FontAwesomeIcon icon={faCheck} />
+                      {isCheckingPayment ? "Đang kiểm tra..." : "Tôi đã thanh toán"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline w-full py-3"
+                    >
+                      <FontAwesomeIcon icon={faHeadset} />
+                      Cần hỗ trợ
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <p className="mt-6 flex items-center justify-center gap-2 text-center text-xs text-gray-500">
+          <FontAwesomeIcon icon={faCheckCircle} className="text-primary" />
+          {isPaid
+            ? "Đơn hàng của bạn sẽ được tiếp tục xử lý và gửi eSIM ngay sau bước xác nhận."
+            : "Sau khi thanh toán thành công, hệ thống sẽ tự động cập nhật trạng thái và xử lý đơn hàng eSIM."}
         </p>
-
-        {!showSuccessPopup && (
-          <div className="mt-4 rounded bg-yellow-50 p-3 text-center text-sm text-yellow-700">
-            Đang chờ thanh toán...
-          </div>
-        )}
-
-        {realtimeWarning && (
-          <p className="mt-3 text-center text-sm text-amber-600">{realtimeWarning}</p>
-        )}
       </div>
-
-      {showSuccessPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-[320px] rounded-xl bg-white p-6 text-center shadow-lg">
-            <div className="text-4xl">✅</div>
-            <h2 className="mt-3 text-lg font-bold text-green-600">Thanh toán thành công</h2>
-            <p className="mt-2 text-sm text-gray-600">Hệ thống đang chuyển bạn về trang đơn hàng.</p>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

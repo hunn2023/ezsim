@@ -64,6 +64,12 @@ async function request<T>(
       if (error.name === "AbortError") {
         throw new AuthApiError("Yêu cầu bị timeout. Vui lòng thử lại.", 408);
       }
+      if (error.message === "Failed to fetch") {
+        throw new AuthApiError(
+          "Không thể kết nối API. Hãy chạy `npm run dev` (cần cả proxy cổng 4000).",
+          0
+        );
+      }
       throw new AuthApiError(error.message, 500);
     }
     throw new AuthApiError("Lỗi không xác định.", 500);

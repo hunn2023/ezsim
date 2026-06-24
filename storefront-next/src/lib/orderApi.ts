@@ -129,21 +129,31 @@ export function mapFormDataToPayload(
 // ─── Payment QR ───────────────────────────────────────────────────────────────
 
 export interface PaymentQrData {
+  paymentTransactionId?: string;
+  orderId?: string;
+  orderCode?: string;
+  amount?: number;
+  currency?: string;
+  status?: string;
+  providerTransactionId?: string;
+  qrCode?: string;
+  qrImageUrl?: string;
+  paymentUrl?: string;
+  bankCode?: string;
+  bankAccountNo?: string;
+  bankAccountName?: string;
+  transferContent?: string;
+  expiredAt?: string;
+  expiresAt?: string;
   qrCodeUrl?: string;
   qrDataUrl?: string;
-  qrCode?: string;
   qrUrl?: string;
-  qrImageUrl?: string;
   bankName?: string;
-  bankCode?: string;
   accountNumber?: string;
   accountName?: string;
-  amount?: number;
   content?: string;
   description?: string;
-  orderId?: string;
   transactionId?: string;
-  expiredAt?: string;
 }
 
 export interface PaymentStatusData {
@@ -201,18 +211,18 @@ export async function getPaymentStatus(orderId: string): Promise<PaymentStatusDa
   return json.data ?? json;
 }
 
+const PAID_STATUS_VALUES = new Set(["paid", "success", "completed", "2"]);
+
+function isPaidStatusValue(value: string | number | undefined): boolean {
+  if (value == null) return false;
+  if (value === 2 || value === "2") return true;
+  if (typeof value === "string") return PAID_STATUS_VALUES.has(value.toLowerCase());
+  return false;
+}
+
 export function isPaymentPaid(data: PaymentStatusData): boolean {
   if (data.paidAt) return true;
-
-  const paymentStatus = data.paymentStatus;
-  if (paymentStatus === 2 || paymentStatus === "2") return true;
-  if (typeof paymentStatus === "string" && paymentStatus.toLowerCase() === "paid") return true;
-
-  const status = data.status;
-  if (status === 2 || status === "2") return true;
-  if (typeof status === "string" && status.toLowerCase() === "paid") return true;
-
-  return false;
+  return isPaidStatusValue(data.paymentStatus) || isPaidStatusValue(data.status);
 }
 
 // ─── Order Detail ─────────────────────────────────────────────────────────────
