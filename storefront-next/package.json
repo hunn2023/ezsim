@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"node dev-proxy.js\"",
-    "dev:next": "next dev",
+    "dev": "cross-env NEXT_PUBLIC_API_URL=https://api-staging.relipacheck.io.vn NEXT_PUBLIC_SIGNALR_URL=https://api-staging.relipacheck.io.vn concurrently \"next dev\" \"node dev-proxy.js\"",
+    "dev:next": "cross-env NEXT_PUBLIC_API_URL=https://api-staging.relipacheck.io.vn NEXT_PUBLIC_SIGNALR_URL=https://api-staging.relipacheck.io.vn next dev",
     "dev:proxy": "node dev-proxy.js",
     "clean:fetch-cache": "node -e \"require('fs').rmSync('.next/cache/fetch-cache', { recursive: true, force: true })\"",
-    "build": "next build",
+    "build": "cross-env NEXT_PUBLIC_API_URL=https://api-staging.relipacheck.io.vn next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -17,6 +17,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@hookform/resolvers": "^5.4.0",
+    "@microsoft/signalr": "^10.0.0",
     "@types/sanitize-html": "^2.16.1",
     "next": "14.2.15",
     "react": "^18.3.1",

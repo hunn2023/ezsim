@@ -131,12 +131,16 @@ export function mapFormDataToPayload(
 export interface PaymentQrData {
   qrCodeUrl?: string;
   qrDataUrl?: string;
+  qrCode?: string;
+  qrUrl?: string;
+  qrImageUrl?: string;
   bankName?: string;
   bankCode?: string;
   accountNumber?: string;
   accountName?: string;
   amount?: number;
   content?: string;
+  description?: string;
   orderId?: string;
   transactionId?: string;
   expiredAt?: string;
@@ -175,12 +179,15 @@ export async function createPaymentQr(orderId: string): Promise<PaymentQrData> {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new OrderApiError(
-      (errorData as { error?: string }).error || "Không thể tạo mã QR thanh toán.",
+      (errorData as { error?: string; message?: string }).error ||
+        (errorData as { message?: string }).message ||
+        "Không thể tạo mã QR thanh toán.",
       response.status
     );
   }
   const json = await response.json();
-  return json.data ?? json;
+  const data = json.data ?? json;
+  return typeof data === "string" ? { qrCodeUrl: data } : data;
 }
 
 export async function getPaymentStatus(orderId: string): Promise<PaymentStatusData> {
@@ -192,6 +199,20 @@ export async function getPaymentStatus(orderId: string): Promise<PaymentStatusDa
   }
   const json = await response.json();
   return json.data ?? json;
+}
+
+export function isPaymentPaid(data: PaymentStatusData): boolean {
+  if (data.paidAt) return true;
+
+  const paymentStatus = data.paymentStatus;
+  if (paymentStatus === 2 || paymentStatus === "2") return true;
+  if (typeof paymentStatus === "string" && paymentStatus.toLowerCase() === "paid") return true;
+
+  const status = data.status;
+  if (status === 2 || status === "2") return true;
+  if (typeof status === "string" && status.toLowerCase() === "paid") return true;
+
+  return false;
 }
 
 // ─── Order Detail ─────────────────────────────────────────────────────────────
