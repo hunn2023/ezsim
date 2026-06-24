@@ -299,11 +299,10 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         }, "warn");
       });
 
-      connection.onreconnected(async (connectionId) => {
+      connection.onreconnected(async () => {
         paymentFlowLog("signalr.reconnected", {
           sessionId,
           orderId,
-          connectionId,
           ...getConnectionSnapshot(connection),
         });
 
