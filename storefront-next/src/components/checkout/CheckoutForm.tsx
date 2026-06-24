@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { getCheckoutSchema, CheckoutFormData } from "@/lib/schemas/checkoutSchema";
-import { createOrder, confirmOrder, createPaymentQr, getPaymentStatus, mapFormDataToPayload, OrderApiError, OrderItem, PaymentQrData, PaymentStatusData } from "@/lib/orderApi";
+import { createOrder, confirmOrder, mapFormDataToPayload, OrderApiError, OrderItem, PaymentQrData } from "@/lib/orderApi";
 import { useCartStore } from "@/lib/cartStore";
 import { formatPrice } from "@/lib/product";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -129,9 +129,8 @@ export default function CheckoutForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeviceModal, setShowDeviceModal] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
-  const [paymentQrData, setPaymentQrData] = useState<PaymentQrData | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusData | null>(null);
+  const [createdOrderId] = useState<string | null>(null);
+  const [paymentQrData] = useState<PaymentQrData | null>(null);
   const paymentPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const {
@@ -181,75 +180,28 @@ export default function CheckoutForm() {
     }
   }, [items.length, reset]);
 
-  // Poll payment status when on step 2
-  useEffect(() => {
-    if (currentStep !== 2 || !createdOrderId) return;
-
-    const isPaid = (status: PaymentStatusData): boolean => {
-      const ps = status.paymentStatus;
-      const s = status.status;
-      if (ps === "Paid" || ps === 2 || ps === "2") return true;
-      if (s === "Paid" || s === 2 || s === "2") return true;
-      if (status.paidAt && status.paidAt.length > 10 && !status.paidAt.startsWith("0001")) return true;
-      return false;
-    };
-
-    const poll = async () => {
-      try {
-        const status = await getPaymentStatus(createdOrderId);
-        setPaymentStatus(status);
-        if (isPaid(status)) {
-          if (paymentPollRef.current) {
-            clearInterval(paymentPollRef.current);
-            paymentPollRef.current = null;
-          }
-          toast.success(text.success);
-          clearCart();
-          router.push("/account/orders");
-        }
-      } catch {
-        // Silently ignore polling errors
-      }
-    };
-
-    // Delay first poll by 10 seconds to allow user to scan QR
-    const initialDelay = setTimeout(() => {
-      poll();
-      paymentPollRef.current = setInterval(poll, 5000);
-    }, 10000);
-
-    return () => {
-      clearTimeout(initialDelay);
-      if (paymentPollRef.current) {
-        clearInterval(paymentPollRef.current);
-        paymentPollRef.current = null;
-      }
-    };
-  }, [currentStep, createdOrderId, clearCart, router, text.success]);
-
   const onSubmit = useCallback(
     async (formData: CheckoutFormData) => {
       if (isSubmitting) return;
 
-      // Step 1 → Step 2: Validate, create order, get QR
-      if (currentStep === 1) {
-        if (!formData.agreeTerms) {
-          toast.error(text.needAgreeTermsFirst);
-          return;
-        }
+      // Create and confirm the order before opening its payment page.
+      if (!formData.agreeTerms) {
+        toast.error(text.needAgreeTermsFirst);
+        return;
+      }
 
-        if (!formData.confirmDeviceSupport) {
-          toast.error(text.needConfirmDeviceAfterTerms);
-          return;
-        }
+      if (!formData.confirmDeviceSupport) {
+        toast.error(text.needConfirmDeviceAfterTerms);
+        return;
+      }
 
-        if (items.length === 0) {
-          toast.error(text.cartEmpty);
-          router.push("/");
-          return;
-        }
+      if (items.length === 0) {
+        toast.error(text.cartEmpty);
+        router.push("/");
+        return;
+      }
 
-        setIsSubmitting(true);
+      setIsSubmitting(true);
 
         const orderItems: OrderItem[] = items.map((item) => ({
           id: item.id,
@@ -277,26 +229,9 @@ export default function CheckoutForm() {
           }
 
           const orderId = result.orderId;
-          setCreatedOrderId(orderId);
-
-          // 2. Confirm order with payment method (optional - some backends auto-confirm)
-          try {
-            await confirmOrder(orderId, formData.paymentMethod);
-          } catch {
-            // Ignore - backend may auto-confirm on create
-          }
-
-          // 3. Generate QR code (non-blocking for step transition)
-          try {
-            const qrData = await createPaymentQr(orderId);
-            setPaymentQrData(qrData);
-          } catch {
-            // Still move to step 2 even if QR generation fails
-            // User will see fallback QR placeholder
-          }
-
-          // Move to step 2
-          setCurrentStep(2);
+          await confirmOrder(orderId, formData.paymentMethod);
+          toast.success(language === "vi" ? "Xác nhận đơn hàng thành công." : "Order confirmed successfully.");
+          router.push(`/checkout/payment/${orderId}`);
         } catch (error) {
           console.error("[Checkout] createOrder error:", error);
           if (error instanceof OrderApiError) {
@@ -315,15 +250,10 @@ export default function CheckoutForm() {
         } finally {
           setIsSubmitting(false);
         }
-        return;
-      }
+      return;
 
-      // Step 2: User confirms payment → redirect to order list
-      toast.success(text.success);
-      clearCart();
-      router.push("/account/orders");
     },
-    [currentStep, isSubmitting, items, getTotalAmount, clearCart, router, text, createdOrderId, language]
+    [isSubmitting, items, getTotalAmount, router, text, language]
   );
 
   if (items.length === 0) {
@@ -339,31 +269,10 @@ export default function CheckoutForm() {
         toast.error(firstError.message as string);
       }
     })} className="space-y-6">
-      {/* Progress indicator */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between text-sm font-medium">
-          <div className={`flex items-center gap-2 ${currentStep === 1 ? "text-primary" : "text-gray-400"}`}>
-            <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center">
-              1
-            </div>
-            <span>{text.shippingInfo}</span>
-          </div>
-          <div className={`flex items-center gap-2 ${currentStep === 2 ? "text-primary" : "text-gray-400"}`}>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep === 2 ? "bg-primary text-white" : "bg-gray-200"}`}>
-              2
-            </div>
-            <span>{text.payment}</span>
-          </div>
-        </div>
-        <div className="mt-2 h-1 bg-gray-200 rounded-full">
-          <div className={`h-1 bg-primary rounded-full transition-all ${currentStep === 1 ? "w-1/2" : "w-full"}`} />
-        </div>
-      </div>
-
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Form Fields */}
-        <div className={`${currentStep === 2 ? "lg:col-span-3" : "lg:col-span-2"} space-y-6`}>
+        <div className="lg:col-span-2 space-y-6">
           {currentStep === 1 ? (
             <>
               {/* Shipping Info Section */}
