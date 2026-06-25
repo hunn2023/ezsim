@@ -586,8 +586,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
 
           {isPaid ? (
             <>
-              <h1 className="mt-4 flex items-center justify-center gap-2 text-2xl font-bold text-navy md:text-3xl">
-                <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" />
+              <h1 className="mt-4 text-2xl font-bold text-navy md:text-3xl">
                 Thanh toán thành công
               </h1>
               <p className="mt-2 text-sm text-gray-500">
@@ -650,8 +649,17 @@ export default function PaymentPage({ params }: PaymentPageProps) {
             <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5">
               {isPaid ? (
                 <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
-                  <div className="flex h-28 w-28 items-center justify-center rounded-full bg-green-500 text-white shadow-lg">
-                    <FontAwesomeIcon icon={faCheck} className="text-4xl" />
+                  <div className="relative flex h-40 w-64 items-center justify-center overflow-hidden rounded-2xl bg-white">
+                    <div className="absolute h-36 w-36 rounded-full bg-green-100/70 blur-xl" />
+                    <span className="absolute left-10 top-6 h-5 w-5 rotate-45 bg-green-400 [clip-path:polygon(50%_0,62%_38%,100%_50%,62%_62%,50%_100%,38%_62%,0_50%,38%_38%)]" />
+                    <span className="absolute right-11 top-16 h-5 w-5 rotate-45 bg-green-400 [clip-path:polygon(50%_0,62%_38%,100%_50%,62%_62%,50%_100%,38%_62%,0_50%,38%_38%)]" />
+                    <span className="absolute left-7 top-20 h-3 w-1 rotate-[-20deg] rounded-full bg-blue-500" />
+                    <span className="absolute left-8 bottom-11 h-3 w-1 rotate-[24deg] rounded-full bg-green-500" />
+                    <span className="absolute right-9 top-8 h-3 w-1 rotate-[-28deg] rounded-full bg-amber-400" />
+                    <span className="absolute right-12 bottom-10 h-3 w-1 rotate-[35deg] rounded-full bg-pink-400" />
+                    <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-emerald-300 to-green-500 text-white shadow-lg shadow-green-200">
+                      <FontAwesomeIcon icon={faCheck} className="text-5xl" />
+                    </div>
                   </div>
                   <p className="mt-5 text-sm text-gray-500">Số tiền đã thanh toán</p>
                   {qrData?.amount != null && (
@@ -661,12 +669,12 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                   )}
                   <div className="mt-5 w-full border-t border-gray-100 pt-4">
                     <p className="text-sm text-gray-600">
-                      Hệ thống đã nhận được thanh toán của bạn và đang xử lý đơn hàng eSIM.
+                      Hệ thống đã được thanh toán và đã gửi eSim qua email
                     </p>
                   </div>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">
                     <span className="h-2 w-2 rounded-full bg-green-500" />
-                    Trạng thái đã được cập nhật tức thời
+                    Đã thanh toán
                   </div>
                 </div>
               ) : qrImageUrl ? (
@@ -710,32 +718,12 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                 {transferContent && (
                   <CopyRow label="Nội dung chuyển khoản" value={transferContent} highlight />
                 )}
-                {providerTransactionId && (
+                {!isPaid && providerTransactionId && (
                   <CopyRow label="Mã giao dịch" value={providerTransactionId} />
                 )}
-                {isPaid ? (
-                  <div className="flex items-center justify-between gap-4 rounded-lg px-3 py-2.5 text-sm">
-                    <span className="flex-shrink-0 text-gray-500">Trạng thái</span>
-                    <span className="flex items-center justify-end gap-2 font-semibold text-green-600">
-                      <span className="h-2 w-2 rounded-full bg-green-500" />
-                      Thành công
-                    </span>
-                  </div>
-                ) : null}
               </div>
 
-              {isPaid ? (
-                <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
-                  <p className="flex items-start gap-2 text-sm font-semibold text-green-800">
-                    <FontAwesomeIcon icon={faCheckCircle} className="mt-0.5 text-green-600" />
-                    Thanh toán đã được xác nhận
-                  </p>
-                  <p className="mt-2 pl-6 text-xs leading-relaxed text-green-700">
-                    Bạn không cần tải lại trang. SignalR đã tự động cập nhật trạng thái thanh toán
-                    theo thời gian thực.
-                  </p>
-                </div>
-              ) : (
+              {!isPaid && (
                 <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
                   <p className="flex items-start gap-2 text-sm font-semibold text-amber-800">
                     <FontAwesomeIcon icon={faExclamationTriangle} className="mt-0.5 text-amber-600" />
@@ -766,13 +754,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                     >
                       <FontAwesomeIcon icon={faShoppingCart} />
                       Tiếp tục mua eSIM
-                    </button>
-                    <button
-                      type="button"
-                      className="mx-auto flex items-center gap-1.5 text-sm text-gray-500 transition hover:text-primary"
-                    >
-                      <FontAwesomeIcon icon={faHeadset} />
-                      Cần hỗ trợ?
                     </button>
                   </>
                 ) : (
