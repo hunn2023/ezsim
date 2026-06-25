@@ -19,16 +19,13 @@ function normalizeOtp(value: string, length: number): string {
   return value.replace(/\D/g, "").slice(0, length);
 }
 
-function isDigitKey(e: React.KeyboardEvent<HTMLInputElement>): string | null {
-  if (e.key.length === 1 && /\d/.test(e.key)) {
-    return e.key;
+function getDigitFromCode(code: string): string | null {
+  if (/^Digit[0-9]$/.test(code)) {
+    return code.slice(5);
   }
-
-  const numpadMatch = e.code.match(/^Numpad([0-9])$/);
-  if (numpadMatch) {
-    return numpadMatch[1];
+  if (/^Numpad[0-9]$/.test(code)) {
+    return code.slice(6);
   }
-
   return null;
 }
 
@@ -39,121 +36,143 @@ export default function OtpInput({
   disabled = false,
   autoFocus = false,
 }: OtpInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const isComposingRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const autofillRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
+  const valueRef = useRef(value);
+
+  onChangeRef.current = onChange;
+
   const normalizedValue = normalizeOtp(value, length);
   const activeIndex = Math.min(normalizedValue.length, length - 1);
 
-  useEffect(() => {
-    if (autoFocus && !disabled) {
-      inputRef.current?.focus();
-    }
-  }, [autoFocus, disabled]);
+  const applyValue = useCallback(
+    (raw: string) => {
+      const normalized = normalizeOtp(raw, length);
+      valueRef.current = normalized;
+      onChangeRef.current(normalized);
+    },
+    [length]
+  );
 
-  const focusInput = useCallback(() => {
+  const focusContainer = useCallback(() => {
     if (!disabled) {
-      inputRef.current?.focus();
+      containerRef.current?.focus();
     }
   }, [disabled]);
 
-  const applyValue = useCallback(
-    (raw: string) => {
-      onChange(normalizeOtp(raw, length));
-    },
-    [length, onChange]
-  );
+  useEffect(() => {
+    valueRef.current = normalizeOtp(value, length);
+  }, [length, value]);
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    applyValue(e.clipboardData.getData("text"));
-  };
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || disabled) return;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isComposingRef.current) return;
-    applyValue(e.target.value);
-  };
-
-  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
-    isComposingRef.current = false;
-    applyValue(e.currentTarget.value);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.nativeEvent.isComposing || e.keyCode === 229) {
-      return;
-    }
-
-    const digit = isDigitKey(e);
-    if (digit) {
-      e.preventDefault();
-      if (normalizedValue.length < length) {
-        applyValue(normalizedValue + digit);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing || event.keyCode === 229) {
+        event.preventDefault();
+        return;
       }
-      return;
-    }
 
-    if (e.key === "Backspace") {
-      e.preventDefault();
-      applyValue(normalizedValue.slice(0, -1));
-      return;
-    }
+      const digit = getDigitFromCode(event.code);
+      if (digit !== null) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
 
-    if (e.key === "Delete") {
-      e.preventDefault();
-      applyValue(normalizedValue.slice(0, -1));
+        const current = normalizeOtp(valueRef.current, length);
+        if (current.length < length) {
+          applyValue(current + digit);
+        }
+        return;
+      }
+
+      if (event.key === "Backspace" || event.key === "Delete") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        applyValue(normalizeOtp(valueRef.current, length).slice(0, -1));
+        return;
+      }
+
+      if (
+        event.key.length === 1 &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        event.key !== "Tab"
+      ) {
+        event.preventDefault();
+      }
+    };
+
+    const onPaste = (event: ClipboardEvent) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      applyValue(event.clipboardData?.getData("text") ?? "");
+    };
+
+    container.addEventListener("keydown", onKeyDown, true);
+    container.addEventListener("paste", onPaste, true);
+
+    return () => {
+      container.removeEventListener("keydown", onKeyDown, true);
+      container.removeEventListener("paste", onPaste, true);
+    };
+  }, [applyValue, disabled, length]);
+
+  useEffect(() => {
+    if (autoFocus && !disabled) {
+      containerRef.current?.focus();
     }
-  };
+  }, [autoFocus, disabled]);
 
   return (
-    <div
-      className="relative inline-flex items-center justify-center gap-2 sm:gap-3"
-      onClick={focusInput}
-    >
+    <div className="relative inline-flex flex-col items-center">
+      <div
+        ref={containerRef}
+        role="group"
+        aria-label="Mã OTP"
+        tabIndex={disabled ? -1 : 0}
+        onClick={focusContainer}
+        className={`relative inline-flex items-center justify-center gap-2 sm:gap-3 outline-none ${
+          disabled ? "cursor-not-allowed" : "cursor-text"
+        }`}
+      >
+        {Array.from({ length }).map((_, index) => {
+          const isActive = !disabled && index === activeIndex;
+          const hasValue = Boolean(normalizedValue[index]);
+
+          return (
+            <div
+              key={index}
+              aria-hidden
+              className={`${cellClassName} ${
+                isActive
+                  ? "border-primary ring-2 ring-primary/20"
+                  : hasValue
+                    ? "border-primary/40 bg-primary-light/20"
+                    : "border-gray-200 bg-white"
+              } ${disabled ? "bg-gray-50" : ""}`}
+            >
+              {normalizedValue[index] || ""}
+            </div>
+          );
+        })}
+      </div>
+
       <input
-        ref={inputRef}
+        ref={autofillRef}
         type="text"
         inputMode="numeric"
-        pattern="[0-9]*"
-        lang="en"
         autoComplete="one-time-code"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        maxLength={length}
-        value={normalizedValue}
+        tabIndex={-1}
+        aria-hidden
         disabled={disabled}
-        aria-label="Mã OTP"
-        className="absolute inset-0 z-10 h-full w-full cursor-text opacity-0 [caret-color:transparent]"
-        style={{ fontSize: "16px", imeMode: "disabled" } as React.CSSProperties}
-        onChange={handleChange}
-        onCompositionStart={() => {
-          isComposingRef.current = true;
-        }}
-        onCompositionEnd={handleCompositionEnd}
-        onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
+        value={normalizedValue}
+        onChange={(event) => applyValue(event.target.value)}
+        className="pointer-events-none absolute h-px w-px opacity-0"
+        style={{ left: "-9999px" }}
       />
-
-      {Array.from({ length }).map((_, index) => {
-        const isActive = !disabled && index === activeIndex;
-        const hasValue = Boolean(normalizedValue[index]);
-
-        return (
-          <div
-            key={index}
-            aria-hidden
-            className={`${cellClassName} ${
-              isActive
-                ? "border-primary ring-2 ring-primary/20"
-                : hasValue
-                  ? "border-primary/40 bg-primary-light/20"
-                  : "border-gray-200 bg-white"
-            } ${disabled ? "bg-gray-50" : ""}`}
-          >
-            {normalizedValue[index] || ""}
-          </div>
-        );
-      })}
     </div>
   );
 }
