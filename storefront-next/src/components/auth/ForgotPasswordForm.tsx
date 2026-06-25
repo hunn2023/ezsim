@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
+import OtpInput from "@/components/ui/OtpInput";
 import { useForgotPassword } from "@/hooks/useForgotPassword";
 import {
   forgotPasswordEmailSchema,
@@ -28,7 +29,6 @@ export default function ForgotPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpCode, setOtpCode] = useState("");
-  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const {
     register: registerEmail,
@@ -66,33 +66,6 @@ export default function ForgotPasswordForm() {
     const seconds = Math.floor((countdownMs % 60000) / 1000);
     return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }, [countdownMs]);
-
-  // OTP digit handlers
-  const handleOtpDigitChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
-    const newCode = otpCode.padEnd(6, " ").split("");
-    newCode[index] = digit || " ";
-    const joined = newCode.join("").replace(/ +$/, "");
-    setOtpCode(joined);
-
-    if (digit && index < 5) {
-      otpInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    setOtpCode(pasted);
-    const focusIndex = Math.min(pasted.length, 5);
-    otpInputRefs.current[focusIndex]?.focus();
-  };
 
   if (step === "email") {
     return (
@@ -162,24 +135,12 @@ export default function ForgotPasswordForm() {
         <label className="block text-sm font-medium text-navy mb-3">
           Nhập mã 6 số <span className="text-danger">*</span>
         </label>
-        <div className="flex items-center justify-center gap-2 sm:gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <input
-              key={i}
-              ref={(el) => { otpInputRefs.current[i] = el; }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={otpCode[i] || ""}
-              onChange={(e) => handleOtpDigitChange(i, e.target.value)}
-              onKeyDown={(e) => handleOtpKeyDown(i, e)}
-              onPaste={i === 0 ? handleOtpPaste : undefined}
-              disabled={isLoading}
-              autoFocus={i === 0}
-              className="w-11 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold rounded-lg border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition disabled:bg-gray-50 disabled:cursor-not-allowed"
-            />
-          ))}
-        </div>
+        <OtpInput
+          value={otpCode}
+          onChange={setOtpCode}
+          disabled={isLoading}
+          autoFocus
+        />
         <p className="mt-2 text-center text-xs text-slate-500">
           Mã còn hiệu lực:{" "}
           <span className={`font-semibold ${otpExpired ? "text-danger" : "text-primary"}`}>

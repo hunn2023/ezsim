@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
+import OtpInput from "@/components/ui/OtpInput";
 import { getRegisterSchema, type RegisterFormData } from "@/lib/schemas/registerSchema";
 import { useRegister } from "@/hooks/useRegister";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -96,34 +97,6 @@ export default function RegisterForm() {
   const otpExpired = otpSession ? remainingMs <= 0 : false;
   const otpCountdownText = `${String(Math.floor(remainingMs / 60000)).padStart(2, "0")}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, "0")}`;
 
-  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleOtpDigitChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
-    const newCode = otpCode.split("");
-    newCode[index] = digit;
-    const joined = newCode.join("").slice(0, 6);
-    setOtpCode(joined.padEnd(6, "").trimEnd());
-
-    if (digit && index < 5) {
-      otpInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    setOtpCode(pasted);
-    const focusIndex = Math.min(pasted.length, 5);
-    otpInputRefs.current[focusIndex]?.focus();
-  };
-
   const handleOtpSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     await verifyOtpAndRegister(otpCode);
@@ -146,24 +119,12 @@ export default function RegisterForm() {
           <label className="block text-sm font-medium text-navy mb-3">
             {text.otpLabel} <span className="text-danger">*</span>
           </label>
-          <div className="flex items-center justify-center gap-2 sm:gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <input
-                key={i}
-                ref={(el) => { otpInputRefs.current[i] = el; }}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={otpCode[i] || ""}
-                onChange={(e) => handleOtpDigitChange(i, e.target.value)}
-                onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                onPaste={i === 0 ? handleOtpPaste : undefined}
-                disabled={isLoading}
-                autoFocus={i === 0}
-                className="w-11 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold rounded-lg border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition disabled:bg-gray-50 disabled:cursor-not-allowed"
-              />
-            ))}
-          </div>
+          <OtpInput
+            value={otpCode}
+            onChange={setOtpCode}
+            disabled={isLoading}
+            autoFocus
+          />
           {otpSession && (
             <p className="mt-3 text-center text-xs text-slate-500">
               {text.otpValidUntil}{" "}
