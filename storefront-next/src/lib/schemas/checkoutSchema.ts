@@ -24,8 +24,8 @@ export function getCheckoutSchema(language: Language = "vi") {
         : "You must agree to the Terms of Service to continue",
     esimDeviceRequired:
       language === "vi"
-        ? "Bạn cần xác nhận thiết bị hỗ trợ eSIM và đã mở khóa mạng"
-        : "You must confirm your device supports eSIM and is network-unlocked",
+        ? "Vui lòng xác nhận thiết bị tương thích trong danh sách trước khi tiếp tục"
+        : "Please confirm device compatibility from the list before continuing",
   };
 
   return z.object({

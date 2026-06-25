@@ -3,7 +3,7 @@ const REFRESH_TOKEN_KEY = "ezsim_refresh_token";
 
 const isClient = () => typeof window !== "undefined";
 
-function safeGet(key: string): string | null {
+function safeGetLocal(key: string): string | null {
   try {
     return isClient() ? localStorage.getItem(key) : null;
   } catch {
@@ -11,7 +11,7 @@ function safeGet(key: string): string | null {
   }
 }
 
-function safeSet(key: string, value: string): void {
+function safeSetLocal(key: string, value: string): void {
   try {
     if (isClient()) localStorage.setItem(key, value);
   } catch {
@@ -19,7 +19,7 @@ function safeSet(key: string, value: string): void {
   }
 }
 
-function safeRemove(key: string): void {
+function safeRemoveLocal(key: string): void {
   try {
     if (isClient()) localStorage.removeItem(key);
   } catch {
@@ -27,24 +27,58 @@ function safeRemove(key: string): void {
   }
 }
 
+function safeGetSession(key: string): string | null {
+  try {
+    return isClient() ? sessionStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeSetSession(key: string, value: string): void {
+  try {
+    if (isClient()) sessionStorage.setItem(key, value);
+  } catch {
+    // quota exceeded or access blocked — fail silently
+  }
+}
+
+function safeRemoveSession(key: string): void {
+  try {
+    if (isClient()) sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
 export const authStorage = {
   getToken(): string | null {
-    return safeGet(TOKEN_KEY);
+    return safeGetLocal(TOKEN_KEY);
   },
   setToken(token: string): void {
-    safeSet(TOKEN_KEY, token);
+    safeSetLocal(TOKEN_KEY, token);
   },
   getRefreshToken(): string | null {
-    return safeGet(REFRESH_TOKEN_KEY);
+    const fromSession = safeGetSession(REFRESH_TOKEN_KEY);
+    if (fromSession) return fromSession;
+
+    const legacy = safeGetLocal(REFRESH_TOKEN_KEY);
+    if (!legacy) return null;
+
+    safeSetSession(REFRESH_TOKEN_KEY, legacy);
+    safeRemoveLocal(REFRESH_TOKEN_KEY);
+    return legacy;
   },
   setRefreshToken(token: string): void {
-    safeSet(REFRESH_TOKEN_KEY, token);
+    safeSetSession(REFRESH_TOKEN_KEY, token);
+    safeRemoveLocal(REFRESH_TOKEN_KEY);
   },
   clearAll(): void {
-    safeRemove(TOKEN_KEY);
-    safeRemove(REFRESH_TOKEN_KEY);
+    safeRemoveLocal(TOKEN_KEY);
+    safeRemoveSession(REFRESH_TOKEN_KEY);
+    safeRemoveLocal(REFRESH_TOKEN_KEY);
   },
   clearToken(): void {
-    safeRemove(TOKEN_KEY);
+    safeRemoveLocal(TOKEN_KEY);
   },
 };

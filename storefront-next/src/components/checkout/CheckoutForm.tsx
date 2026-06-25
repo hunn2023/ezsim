@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -73,7 +73,7 @@ export default function CheckoutForm() {
         ? "Tôi đã đọc và đồng ý với"
         : "I have read and agree to the",
     termsAgreementLink:
-      language === "vi" ? "Điều khoản dịch vụ (mock)" : "Terms of Service (mock)",
+      language === "vi" ? "Điều khoản dịch vụ" : "Terms of Service",
     termsPolicyTitle:
       language === "vi" ? "Chính sách điều khoản" : "Terms policy",
     termsPolicyBody:
@@ -81,35 +81,11 @@ export default function CheckoutForm() {
         ? "Bạn cần đọc kỹ điều khoản về thanh toán, hoàn tiền, và trách nhiệm sử dụng dịch vụ trước khi hoàn tất đơn hàng."
         : "Please review terms on payment, refunds, and service responsibilities before completing the order.",
     termsPanelTitle:
-      language === "vi" ? "Nội dung Điều khoản dịch vụ (mock)" : "Terms of Service content (mock)",
+      language === "vi" ? "Nội dung Điều khoản dịch vụ" : "Terms of Service content",
     needAgreeTermsFirst:
       language === "vi"
         ? "Vui lòng tích Điều khoản dịch vụ trước khi sang bước thanh toán."
         : "Please agree to the Terms of Service before continuing to payment.",
-    needConfirmDeviceAfterTerms:
-      language === "vi"
-        ? "Vui lòng xác nhận thiết bị hỗ trợ eSIM sau khi đã đồng ý Điều khoản dịch vụ."
-        : "Please confirm eSIM device compatibility after agreeing to the Terms of Service.",
-    agreeTermsBeforeDevice:
-      language === "vi"
-        ? "Bạn cần tích Điều khoản dịch vụ trước khi xác nhận thiết bị."
-        : "You need to agree to the Terms first before confirming device compatibility.",
-    confirmDeviceHint:
-      language === "vi"
-        ? "Hãy tích Điều khoản dịch vụ trước, sau đó mới xác nhận thiết bị hỗ trợ eSIM."
-        : "Agree to the Terms first, then confirm eSIM device compatibility.",
-    esimAgreement:
-      language === "vi"
-        ? "Tôi xác nhận thiết bị sử dụng có hỗ trợ eSIM và đã được mở khóa mạng"
-        : "I confirm my device supports eSIM and is network-unlocked",
-    esimPolicyTitle:
-      language === "vi" ? "Chính sách tương thích eSIM" : "eSIM compatibility policy",
-    esimPolicyBody:
-      language === "vi"
-        ? "Bạn cần kiểm tra danh sách thiết bị hỗ trợ eSIM và đảm bảo máy không bị khóa mạng trước khi mua."
-        : "You need to verify the compatible device list and ensure your device is not carrier-locked before purchase.",
-    openDeviceList:
-      language === "vi" ? "Xem danh sách thiết bị tương thích" : "View compatible devices",
     deviceModalTitle:
       language === "vi" ? "Danh sách thiết bị hỗ trợ eSIM" : "eSIM supported devices",
     deviceModalDesc:
@@ -134,7 +110,6 @@ export default function CheckoutForm() {
   const paymentPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const {
-    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -142,6 +117,7 @@ export default function CheckoutForm() {
     watch,
     reset,
     getValues,
+    trigger,
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -160,7 +136,6 @@ export default function CheckoutForm() {
   const selectedPaymentMethod = watch("paymentMethod") ?? "banking";
   const requestInvoice = watch("requestInvoice");
   const agreeTerms = watch("agreeTerms");
-  const confirmDeviceSupport = watch("confirmDeviceSupport");
 
   useEffect(() => {
     if (!isAuthenticated || !user || prefilledRef.current) return;
@@ -191,7 +166,7 @@ export default function CheckoutForm() {
       }
 
       if (!formData.confirmDeviceSupport) {
-        toast.error(text.needConfirmDeviceAfterTerms);
+        setShowDeviceModal(true);
         return;
       }
 
@@ -255,6 +230,32 @@ export default function CheckoutForm() {
     },
     [isSubmitting, items, getTotalAmount, router, text, language]
   );
+
+  const handleContinueToPayment = useCallback(async () => {
+    const isValid = await trigger([
+      "fullName",
+      "phone",
+      "email",
+      "orderNote",
+      "paymentMethod",
+      "agreeTerms",
+    ]);
+    if (!isValid) return;
+
+    if (!getValues("agreeTerms")) {
+      toast.error(text.needAgreeTermsFirst);
+      return;
+    }
+
+    setShowDeviceModal(true);
+  }, [getValues, text.needAgreeTermsFirst, trigger]);
+
+  const handleDeviceConfirm = useCallback(async () => {
+    setShowDeviceModal(false);
+    const formData = { ...getValues(), confirmDeviceSupport: true };
+    setValue("confirmDeviceSupport", true, { shouldDirty: true });
+    await onSubmit(formData);
+  }, [getValues, onSubmit, setValue]);
 
   if (items.length === 0) {
     return null;
@@ -348,52 +349,6 @@ export default function CheckoutForm() {
                       </div>
                     </>
                   )}
-
-                  <Controller
-                    control={control}
-                    name="confirmDeviceSupport"
-                    render={({ field }) => (
-                      <label className={`flex items-start gap-2 text-sm ${agreeTerms ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}>
-                        <input
-                          type="checkbox"
-                          checked={field.value ?? false}
-                          className="mt-1"
-                          disabled={!agreeTerms}
-                          onChange={(event) => {
-                            if (!agreeTerms) {
-                              toast.error(text.agreeTermsBeforeDevice);
-                              field.onChange(false);
-                              return;
-                            }
-
-                            if (event.target.checked) {
-                              setShowDeviceModal(true);
-                              field.onChange(false);
-                              return;
-                            }
-                            field.onChange(false);
-                          }}
-                        />
-                        <span>{text.esimAgreement}</span>
-                      </label>
-                    )}
-                  />
-                  {!agreeTerms && <p className="text-xs text-gray-500">{text.confirmDeviceHint}</p>}
-                  {errors.confirmDeviceSupport && <p className="text-danger text-xs">{errors.confirmDeviceSupport.message}</p>}
-
-                  {confirmDeviceSupport && (
-                    <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-sm text-gray-600">
-                      <p className="font-semibold text-navy mb-1">{text.esimPolicyTitle}</p>
-                      <p className="mb-2">{text.esimPolicyBody}</p>
-                      <button
-                        type="button"
-                        className="text-primary font-semibold hover:underline"
-                        onClick={() => setShowDeviceModal(true)}
-                      >
-                        {text.openDeviceList}
-                      </button>
-                    </div>
-                  )}
                 </div>
               </section>
 
@@ -473,7 +428,8 @@ export default function CheckoutForm() {
 
                 {/* Submit Button */}
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => void handleContinueToPayment()}
                   disabled={isSubmitting}
                   className={`w-full py-4 rounded-xl font-semibold text-white transition ${
                     isSubmitting
@@ -699,10 +655,7 @@ export default function CheckoutForm() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setValue("confirmDeviceSupport", true, { shouldDirty: true, shouldValidate: true });
-                  setShowDeviceModal(false);
-                }}
+                onClick={() => void handleDeviceConfirm()}
                 className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark"
               >
                 {text.deviceConfirm}

@@ -46,6 +46,20 @@ export class OrderApiError extends Error {
   }
 }
 
+function getApiErrorMessage(json: unknown, fallback: string): string {
+  if (typeof json !== "object" || json === null) return fallback;
+
+  const payload = json as { error?: string | null; message?: string | null };
+  if (typeof payload.error === "string" && payload.error.trim()) return payload.error;
+  if (typeof payload.message === "string" && payload.message.trim()) return payload.message;
+
+  return fallback;
+}
+
+function isApiFailure(json: unknown): boolean {
+  return typeof json === "object" && json !== null && "isSuccess" in json && json.isSuccess === false;
+}
+
 export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<CreateOrderResponse> {
@@ -79,18 +93,25 @@ export async function createOrder(
       body: JSON.stringify(apiPayload),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+    const json = await response.json().catch(() => ({}));
+
+    if (!response.ok || isApiFailure(json)) {
       throw new OrderApiError(
-        (errorData as { message?: string }).message || `HTTP ${response.status}: ${response.statusText}`,
-        response.status
+        getApiErrorMessage(json, `Không thể tạo đơn hàng. HTTP ${response.status}`),
+        response.status || 400
       );
     }
 
-    const json = await response.json();
     const data = json.data ?? json;
-    // data may be a string (orderId directly) or an object with id/orderId
     const orderId = typeof data === "string" ? data : (data.id || data.orderId);
+
+    if (!orderId || orderId === "00000000-0000-0000-0000-000000000000") {
+      throw new OrderApiError(
+        getApiErrorMessage(json, "Không thể tạo đơn hàng."),
+        response.status || 400
+      );
+    }
+
     return {
       success: true,
       orderId,
@@ -170,14 +191,15 @@ export async function confirmOrder(orderId: string, paymentMethod: string = "ban
     method: "POST",
     body: JSON.stringify({ paymentMethod }),
   });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+  const json = await response.json().catch(() => ({}));
+
+  if (!response.ok || isApiFailure(json)) {
     throw new OrderApiError(
-      (errorData as { error?: string }).error || `Không thể xác nhận đơn hàng. HTTP ${response.status}`,
-      response.status
+      getApiErrorMessage(json, `Không thể xác nhận đơn hàng. HTTP ${response.status}`),
+      response.status || 400
     );
   }
-  const json = await response.json();
+
   return json.data ?? json;
 }
 
@@ -186,16 +208,15 @@ export async function createPaymentQr(orderId: string): Promise<PaymentQrData> {
     method: "POST",
     body: JSON.stringify({ orderId }),
   });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+  const json = await response.json().catch(() => ({}));
+
+  if (!response.ok || isApiFailure(json)) {
     throw new OrderApiError(
-      (errorData as { error?: string; message?: string }).error ||
-        (errorData as { message?: string }).message ||
-        "Không thể tạo mã QR thanh toán.",
-      response.status
+      getApiErrorMessage(json, "Không thể tạo mã QR thanh toán."),
+      response.status || 400
     );
   }
-  const json = await response.json();
+
   const data = json.data ?? json;
   return typeof data === "string" ? { qrCodeUrl: data } : data;
 }

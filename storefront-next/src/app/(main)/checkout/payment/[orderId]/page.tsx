@@ -44,7 +44,7 @@ type PaymentPaidEvent = {
 
 type PaymentSuccessSource = "signalr" | "poll";
 
-const PAYMENT_POLL_INTERVAL_MS = 4000;
+const PAYMENT_POLL_INTERVAL_MS = 60_000;
 const SIGNALR_START_RETRIES = 4;
 
 function getQrImageUrl(data: PaymentQrData | null): string {
@@ -629,11 +629,30 @@ export default function PaymentPage({ params }: PaymentPageProps) {
             Đang tạo mã QR...
           </div>
         ) : qrError ? (
-          <div className="mt-8 flex h-80 flex-col items-center justify-center gap-4">
-            <p className="text-danger">{qrError}</p>
-            <button type="button" className="btn btn-secondary px-5 py-2" onClick={() => void loadPaymentQr()}>
-              Thử lại
-            </button>
+          <div className="mt-8 rounded-2xl border-2 border-red-300 bg-red-50 px-5 py-8 text-center shadow-sm md:px-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="text-3xl" />
+            </div>
+            <h2 className="text-xl font-bold text-red-700">Không thể tạo mã QR thanh toán</h2>
+            <p className="mx-auto mt-3 max-w-xl text-base font-medium leading-relaxed text-red-800">
+              {qrError}
+            </p>
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                className="btn btn-secondary min-w-[160px] px-6 py-3"
+                onClick={() => void loadPaymentQr()}
+              >
+                Thử lại
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline min-w-[160px] px-6 py-3"
+                onClick={() => router.push("/")}
+              >
+                Quay về trang chủ
+              </button>
+            </div>
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-stretch">

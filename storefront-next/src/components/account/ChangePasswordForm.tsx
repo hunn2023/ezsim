@@ -5,6 +5,71 @@ import { toast } from "sonner";
 import Icon from "@/components/ui/Icon";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
+function getApiErrorMessage(json: unknown, fallback: string): string {
+  if (typeof json !== "object" || json === null) return fallback;
+
+  const payload = json as { error?: string | null; message?: string | null };
+  if (typeof payload.error === "string" && payload.error.trim()) return payload.error;
+  if (typeof payload.message === "string" && payload.message.trim()) return payload.message;
+
+  return fallback;
+}
+
+interface PasswordFieldProps {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+  placeholder: string;
+  leftIcon: "lock";
+  disabled?: boolean;
+}
+
+function PasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+  placeholder,
+  leftIcon,
+  disabled = false,
+}: PasswordFieldProps) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-semibold text-navy mb-1.5">
+        {label}
+      </label>
+      <div className="relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <Icon icon={leftIcon} className="text-sm" />
+        </span>
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="input pl-10 pr-12 disabled:bg-gray-50 disabled:cursor-not-allowed"
+        />
+        <button
+          type="button"
+          onClick={onToggleShow}
+          disabled={disabled}
+          aria-label={show ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+          className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-navy disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Icon icon={show ? "eye-slash" : "eye"} className="text-sm" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function ChangePasswordForm() {
   const [expanded, setExpanded] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -13,6 +78,7 @@ export default function ChangePasswordForm() {
   const [loading, setLoading] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +102,15 @@ export default function ChangePasswordForm() {
           newPassword,
           confirmNewPassword: confirmPassword,
         }),
+        _skipRefresh: true,
       });
 
       const json = await res.json().catch(() => ({}));
+      const isFailure =
+        !res.ok || (typeof json === "object" && json !== null && "isSuccess" in json && json.isSuccess === false);
 
-      if (!res.ok || json.isSuccess === false) {
-        toast.error(json.error ?? json.message ?? "Đổi mật khẩu thất bại. Vui lòng thử lại.");
+      if (isFailure) {
+        toast.error(getApiErrorMessage(json, "Đổi mật khẩu thất bại. Vui lòng thử lại."));
         return;
       }
 
@@ -74,95 +143,53 @@ export default function ChangePasswordForm() {
       </button>
 
       {expanded && (
-      <form onSubmit={handleSubmit} noValidate className="p-6 md:p-8 pt-0 space-y-5 border-t border-gray-100">
-        {/* Current password */}
-        <div>
-          <label htmlFor="cp-current" className="block text-sm font-semibold text-navy mb-1.5">
-            Mật khẩu hiện tại
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <Icon icon="lock" className="text-sm" />
-            </span>
-            <input
-              id="cp-current"
-              type={showCurrent ? "text" : "password"}
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="••••••••"
-              disabled={loading}
-              className="input pl-10 pr-10 disabled:bg-gray-50 disabled:cursor-not-allowed"
-            />
+        <form onSubmit={handleSubmit} noValidate className="p-6 md:p-8 pt-0 space-y-5 border-t border-gray-100">
+          <PasswordField
+            id="cp-current"
+            label="Mật khẩu hiện tại"
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            show={showCurrent}
+            onToggleShow={() => setShowCurrent((value) => !value)}
+            placeholder="••••••••"
+            leftIcon="lock"
+            disabled={loading}
+          />
+
+          <PasswordField
+            id="cp-new"
+            label="Mật khẩu mới"
+            value={newPassword}
+            onChange={setNewPassword}
+            show={showNew}
+            onToggleShow={() => setShowNew((value) => !value)}
+            placeholder="Nhập mật khẩu mới"
+            leftIcon="lock"
+            disabled={loading}
+          />
+
+          <PasswordField
+            id="cp-confirm"
+            label="Xác nhận mật khẩu mới"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            show={showConfirm}
+            onToggleShow={() => setShowConfirm((value) => !value)}
+            placeholder="Nhập lại mật khẩu mới"
+            leftIcon="lock"
+            disabled={loading}
+          />
+
+          <div className="pt-1">
             <button
-              type="button"
-              onClick={() => setShowCurrent(!showCurrent)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy transition"
+              type="submit"
+              disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+              className="btn btn-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
             >
-              <Icon icon={showCurrent ? "eye-slash" : "eye"} className="text-sm" />
+              {loading ? "Đang xử lý..." : "Đổi mật khẩu"}
             </button>
           </div>
-        </div>
-
-        {/* New password */}
-        <div>
-          <label htmlFor="cp-new" className="block text-sm font-semibold text-navy mb-1.5">
-            Mật khẩu mới
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <Icon icon="key" className="text-sm" />
-            </span>
-            <input
-              id="cp-new"
-              type={showNew ? "text" : "password"}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Nhập mật khẩu mới"
-              disabled={loading}
-              className="input pl-10 pr-10 disabled:bg-gray-50 disabled:cursor-not-allowed"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNew(!showNew)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy transition"
-            >
-              <Icon icon={showNew ? "eye-slash" : "eye"} className="text-sm" />
-            </button>
-          </div>
-        </div>
-
-        {/* Confirm new password */}
-        <div>
-          <label htmlFor="cp-confirm" className="block text-sm font-semibold text-navy mb-1.5">
-            Xác nhận mật khẩu mới
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <Icon icon="key" className="text-sm" />
-            </span>
-            <input
-              id="cp-confirm"
-              type={showNew ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Nhập lại mật khẩu mới"
-              disabled={loading}
-              className="input pl-10 pr-10 disabled:bg-gray-50 disabled:cursor-not-allowed"
-            />
-          </div>
-        </div>
-
-        {/* Submit */}
-        <div className="pt-1">
-          <button
-            type="submit"
-            disabled={loading || !currentPassword || !newPassword || !confirmPassword}
-            className="btn btn-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
-          >
-            {loading ? "Đang xử lý..." : "Đổi mật khẩu"}
-          </button>
-        </div>
-      </form>
+        </form>
       )}
     </div>
   );
