@@ -83,10 +83,6 @@ function getCountdownSeconds(expiredAt: string | undefined): number | null {
   return Math.max(0, Math.floor((expiresMs - Date.now()) / 1000));
 }
 
-function getProviderTransactionId(data: PaymentQrData | null): string {
-  return data?.providerTransactionId || data?.transactionId || "";
-}
-
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("vi-VN", {
     day: "2-digit",
@@ -229,7 +225,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   const [qrError, setQrError] = useState("");
   const [isPaid, setIsPaid] = useState(false);
   const [paidAt, setPaidAt] = useState<string | null>(null);
-  const [successSource, setSuccessSource] = useState<PaymentSuccessSource | null>(null);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
 
@@ -244,7 +239,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
       paymentFlowLog("payment.success", { orderId, source });
 
       setIsPaid(true);
-      setSuccessSource(source);
       setPaidAt(confirmedAt || new Date().toISOString());
       clearCart();
     },
@@ -570,7 +564,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   const bankAccountNo = getBankAccountNo(qrData);
   const bankAccountName = getBankAccountName(qrData);
   const transferContent = getTransferContent(qrData);
-  const providerTransactionId = getProviderTransactionId(qrData);
   const expiredAt = getExpiredAt(qrData);
   const showCountdown = getCountdownSeconds(expiredAt) !== null && secondsLeft > 0;
   const paidAtText = paidAt ? formatDateTime(paidAt) : "";
@@ -597,11 +590,9 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                   <FontAwesomeIcon icon={faCheck} className="text-[10px]" />
                   Đã thanh toán
                 </span>
-                {successSource === "signalr" && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                    Xác nhận tự động qua SignalR
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                  Đã gửi thông tin eSim qua email
+                </span>
               </div>
               {paidAtText && (
                 <p className="mt-2 text-xs text-gray-400">
@@ -717,9 +708,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                 {bankAccountName && <CopyRow label="Tên tài khoản" value={bankAccountName} />}
                 {transferContent && (
                   <CopyRow label="Nội dung chuyển khoản" value={transferContent} highlight />
-                )}
-                {!isPaid && providerTransactionId && (
-                  <CopyRow label="Mã giao dịch" value={providerTransactionId} />
                 )}
               </div>
 
