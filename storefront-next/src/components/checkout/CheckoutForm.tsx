@@ -12,6 +12,8 @@ import { useCartStore } from "@/lib/cartStore";
 import { formatPrice } from "@/lib/product";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { usePaymentProviders } from "@/hooks/usePaymentProviders";
+import { isProviderAmountEligible } from "@/lib/api/paymentProviderApi";
 import Icon from "@/components/ui/Icon";
 
 import ShippingInfoForm from "./ShippingInfoForm";
@@ -22,6 +24,8 @@ export default function CheckoutForm() {
   const router = useRouter();
   const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
+  const { providers, isLoading: isProvidersLoading, error: providersError, reload: reloadProviders } =
+    usePaymentProviders();
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
   const getTotalAmount = useCartStore((s) => s.getTotalAmount);
@@ -86,6 +90,10 @@ export default function CheckoutForm() {
       language === "vi"
         ? "Vui lòng tích Điều khoản dịch vụ trước khi sang bước thanh toán."
         : "Please agree to the Terms of Service before continuing to payment.",
+    selectPaymentMethod:
+      language === "vi"
+        ? "Vui lòng chọn phương thức thanh toán."
+        : "Please select a payment method.",
     deviceModalTitle:
       language === "vi" ? "Danh sách thiết bị hỗ trợ eSIM" : "eSIM supported devices",
     deviceModalDesc:
@@ -125,7 +133,7 @@ export default function CheckoutForm() {
       phone: "",
       email: "",
       orderNote: "",
-      paymentMethod: "banking",
+      paymentMethod: "",
       requestInvoice: false,
       agreeTerms: false,
       confirmDeviceSupport: false,
@@ -133,9 +141,31 @@ export default function CheckoutForm() {
     mode: "onBlur",
   });
 
-  const selectedPaymentMethod = watch("paymentMethod") ?? "banking";
+  const selectedPaymentMethod = watch("paymentMethod") ?? "";
   const requestInvoice = watch("requestInvoice");
   const agreeTerms = watch("agreeTerms");
+  const orderTotal = getTotalAmount();
+
+  useEffect(() => {
+    if (providers.length === 0) return;
+
+    const current = getValues("paymentMethod");
+    const currentProvider = providers.find((provider) => provider.code === current);
+    const isCurrentValid =
+      currentProvider && isProviderAmountEligible(currentProvider, orderTotal);
+
+    if (isCurrentValid) return;
+
+    const eligibleProviders = providers.filter((provider) =>
+      isProviderAmountEligible(provider, orderTotal)
+    );
+    const defaultProvider =
+      eligibleProviders.find((provider) => provider.isDefault) ?? eligibleProviders[0];
+
+    if (defaultProvider) {
+      setValue("paymentMethod", defaultProvider.code, { shouldDirty: false, shouldValidate: true });
+    }
+  }, [getValues, orderTotal, providers, setValue]);
 
   useEffect(() => {
     if (!isAuthenticated || !user || prefilledRef.current) return;
@@ -144,7 +174,6 @@ export default function CheckoutForm() {
     setValue("fullName", current.fullName || user.name || "", { shouldDirty: false });
     setValue("phone", current.phone || user.phone || "", { shouldDirty: false });
     setValue("email", current.email || user.email || "", { shouldDirty: false });
-    setValue("paymentMethod", "banking", { shouldDirty: false });
     prefilledRef.current = true;
   }, [getValues, isAuthenticated, setValue, user]);
 
@@ -162,6 +191,17 @@ export default function CheckoutForm() {
       // Create and confirm the order before opening its payment page.
       if (!formData.agreeTerms) {
         toast.error(text.needAgreeTermsFirst);
+        return;
+      }
+
+      if (!formData.paymentMethod) {
+        toast.error(text.selectPaymentMethod);
+        return;
+      }
+
+      const selectedProvider = providers.find((provider) => provider.code === formData.paymentMethod);
+      if (!selectedProvider || !isProviderAmountEligible(selectedProvider, getTotalAmount())) {
+        toast.error(text.selectPaymentMethod);
         return;
       }
 
@@ -204,7 +244,7 @@ export default function CheckoutForm() {
           }
 
           const orderId = result.orderId;
-          await confirmOrder(orderId, formData.paymentMethod);
+          await confirmOrder(orderId, selectedProvider.paymentMethod);
           toast.success(language === "vi" ? "Xác nhận đơn hàng thành công." : "Order confirmed successfully.");
           router.push(`/checkout/payment/${orderId}`);
         } catch (error) {
@@ -228,7 +268,7 @@ export default function CheckoutForm() {
       return;
 
     },
-    [isSubmitting, items, getTotalAmount, router, text, language]
+    [isSubmitting, items, getTotalAmount, router, text, language, providers]
   );
 
   const handleContinueToPayment = useCallback(async () => {
@@ -247,8 +287,13 @@ export default function CheckoutForm() {
       return;
     }
 
+    if (!getValues("paymentMethod")) {
+      toast.error(text.selectPaymentMethod);
+      return;
+    }
+
     setShowDeviceModal(true);
-  }, [getValues, text.needAgreeTermsFirst, trigger]);
+  }, [getValues, text.needAgreeTermsFirst, text.selectPaymentMethod, trigger]);
 
   const handleDeviceConfirm = useCallback(async () => {
     setShowDeviceModal(false);
@@ -356,20 +401,34 @@ export default function CheckoutForm() {
               <section className="bg-white rounded-xl p-6 shadow-card">
                 <PaymentMethod
                   register={register}
+                  setValue={setValue}
                   selectedMethod={selectedPaymentMethod}
+                  providers={providers}
+                  isLoading={isProvidersLoading}
+                  loadError={providersError}
+                  onRetry={() => void reloadProviders()}
                   language={language}
                   showDetails={false}
+                  amount={orderTotal}
                 />
+                {errors.paymentMethod && (
+                  <p className="text-danger text-xs mt-2">{errors.paymentMethod.message}</p>
+                )}
               </section>
             </>
           ) : (
             <section className="bg-white rounded-xl p-6 shadow-card">
               <PaymentMethod
                 register={register}
+                setValue={setValue}
                 selectedMethod={selectedPaymentMethod}
+                providers={providers}
+                isLoading={isProvidersLoading}
+                loadError={providersError}
+                onRetry={() => void reloadProviders()}
                 language={language}
                 showDetails
-                amount={getTotalAmount()}
+                amount={orderTotal}
                 paymentQrData={paymentQrData}
                 orderId={createdOrderId}
                 onPaymentConfirmed={() => {
@@ -430,7 +489,12 @@ export default function CheckoutForm() {
                 <button
                   type="button"
                   onClick={() => void handleContinueToPayment()}
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting ||
+                    isProvidersLoading ||
+                    providers.length === 0 ||
+                    !selectedPaymentMethod
+                  }
                   className={`w-full py-4 rounded-xl font-semibold text-white transition ${
                     isSubmitting
                       ? "bg-gray-400 cursor-not-allowed"

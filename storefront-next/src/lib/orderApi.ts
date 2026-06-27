@@ -25,7 +25,7 @@ export interface CreateOrderPayload {
     email?: string;
   };
   items: OrderItem[];
-  paymentMethod: "cod" | "banking";
+  paymentMethod: string;
   orderNote?: string;
   totalAmount: number;
 }
@@ -186,7 +186,7 @@ export interface PaymentStatusData {
   transactionId?: string;
 }
 
-export async function confirmOrder(orderId: string, paymentMethod: string = "banking") {
+export async function confirmOrder(orderId: string, paymentMethod: string) {
   const response = await fetchWithAuth(`/api/orders/${orderId}/confirm`, {
     method: "POST",
     body: JSON.stringify({ paymentMethod }),
@@ -346,6 +346,9 @@ function mapPaymentMethod(method: number | string | null | undefined): OrderPaym
     if (lower === "cod") return "cod";
     if (lower === "momo") return "momo";
     if (lower === "vnpay") return "vnpay";
+    if (lower === "banking" || lower === "bankqr" || lower === "sepay" || lower === "vnpt_epay") {
+      return "banking";
+    }
     return "banking";
   }
   // Integer enum: 0=COD, 1=Banking, 2=Momo, 3=VNPay

@@ -49,9 +49,7 @@ export function getCheckoutSchema(language: Language = "vi") {
       .max(500, t.orderNoteMax)
       .optional()
       .or(z.literal("")),
-    paymentMethod: z.enum(["banking"], {
-      message: t.paymentRequired,
-    }),
+    paymentMethod: z.string().min(1, t.paymentRequired),
     requestInvoice: z.boolean(),
     agreeTerms: z.boolean().refine((value) => value === true, {
       message: t.termsRequired,
@@ -66,4 +64,5 @@ export const checkoutSchema = getCheckoutSchema("vi");
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
-export type PaymentMethodType = z.infer<typeof checkoutSchema.shape.paymentMethod>;
+/** Provider `code` from GET /api/public/payment-providers (e.g. SEPAY). Mapped to `paymentMethod` on confirm. */
+export type PaymentMethodType = string;
