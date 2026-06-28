@@ -1,24 +1,44 @@
 /**
- * Local dev proxy server to bypass CORS when developing with output: "export".
- * Proxies all requests from http://localhost:4000/api/* → https://api-staging.relipacheck.io.vn/api/*
- * Adds CORS headers so browser doesn't block.
+ * Local dev proxy — bypass CORS when FE calls a local origin that forwards to the real API.
+ * Loads `.env.local` (same as Next.js) for API_PROXY_PORT / API_PROXY_TARGET.
  *
- * Usage: node dev-proxy.js
+ * FE should set NEXT_PUBLIC_API_URL=http://localhost:{API_PROXY_PORT}
+ * Proxy forwards /api/* → API_PROXY_TARGET
  */
+const fs = require("fs");
 const http = require("http");
 const https = require("https");
+const path = require("path");
 const { URL } = require("url");
 
-const PROXY_PORT = 4000;
-const BACKEND_URL = "https://api-staging.relipacheck.io.vn";
+function loadEnvLocal() {
+  const envPath = path.join(__dirname, ".env.local");
+  if (!fs.existsSync(envPath)) return;
+
+  for (const line of fs.readFileSync(envPath, "utf8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
+    if (key && process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadEnvLocal();
+
+const PROXY_PORT = Number(process.env.API_PROXY_PORT) || 4000;
+const BACKEND_URL =
+  process.env.API_PROXY_TARGET || "https://api-staging.relipacheck.io.vn";
 
 const server = http.createServer((req, res) => {
-  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  // Handle preflight
   if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
@@ -29,7 +49,7 @@ const server = http.createServer((req, res) => {
 
   const options = {
     hostname: targetUrl.hostname,
-    port: 443,
+    port: targetUrl.protocol === "https:" ? 443 : targetUrl.port || 80,
     path: targetUrl.pathname + targetUrl.search,
     method: req.method,
     headers: {
@@ -38,16 +58,15 @@ const server = http.createServer((req, res) => {
     },
   };
 
-  // Remove headers that cause issues
-  delete options.headers["origin"];
-  delete options.headers["referer"];
+  delete options.headers.origin;
+  delete options.headers.referer;
 
-  const proxyReq = https.request(options, (proxyRes) => {
-    // Copy status and headers from backend
+  const transport = targetUrl.protocol === "https:" ? https : http;
+
+  const proxyReq = transport.request(options, (proxyRes) => {
     const responseHeaders = { ...proxyRes.headers };
-    // Override CORS
     responseHeaders["access-control-allow-origin"] = "*";
-    delete responseHeaders["transfer-encoding"]; // avoid chunked issues
+    delete responseHeaders["transfer-encoding"];
 
     res.writeHead(proxyRes.statusCode, responseHeaders);
     proxyRes.pipe(res, { end: true });
@@ -63,6 +82,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PROXY_PORT, () => {
-  console.log(`✓ Dev proxy running: http://localhost:${PROXY_PORT} → ${BACKEND_URL}`);
-  console.log(`  All /api/* requests will be proxied to backend.`);
+  console.log(`✓ Dev proxy: http://localhost:${PROXY_PORT} → ${BACKEND_URL}`);
 });

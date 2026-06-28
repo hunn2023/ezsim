@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NEXT_PUBLIC_API_URL=http://localhost:4000 NEXT_PUBLIC_SIGNALR_URL=https://api-staging.relipacheck.io.vn concurrently \"next dev -p 4444\" \"node dev-proxy.js\"",
-    "dev:next": "cross-env NEXT_PUBLIC_API_URL=http://localhost:4000 NEXT_PUBLIC_SIGNALR_URL=https://api-staging.relipacheck.io.vn next dev -p 4444",
+    "dev": "concurrently \"next dev -p 4444\" \"node dev-proxy.js\"",
+    "dev:next": "next dev -p 4444",
     "dev:proxy": "node dev-proxy.js",
     "clean:fetch-cache": "node -e \"require('fs').rmSync('.next/cache/fetch-cache', { recursive: true, force: true })\"",
     "build": "cross-env NEXT_PUBLIC_API_URL=https://api-staging.relipacheck.io.vn next build",
