@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const OTP_EXPIRES_IN_MS = 5 * 60 * 1000;
 
 type ForgotPasswordStep = "email" | "reset";
@@ -32,10 +32,10 @@ export function useForgotPassword() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      const response = await fetchWithAuth("/api/auth/forgot-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: nextEmail }),
+        _skipRefresh: true,
       });
 
       const json = await response.json().catch(() => ({}));
@@ -63,10 +63,10 @@ export function useForgotPassword() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      const response = await fetchWithAuth("/api/auth/forgot-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
+        _skipRefresh: true,
       });
 
       const json = await response.json().catch(() => ({}));
@@ -91,10 +91,10 @@ export function useForgotPassword() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      const response = await fetchWithAuth("/api/auth/reset-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otpCode: otp, newPassword }),
+        _skipRefresh: true,
       });
 
       const json = await response.json().catch(() => ({}));

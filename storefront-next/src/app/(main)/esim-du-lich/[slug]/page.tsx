@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { getEsimCountryBySlug } from "@/lib/api/esimApi";
 import { getProductContents, getProductFaqs } from "@/lib/api/productContentApi";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import EsimCountryView from "./EsimCountryView";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export const revalidate = 60;
 
@@ -13,7 +12,7 @@ export async function generateStaticParams() {
   const slugSet = new Set<string>();
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`);
+    const res = await fetchWithAuth("/api/catalog/products/home/esim-products");
     if (res.ok) {
       const json = await res.json();
       const items: { slug: string }[] = json.data ?? [];

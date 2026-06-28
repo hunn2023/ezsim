@@ -1,3 +1,5 @@
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export interface PaymentProvider {
@@ -27,7 +29,7 @@ export function resolvePaymentProviderLogoUrl(logoUrl: string | null | undefined
 /** Active payment providers from GET /api/public/payment-providers */
 export async function getPaymentProviders(): Promise<PaymentProvider[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/public/payment-providers`);
+    const response = await fetchWithAuth("/api/public/payment-providers");
     if (!response.ok) return [];
 
     const json = (await response.json()) as ApiResult<PaymentProvider[]>;

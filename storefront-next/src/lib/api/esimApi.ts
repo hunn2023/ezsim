@@ -8,8 +8,7 @@ import type {
   PackageQuickTag,
 } from "@/types/esim";
 import type { ApiCountryHome, ApiEsimPackage, ApiProduct } from "@/types/api";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -165,8 +164,8 @@ export async function getCatalogThumbnails(): Promise<CatalogThumbnailMaps> {
       const byVariant = new Map<string, string>();
       const byProduct = new Map<string, string>();
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/catalog/products/variants?pageSize=500`
+        const response = await fetchWithAuth(
+          "/api/catalog/products/variants?pageSize=500"
         );
         if (response.ok) {
           const json = await response.json();
@@ -225,7 +224,7 @@ function unwrapItems<T>(json: unknown): { items: T[]; hasNext: boolean; totalPag
 
 async function getCatalogVariants(): Promise<ApiProductVariant[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/catalog/products/variants?pageSize=500`);
+    const response = await fetchWithAuth("/api/catalog/products/variants?pageSize=500");
     if (!response.ok) return [];
     const json = await response.json();
     const payload = json?.data ?? json;
@@ -241,8 +240,8 @@ async function getCatalogEsimPackages(): Promise<ApiEsimPackage[]> {
 
   while (true) {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/catalog/esim-packages?PageIndex=${pageIndex}&PageSize=${ESIM_PACKAGES_PAGE_SIZE}`
+      const response = await fetchWithAuth(
+        `/api/catalog/esim-packages?PageIndex=${pageIndex}&PageSize=${ESIM_PACKAGES_PAGE_SIZE}`
       );
       if (!response.ok) break;
       const json = await response.json();
@@ -261,7 +260,7 @@ async function getCatalogEsimPackages(): Promise<ApiEsimPackage[]> {
 
 async function getCatalogEsimPackagesBySlug(slug: string): Promise<ApiEsimPackage[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/catalog/esim-packages/${encodeURIComponent(slug)}`);
+    const response = await fetchWithAuth(`/api/catalog/esim-packages/${encodeURIComponent(slug)}`);
     if (!response.ok) return [];
     const json = await response.json();
     if (json?.isSuccess === false) return [];
@@ -275,7 +274,7 @@ async function getCatalogEsimPackagesBySlug(slug: string): Promise<ApiEsimPackag
 
 async function getCatalogProductBySlug(slug: string): Promise<ApiProduct | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/catalog/products/${encodeURIComponent(slug)}`);
+    const response = await fetchWithAuth(`/api/catalog/products/${encodeURIComponent(slug)}`);
     if (!response.ok) return null;
     const json = await response.json();
     if (json?.isSuccess === false) return null;
@@ -298,7 +297,7 @@ function matchesProductSlug(productSlug: string | null | undefined, slug: string
 /** Featured eSIM products for the homepage "Điểm đến nổi bật" section. */
 export async function getHomeEsimProducts(): Promise<HomeEsimProduct[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/catalog/products/home/esim-products`);
+    const response = await fetchWithAuth("/api/catalog/products/home/esim-products");
     if (!response.ok) return [];
     const json = await response.json();
     const data = json?.data ?? json ?? [];
@@ -331,7 +330,7 @@ const COUNTRIES_PAGE_SIZE = 100;
 async function getProductSlugByCountryId(): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   try {
-    const response = await fetch(`${API_BASE_URL}/api/catalog/products/variants?pageSize=500`);
+    const response = await fetchWithAuth("/api/catalog/products/variants?pageSize=500");
     if (!response.ok) return map;
     const json = await response.json();
     const payload = json?.data ?? json;
@@ -368,8 +367,8 @@ export async function getEsimCountries(): Promise<EsimCountrySummary[]> {
 
     while (true) {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/catalog/countries/home?PageIndex=${pageIndex}&PageSize=${COUNTRIES_PAGE_SIZE}`
+        const response = await fetchWithAuth(
+          `/api/catalog/countries/home?PageIndex=${pageIndex}&PageSize=${COUNTRIES_PAGE_SIZE}`
         );
         if (!response.ok) break;
         const json = await response.json();

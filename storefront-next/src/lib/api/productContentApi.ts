@@ -1,6 +1,5 @@
 import type { ProductContent, ProductFaq } from "@/types/productContent";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 function unwrapItems<T>(json: unknown): T[] {
   const payload = (json as { data?: unknown })?.data ?? json;
@@ -11,8 +10,8 @@ function unwrapItems<T>(json: unknown): T[] {
 
 export async function getProductContents(productId: string): Promise<ProductContent[]> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/public/product-contents/by-product/${productId}`
+    const response = await fetchWithAuth(
+      `/api/public/product-contents/by-product/${productId}`
     );
     if (!response.ok) return [];
     const items = unwrapItems<ProductContent>(await response.json());
@@ -29,8 +28,8 @@ export async function getProductContentsByType(
   contentType: number
 ): Promise<ProductContent[]> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/public/product-contents/by-product/${productId}/type/${contentType}`
+    const response = await fetchWithAuth(
+      `/api/public/product-contents/by-product/${productId}/type/${contentType}`
     );
     if (!response.ok) return [];
     const items = unwrapItems<ProductContent>(await response.json());
@@ -44,8 +43,8 @@ export async function getProductContentsByType(
 
 export async function getProductFaqs(productId: string): Promise<ProductFaq[]> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/public/product-faqs/by-product/${productId}`
+    const response = await fetchWithAuth(
+      `/api/public/product-faqs/by-product/${productId}`
     );
     if (!response.ok) return [];
     const items = unwrapItems<ProductFaq>(await response.json());

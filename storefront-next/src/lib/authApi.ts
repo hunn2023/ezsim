@@ -6,8 +6,8 @@ import type {
 } from "@/types/auth";
 import type { User } from "@/types/user";
 import type { ApiLoginResponse, ApiUserProfile } from "@/types/api";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const TIMEOUT_MS = 30_000;
 
 export class AuthApiError extends Error {
@@ -29,9 +29,10 @@ async function request<T>(
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetchWithAuth(path, {
       ...options,
       signal: controller.signal,
+      _skipRefresh: true,
     });
 
     clearTimeout(timeoutId);
@@ -210,10 +211,10 @@ export async function resendRegisterOtp(email: string): Promise<void> {
 export async function logoutApi(refreshToken: string): Promise<void> {
   // Fire and forget — don't block UI on logout failure
   try {
-    await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    await fetchWithAuth("/api/auth/logout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
+      _skipRefresh: true,
     });
   } catch {
     // ignore

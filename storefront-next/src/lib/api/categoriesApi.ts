@@ -1,7 +1,7 @@
 import { Category, Product, PaginatedProducts, ProductQueryParams } from "@/types/product";
 import type { ApiCategory, ApiProduct, PaginatedResponse } from "@/types/api";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 const PAGE_SIZE = 9;
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
@@ -33,8 +33,8 @@ function mapApiProduct(p: ApiProduct): Product {
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/categories?PageIndex=1&PageSize=50`
+    const response = await fetchWithAuth(
+      "/api/catalog/categories?PageIndex=1&PageSize=50"
     );
     if (!response.ok) return null;
     const json = await response.json();
@@ -53,8 +53,8 @@ export async function getProductsByCategory(
 ): Promise<PaginatedProducts> {
   try {
     // First resolve categoryId from slug
-    const catRes = await fetch(
-      `${API_BASE_URL}/api/catalog/categories?PageIndex=1&PageSize=50`
+    const catRes = await fetchWithAuth(
+      "/api/catalog/categories?PageIndex=1&PageSize=50"
     );
     let categoryId = "";
     if (catRes.ok) {
@@ -72,8 +72,8 @@ export async function getProductsByCategory(
     });
     if (categoryId) queryParams.set("CategoryId", categoryId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/products?${queryParams.toString()}`
+    const response = await fetchWithAuth(
+      `/api/catalog/products?${queryParams.toString()}`
     );
     if (!response.ok) return { products: [], totalPages: 0 };
 

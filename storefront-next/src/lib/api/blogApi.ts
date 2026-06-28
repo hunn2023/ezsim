@@ -1,9 +1,8 @@
 import type { Language } from "@/lib/i18n";
 import type { BlogPost, BlogPostSummary } from "@/types/blog";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export const BLOG_PAGE_SIZE = 6;
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export interface BlogListResult {
   posts: BlogPostSummary[];
@@ -77,7 +76,7 @@ function toSummary({ content: _content, ...summary }: BlogPost): BlogPostSummary
 
 async function fetchJson<T>(path: string): Promise<T | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`);
+    const response = await fetchWithAuth(path);
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {

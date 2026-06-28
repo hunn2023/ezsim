@@ -28,6 +28,7 @@ import {
 } from "@/lib/orderApi";
 import { paymentFlowError, paymentFlowLog } from "@/lib/paymentFlowLog";
 import { formatPrice } from "@/lib/product";
+import { authStorage } from "@/lib/storage";
 
 interface PaymentPageProps {
   params: { orderId: string };
@@ -380,11 +381,13 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         sessionId,
         orderId,
         hubUrl,
+        hasAccessToken: Boolean(authStorage.getToken()),
         withCredentials: true,
       });
 
       const connection = new HubConnectionBuilder()
         .withUrl(hubUrl, {
+          accessTokenFactory: () => authStorage.getToken() ?? "",
           withCredentials: true,
         })
         .withAutomaticReconnect()

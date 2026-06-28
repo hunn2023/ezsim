@@ -5,8 +5,7 @@ import type {
   CardDenomination,
 } from "@/types/cardMarketplace";
 import type { ApiPhoneCard, PaginatedResponse } from "@/types/api";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 // ─── Content Metadata (static — not from API) ────────────────────────────────
 
@@ -131,8 +130,8 @@ export async function getCardMarketplaceContent(tab: CardMarketplaceTab): Promis
   const meta = contentMeta[tab] ?? contentMeta.telecom;
 
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/phone-cards?PageIndex=1&PageSize=100`
+    const response = await fetchWithAuth(
+      "/api/catalog/phone-cards?PageIndex=1&PageSize=100"
     );
     if (!response.ok) {
       return { ...meta, providers: [] };
@@ -153,8 +152,8 @@ export async function getCardMarketplaceContent(tab: CardMarketplaceTab): Promis
 
 export async function getCardTabCounts(): Promise<Record<CardMarketplaceTab, number>> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/phone-cards?PageIndex=1&PageSize=200`
+    const response = await fetchWithAuth(
+      "/api/catalog/phone-cards?PageIndex=1&PageSize=200"
     );
     if (!response.ok) return { telecom: 0, game: 0, data: 0, promo: 0 };
     const json = await response.json();

@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 export interface ChatbotProductSuggestion {
   productId: string;
@@ -60,11 +60,8 @@ function getApiErrorMessage(json: ApiEnvelope<ChatbotResponse> | ChatbotResponse
 }
 
 export async function sendChatbotMessage(request: ChatbotRequest): Promise<ChatbotResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/public/chatbot/message`, {
+  const response = await fetchWithAuth("/api/public/chatbot/message", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(request),
   });
 

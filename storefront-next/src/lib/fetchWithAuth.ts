@@ -1,7 +1,24 @@
-import { getToken, useAuthStore } from "@/lib/authStore";
 import { authStorage } from "@/lib/storage";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+async function updateAuthToken(token: string): Promise<void> {
+  try {
+    const { useAuthStore } = await import("@/lib/authStore");
+    useAuthStore.setState({ token });
+  } catch {
+    // Auth store may not be available during server/static rendering.
+  }
+}
+
+async function logoutAuthStore(): Promise<void> {
+  try {
+    const { useAuthStore } = await import("@/lib/authStore");
+    useAuthStore.getState().logout();
+  } catch {
+    authStorage.clearAll();
+  }
+}
 
 export type FetchWithAuthOptions = RequestInit & {
   /** Skip auto-prefixing with API_BASE_URL — use for absolute URLs */
@@ -17,7 +34,7 @@ async function tryRefreshToken(): Promise<string | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/refresh-token`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: buildAuthHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ refreshToken }),
     });
 
@@ -32,8 +49,7 @@ async function tryRefreshToken(): Promise<string | null> {
     if (newAccessToken) {
       authStorage.setToken(newAccessToken);
       if (newRefreshToken) authStorage.setRefreshToken(newRefreshToken);
-      // Update Zustand store in-memory
-      useAuthStore.setState({ token: newAccessToken });
+      await updateAuthToken(newAccessToken);
       return newAccessToken;
     }
     return null;
@@ -42,16 +58,21 @@ async function tryRefreshToken(): Promise<string | null> {
   }
 }
 
+function buildAuthHeaders(init?: HeadersInit): Headers {
+  const token = authStorage.getToken();
+  const headers = new Headers(init);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return headers;
+}
+
 export async function fetchWithAuth(
   path: string,
   options: FetchWithAuthOptions = {}
 ): Promise<Response> {
   const { absoluteUrl, _skipRefresh, ...fetchOptions } = options;
 
-  const token = getToken();
-  const headers = new Headers(fetchOptions.headers);
-  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const headers = buildAuthHeaders(fetchOptions.headers);
 
   const url = absoluteUrl ? path : `${API_BASE_URL}${path}`;
   const response = await fetch(url, { ...fetchOptions, headers });
@@ -67,7 +88,7 @@ export async function fetchWithAuth(
       return fetch(url, { ...fetchOptions, headers: retryHeaders });
     }
     // Refresh failed — logout
-    useAuthStore.getState().logout();
+    await logoutAuthStore();
   }
 
   return response;

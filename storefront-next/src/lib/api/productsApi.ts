@@ -1,7 +1,6 @@
 import { Product, ProductDetail } from "@/types/product";
 import type { ApiProduct, PaginatedResponse } from "@/types/api";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
@@ -44,7 +43,7 @@ function mapApiProductToCard(p: ApiProduct): Product {
 
 export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/catalog/products/${slug}`);
+    const response = await fetchWithAuth(`/api/catalog/products/${slug}`);
     if (!response.ok) return null;
     const json = await response.json();
     const product: ApiProduct = json.data ?? json;
@@ -59,8 +58,8 @@ export async function getRelatedProducts(
   excludeId: string
 ): Promise<Product[]> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/products?CategoryId=${categoryId}&PageIndex=1&PageSize=6`
+    const response = await fetchWithAuth(
+      `/api/catalog/products?CategoryId=${categoryId}&PageIndex=1&PageSize=6`
     );
     if (!response.ok) return [];
     const json = await response.json();
@@ -77,8 +76,8 @@ export async function getRelatedProducts(
 
 export async function getHomeEsimProducts(): Promise<Product[]> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/catalog/products?IsFeatured=true&PageIndex=1&PageSize=10`
+    const response = await fetchWithAuth(
+      "/api/catalog/products?IsFeatured=true&PageIndex=1&PageSize=10"
     );
     if (!response.ok) return [];
     const json = await response.json();
