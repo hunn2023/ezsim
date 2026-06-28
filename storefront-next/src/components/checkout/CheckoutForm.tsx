@@ -246,7 +246,9 @@ export default function CheckoutForm() {
           const orderId = result.orderId;
           await confirmOrder(orderId, selectedProvider.paymentMethod);
           toast.success(language === "vi" ? "Xác nhận đơn hàng thành công." : "Order confirmed successfully.");
-          router.push(`/checkout/payment/${orderId}`);
+          router.push(
+            `/checkout/payment/${orderId}?paymentProviderCode=${encodeURIComponent(selectedProvider.code)}`
+          );
         } catch (error) {
           console.error("[Checkout] createOrder error:", error);
           if (error instanceof OrderApiError) {

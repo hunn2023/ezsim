@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { useCartStore } from "@/lib/cartStore";
@@ -214,7 +214,9 @@ function CopyRow({
 
 export default function PaymentPage({ params }: PaymentPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const orderId = params.orderId;
+  const paymentProviderCode = searchParams.get("paymentProviderCode") ?? undefined;
   const clearCart = useCartStore((state) => state.clearCart);
   const connectionRef = useRef<HubConnection | null>(null);
   const paymentHandledRef = useRef(false);
@@ -247,14 +249,15 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   );
 
   const loadPaymentQr = useCallback(async () => {
-    paymentFlowLog("qr.load.start", { orderId });
+    paymentFlowLog("qr.load.start", { orderId, paymentProviderCode: paymentProviderCode ?? null });
     setIsLoadingQr(true);
     setQrError("");
 
     try {
-      const data = await createPaymentQr(orderId);
+      const data = await createPaymentQr(orderId, paymentProviderCode);
       paymentFlowLog("qr.load.success", {
         orderId,
+        paymentProviderCode: paymentProviderCode ?? null,
         hasQrImage: Boolean(getQrImageUrl(data)),
         amount: data.amount ?? null,
         orderCode: data.orderCode ?? null,
@@ -270,7 +273,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
     } finally {
       setIsLoadingQr(false);
     }
-  }, [orderId]);
+  }, [orderId, paymentProviderCode]);
 
   const handleManualCheck = useCallback(async () => {
     setIsCheckingPayment(true);

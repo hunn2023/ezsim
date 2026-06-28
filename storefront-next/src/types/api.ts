@@ -270,6 +270,7 @@ export interface ApiOrderResponse {
 // ─── Payments ─────────────────────────────────────────────────────────────────
 export interface ApiCreatePaymentQrRequest {
   orderId: string;
+  paymentProviderCode?: string | null;
 }
 
 export interface ApiPaymentQrResponse {

@@ -2,7 +2,7 @@ import { CheckoutFormData } from "./schemas/checkoutSchema";
 import { fetchWithAuth } from "./fetchWithAuth";
 import { useAuthStore } from "./authStore";
 import { getCatalogThumbnails } from "./api/esimApi";
-import type { ApiCreateOrderCommand, ApiCreateOrderItem, OrderItemType } from "@/types/api";
+import type { ApiCreateOrderCommand, ApiCreateOrderItem, ApiCreatePaymentQrRequest, OrderItemType } from "@/types/api";
 
 export interface OrderItem {
   id: string;
@@ -203,10 +203,18 @@ export async function confirmOrder(orderId: string, paymentMethod: string) {
   return json.data ?? json;
 }
 
-export async function createPaymentQr(orderId: string): Promise<PaymentQrData> {
+export async function createPaymentQr(
+  orderId: string,
+  paymentProviderCode?: string
+): Promise<PaymentQrData> {
+  const payload: ApiCreatePaymentQrRequest = { orderId };
+  if (paymentProviderCode) {
+    payload.paymentProviderCode = paymentProviderCode;
+  }
+
   const response = await fetchWithAuth("/api/payments/qr", {
     method: "POST",
-    body: JSON.stringify({ orderId }),
+    body: JSON.stringify(payload),
   });
   const json = await response.json().catch(() => ({}));
 
