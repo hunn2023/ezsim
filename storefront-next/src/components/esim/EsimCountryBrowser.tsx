@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Icon from "@/components/ui/Icon";
 import { useCartStore } from "@/lib/cartStore";
 import { useCartAnimation } from "@/components/ui/CartAnimation";
@@ -45,6 +46,8 @@ interface EsimCountryBrowserProps {
 
 export default function EsimCountryBrowser({ country, contents, faqs }: EsimCountryBrowserProps) {
   const addToCart = useCartStore((state) => state.addToCart);
+  const setBuyNowItem = useCartStore((state) => state.setBuyNowItem);
+  const router = useRouter();
   const { triggerFlyToCart } = useCartAnimation();
   const { language } = useLanguage();
   const [filters, setFilters] = useState<EsimPackageFilters>(INITIAL_FILTERS);
@@ -128,22 +131,29 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
     setFilters((current) => ({ ...current, sort }));
   };
 
+  const buildCartItem = (pkg: EsimCountryDetail["packages"][number], quantity: number) => ({
+    id: pkg.id,
+    name: `${country.name} ${pkg.data} ${pkg.dataUnit} - ${pkg.days} ngày`,
+    slug: pkg.slug,
+    href: `/esim-du-lich/${country.slug}`,
+    image: pkg.image,
+    price: pkg.price,
+    quantity,
+    stock: pkg.stock,
+    productId: pkg.productId,
+    productVariantId: pkg.productVariantId,
+    esimPackageId: pkg.esimPackageId || pkg.id,
+    itemType: 1, // EsimPackage
+  });
+
   const handleBuy = (pkg: EsimCountryDetail["packages"][number], quantity: number, triggerElement: HTMLElement | null) => {
-    addToCart({
-      id: pkg.id,
-      name: `${country.name} ${pkg.data} ${pkg.dataUnit} - ${pkg.days} ngày`,
-      slug: pkg.slug,
-      href: `/esim-du-lich/${country.slug}`,
-      image: pkg.image,
-      price: pkg.price,
-      quantity,
-      stock: pkg.stock,
-      productId: pkg.productId,
-      productVariantId: pkg.productVariantId,
-      esimPackageId: pkg.esimPackageId || pkg.id,
-      itemType: 1, // EsimPackage
-    });
+    addToCart(buildCartItem(pkg, quantity));
     triggerFlyToCart(pkg.image, triggerElement);
+  };
+
+  const handleBuyNow = (pkg: EsimCountryDetail["packages"][number], quantity: number) => {
+    setBuyNowItem(buildCartItem(pkg, quantity));
+    router.push("/checkout?buyNow=1");
   };
 
   const text = {
@@ -341,7 +351,7 @@ export default function EsimCountryBrowser({ country, contents, faqs }: EsimCoun
           {visiblePackages.length > 0 ? (
             <div className={`grid gap-4 ${viewMode === "grid" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}>
               {visiblePackages.map((pkg) => (
-                <PackageCard key={pkg.id} pkg={pkg} onBuy={handleBuy} />
+                <PackageCard key={pkg.id} pkg={pkg} onBuy={handleBuy} onBuyNow={handleBuyNow} />
               ))}
             </div>
           ) : (

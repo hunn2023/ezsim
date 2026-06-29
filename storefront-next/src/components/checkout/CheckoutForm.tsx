@@ -10,6 +10,7 @@ import { getCheckoutSchema, CheckoutFormData } from "@/lib/schemas/checkoutSchem
 import { createOrder, confirmOrder, mapFormDataToPayload, OrderApiError, OrderItem, PaymentQrData } from "@/lib/orderApi";
 import { useCartStore } from "@/lib/cartStore";
 import { formatPrice } from "@/lib/product";
+import type { CartItem } from "@/types/cart";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { usePaymentProviders } from "@/hooks/usePaymentProviders";
@@ -20,7 +21,12 @@ import ShippingInfoForm from "./ShippingInfoForm";
 import PaymentMethod from "./PaymentMethod";
 import OrderReview from "./OrderReview";
 
-export default function CheckoutForm() {
+interface CheckoutFormProps {
+  checkoutItems?: CartItem[];
+  isBuyNow?: boolean;
+}
+
+export default function CheckoutForm({ checkoutItems, isBuyNow = false }: CheckoutFormProps) {
   const router = useRouter();
   const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
@@ -28,7 +34,12 @@ export default function CheckoutForm() {
     usePaymentProviders();
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
-  const getTotalAmount = useCartStore((s) => s.getTotalAmount);
+  const clearBuyNowItem = useCartStore((s) => s.clearBuyNowItem);
+  const activeItems = checkoutItems ?? items;
+  const orderTotal = useMemo(
+    () => activeItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [activeItems]
+  );
   const prefilledRef = useRef(false);
 
   const text = useMemo(() => ({
@@ -144,7 +155,6 @@ export default function CheckoutForm() {
   const selectedPaymentMethod = watch("paymentMethod") ?? "";
   const requestInvoice = watch("requestInvoice");
   const agreeTerms = watch("agreeTerms");
-  const orderTotal = getTotalAmount();
 
   useEffect(() => {
     if (providers.length === 0) return;
@@ -179,10 +189,10 @@ export default function CheckoutForm() {
 
   // Cleanup: Reset form if items become empty
   useEffect(() => {
-    if (items.length === 0) {
+    if (activeItems.length === 0) {
       reset();
     }
-  }, [items.length, reset]);
+  }, [activeItems.length, reset]);
 
   const onSubmit = useCallback(
     async (formData: CheckoutFormData) => {
@@ -200,7 +210,7 @@ export default function CheckoutForm() {
       }
 
       const selectedProvider = providers.find((provider) => provider.code === formData.paymentMethod);
-      if (!selectedProvider || !isProviderAmountEligible(selectedProvider, getTotalAmount())) {
+      if (!selectedProvider || !isProviderAmountEligible(selectedProvider, orderTotal)) {
         toast.error(text.selectPaymentMethod);
         return;
       }
@@ -210,7 +220,7 @@ export default function CheckoutForm() {
         return;
       }
 
-      if (items.length === 0) {
+      if (activeItems.length === 0) {
         toast.error(text.cartEmpty);
         router.push("/");
         return;
@@ -218,7 +228,7 @@ export default function CheckoutForm() {
 
       setIsSubmitting(true);
 
-        const orderItems: OrderItem[] = items.map((item) => ({
+        const orderItems: OrderItem[] = activeItems.map((item) => ({
           id: item.id,
           name: item.name,
           price: item.price,
@@ -231,7 +241,7 @@ export default function CheckoutForm() {
           itemType: item.itemType,
         }));
 
-        const payload = mapFormDataToPayload(formData, orderItems, getTotalAmount());
+        const payload = mapFormDataToPayload(formData, orderItems, orderTotal);
         console.log("[Checkout] createOrder payload:", JSON.stringify(payload, null, 2));
 
         try {
@@ -247,7 +257,7 @@ export default function CheckoutForm() {
           await confirmOrder(orderId, selectedProvider.paymentMethod);
           toast.success(language === "vi" ? "Xác nhận đơn hàng thành công." : "Order confirmed successfully.");
           router.push(
-            `/checkout/payment/${orderId}?paymentProviderCode=${encodeURIComponent(selectedProvider.code)}`
+            `/checkout/payment/${orderId}?paymentProviderCode=${encodeURIComponent(selectedProvider.code)}${isBuyNow ? "&buyNow=1" : ""}`
           );
         } catch (error) {
           console.error("[Checkout] createOrder error:", error);
@@ -270,7 +280,7 @@ export default function CheckoutForm() {
       return;
 
     },
-    [isSubmitting, items, getTotalAmount, router, text, language, providers]
+    [isSubmitting, activeItems, orderTotal, router, text, language, providers, isBuyNow]
   );
 
   const handleContinueToPayment = useCallback(async () => {
@@ -304,7 +314,7 @@ export default function CheckoutForm() {
     await onSubmit(formData);
   }, [getValues, onSubmit, setValue]);
 
-  if (items.length === 0) {
+  if (activeItems.length === 0) {
     return null;
   }
 
@@ -435,7 +445,11 @@ export default function CheckoutForm() {
                 orderId={createdOrderId}
                 onPaymentConfirmed={() => {
                   toast.success(text.success);
-                  clearCart();
+                  if (isBuyNow) {
+                    clearBuyNowItem();
+                  } else {
+                    clearCart();
+                  }
                   router.push("/account/orders");
                 }}
               />
@@ -477,13 +491,13 @@ export default function CheckoutForm() {
         {currentStep === 1 && (
           <div className="lg:col-span-1">
             <section className="bg-white rounded-xl p-6 shadow-card sticky top-24">
-              <OrderReview items={items} shippingFee={0} language={language} />
+              <OrderReview items={activeItems} shippingFee={0} language={language} />
 
               <div className="mt-6 pt-4 border-t">
                 <div className="flex justify-between items-center mb-4">
                   <span className="font-semibold text-navy">{text.totalPayment}</span>
                   <span className="text-2xl font-bold text-primary">
-                    {formatPrice(getTotalAmount())}
+                    {formatPrice(orderTotal)}
                   </span>
                 </div>
 

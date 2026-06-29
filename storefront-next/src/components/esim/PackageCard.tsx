@@ -8,6 +8,7 @@ import type { EsimPackage } from "@/types/esim";
 interface PackageCardProps {
   pkg: EsimPackage;
   onBuy?: (pkg: EsimPackage, quantity: number, triggerElement: HTMLElement | null) => void;
+  onBuyNow?: (pkg: EsimPackage, quantity: number) => void;
 }
 
 const BOOLEAN_FEATURE_ICONS: Record<string, string> = {
@@ -23,7 +24,7 @@ const BOOLEAN_FEATURE_ICONS: Record<string, string> = {
   "KYC required": "🪪",
 };
 
-export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
+export default function PackageCard({ pkg, onBuy, onBuyNow }: PackageCardProps) {
   const [quantity, setQuantity] = useState(1);
   const { language } = useLanguage();
 
@@ -44,6 +45,7 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
     decreaseQuantity: language === "vi" ? "Giảm số lượng" : "Decrease quantity",
     increaseQuantity: language === "vi" ? "Tăng số lượng" : "Increase quantity",
     addToCart: language === "vi" ? "Thêm vào giỏ hàng" : "Add to cart",
+    buyNow: language === "vi" ? "Đặt hàng ngay" : "Buy now",
   };
 
   const translateText = (value: string) => {
@@ -264,19 +266,33 @@ export default function PackageCard({ pkg, onBuy }: PackageCardProps) {
           <p className="text-lg font-extrabold text-primary">{formatPrice(totalPrice)}</p>
         </div>
 
-        {/* Buy button */}
-        <button
-          type="button"
-          onClick={(event) => onBuy?.(pkg, quantity, event.currentTarget)}
-          className="gradient-primary text-white font-bold no-underline flex items-center justify-center gap-2 transition hover:brightness-105"
-          style={{
-            padding: "12px 20px",
-            borderRadius: "10px",
-            fontSize: "14px",
-          }}
-        >
-          <Icon icon="shopping-cart" /> {text.addToCart}
-        </button>
+        {/* Action buttons */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={(event) => onBuy?.(pkg, quantity, event.currentTarget)}
+            className="gradient-primary text-white font-bold no-underline flex min-h-[46px] items-center justify-center gap-2 transition hover:brightness-105"
+            style={{
+              padding: "12px 10px",
+              borderRadius: "10px",
+              fontSize: "13px",
+            }}
+          >
+            <Icon icon="shopping-cart" /> <span className="leading-tight">{text.addToCart}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onBuyNow?.(pkg, quantity)}
+            className="bg-navy text-white font-bold no-underline flex min-h-[46px] items-center justify-center gap-2 transition hover:brightness-110"
+            style={{
+              padding: "12px 10px",
+              borderRadius: "10px",
+              fontSize: "13px",
+            }}
+          >
+            <Icon icon="bolt" /> <span className="leading-tight">{text.buyNow}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

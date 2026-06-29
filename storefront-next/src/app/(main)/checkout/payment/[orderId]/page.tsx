@@ -217,7 +217,9 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   const searchParams = useSearchParams();
   const orderId = params.orderId;
   const paymentProviderCode = searchParams.get("paymentProviderCode") ?? undefined;
+  const isBuyNow = searchParams.get("buyNow") === "1";
   const clearCart = useCartStore((state) => state.clearCart);
+  const clearBuyNowItem = useCartStore((state) => state.clearBuyNowItem);
   const connectionRef = useRef<HubConnection | null>(null);
   const paymentHandledRef = useRef(false);
   const realtimeSessionRef = useRef(0);
@@ -243,9 +245,13 @@ export default function PaymentPage({ params }: PaymentPageProps) {
 
       setIsPaid(true);
       setPaidAt(confirmedAt || new Date().toISOString());
-      clearCart();
+      if (isBuyNow) {
+        clearBuyNowItem();
+      } else {
+        clearCart();
+      }
     },
-    [clearCart, orderId]
+    [clearBuyNowItem, clearCart, isBuyNow, orderId]
   );
 
   const loadPaymentQr = useCallback(async () => {

@@ -57,12 +57,13 @@ function normalizeCartItems(rawItems: unknown) {
 
 function normalizePersistedCartState(rawState: unknown) {
   if (!rawState || typeof rawState !== "object") {
-    return { items: [] as CartItem[] };
+    return { items: [] as CartItem[], buyNowItem: null as CartItem | null };
   }
 
-  const persistedState = rawState as { items?: unknown };
+  const persistedState = rawState as { items?: unknown; buyNowItem?: unknown };
   return {
     items: normalizeCartItems(persistedState.items),
+    buyNowItem: normalizeCartItem(persistedState.buyNowItem),
   };
 }
 
@@ -70,6 +71,7 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      buyNowItem: null,
 
       addToCart: (item: CartItem) => {
         const normalizedItem = normalizeCartItem(item);
@@ -107,6 +109,24 @@ export const useCartStore = create<CartState>()(
             items: [...state.items, { ...normalizedItem, quantity: clampedQty }],
           };
         });
+      },
+
+      setBuyNowItem: (item: CartItem) => {
+        const normalizedItem = normalizeCartItem(item);
+        if (!normalizedItem) {
+          return;
+        }
+
+        set({
+          buyNowItem: {
+            ...normalizedItem,
+            quantity: Math.min(normalizedItem.quantity, normalizedItem.stock),
+          },
+        });
+      },
+
+      clearBuyNowItem: () => {
+        set({ buyNowItem: null });
       },
 
       removeFromCart: (productId: string) => {
